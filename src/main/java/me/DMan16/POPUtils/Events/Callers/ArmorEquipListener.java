@@ -32,8 +32,8 @@ public class ArmorEquipListener extends Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void inventoryClick(InventoryClickEvent event) {
-		if (event.isCancelled() || !(event.getInventory() instanceof CraftingInventory) ||
-				(event.getView().getType() != InventoryType.CREATIVE && event.getView().getType() != InventoryType.CRAFTING) || !(event.getWhoClicked() instanceof Player player)) return;
+		if (!(event.getInventory() instanceof CraftingInventory) || (event.getView().getType() != InventoryType.CREATIVE && event.getView().getType() != InventoryType.CRAFTING) ||
+				!(event.getWhoClicked() instanceof Player player)) return;
 		if (event.getSlotType() != SlotType.ARMOR && event.getSlotType() != SlotType.QUICKBAR && event.getSlotType() != SlotType.CONTAINER) return;
 		EquipMethod method = null;
 		EquipmentSlot equipSlot = null;
@@ -157,7 +157,6 @@ public class ArmorEquipListener extends Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void inventoryDrag(InventoryDragEvent event) {
-		if (event.isCancelled()) return;
 		if (event.getRawSlots().isEmpty()) return;
 		int slot = event.getRawSlots().stream().findFirst().orElse(0);
 		EquipmentSlot method = event.getOldCursor().getType().getEquipmentSlot();
@@ -202,7 +201,6 @@ public class ArmorEquipListener extends Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onDispenseArmorEvent(BlockDispenseArmorEvent event) {
-		if (event.isCancelled()) return;
 		if (Utils.isNull(event.getItem())) return;
 		if (!(event.getTargetEntity() instanceof Player player)) return;
 		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DISPENSER,event.getItem().getType().getEquipmentSlot(),

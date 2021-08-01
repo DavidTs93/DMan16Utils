@@ -8,19 +8,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Gradient {
-	List<TextColor> nums = new ArrayList<>();
+	private final List<TextColor> nums = new ArrayList<>();
 	
 	public Gradient(int ... nums) {
 		for (int num : nums) this.nums.add(TextColor.color(num));
 		if (this.nums.isEmpty()) throw new IllegalArgumentException("Cannot initiate with no values!");
 	}
 	
-	public Gradient(TextColor... colors) {
+	public Gradient(TextColor ... colors) {
 		for (TextColor color : colors) if (color != null) this.nums.add(color);
 		if (this.nums.isEmpty()) throw new IllegalArgumentException("Cannot initiate with no values!");
 	}
 	
-	public Gradient(Color... colors) {
+	public Gradient(Color ... colors) {
 		for (Color color : colors) if (color != null) this.nums.add(TextColor.color(color.asRGB()));
 		if (this.nums.isEmpty()) throw new IllegalArgumentException("Cannot initiate with no values!");
 	}

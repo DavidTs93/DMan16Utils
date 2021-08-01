@@ -20,13 +20,11 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
+	protected static final ItemStack close = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack next = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack previous = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	
 	protected int currentPage = 1;
-	protected static ItemStack close = Utils.makeItem(Material.BARRIER, Component.translatable("spectatorMenu.close",
-			NamedTextColor.RED).decoration(TextDecoration.ITALIC,false), ItemFlag.values());
-	protected static ItemStack next = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",
-			NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static ItemStack previous = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",
-			NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
 	protected int closeSlot = inventory.getSize() - 5;
 	protected int nextSlot = inventory.getSize() - 1;
 	protected int previousSlot = inventory.getSize() - 9;

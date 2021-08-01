@@ -19,10 +19,10 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public class WorldGuardManager {
-	public final FlagRegistry FlagRegistry;
+	public final FlagRegistry flagRegistry;
 	
 	public WorldGuardManager() {
-		FlagRegistry = WorldGuard.getInstance().getFlagRegistry();
+		flagRegistry = WorldGuard.getInstance().getFlagRegistry();
 	}
 	
 	@NotNull
@@ -70,10 +70,10 @@ public class WorldGuardManager {
 	public StateFlag newStateFlag(@NotNull String name, boolean defaultValue) {
 		try {
 			StateFlag flag = new StateFlag(name,defaultValue);
-			FlagRegistry.register(flag);
+			flagRegistry.register(flag);
 			return flag;
 		} catch (Exception e) {
-			Flag<?> flag = FlagRegistry.get(name);
+			Flag<?> flag = flagRegistry.get(name);
 			if (flag instanceof StateFlag) return (StateFlag) flag;
 		}
 		return null;
@@ -83,10 +83,10 @@ public class WorldGuardManager {
 	public StringFlag newStringFlag(@NotNull String name, String defaultValue) {
 		try {
 			StringFlag flag = new StringFlag(name,defaultValue);
-			FlagRegistry.register(flag);
+			flagRegistry.register(flag);
 			return flag;
 		} catch (Exception e) {
-			Flag<?> flag = FlagRegistry.get(name);
+			Flag<?> flag = flagRegistry.get(name);
 			if (flag instanceof StringFlag) return (StringFlag) flag;
 		}
 		return null;

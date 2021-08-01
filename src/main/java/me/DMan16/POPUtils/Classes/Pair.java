@@ -1,13 +1,9 @@
 package me.DMan16.POPUtils.Classes;
 
-import java.lang.reflect.Array;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
 import java.util.function.Function;
 
-@SuppressWarnings("unchecked")
 public class Pair<F,S> {
 	private final F first;
 	private final S second;
@@ -39,10 +35,6 @@ public class Pair<F,S> {
 		return Objects.equals(this.first,other.first) && Objects.equals(this.second,other.second);
 	}
 	
-	public int hashCode() {
-		return com.google.common.base.Objects.hashCode(this.first,this.second);
-	}
-	
 	public <F2> Pair<F2,S> mapFirst(Function<? super F,? extends F2> function) {
 		return of(function.apply(this.first),this.second);
 	}
@@ -55,17 +47,20 @@ public class Pair<F,S> {
 		return new Pair<F,S>(first,second);
 	}
 	
+	@SafeVarargs
 	public static <F,S> Map<F,S> toMap(Pair<F,S> ... pairs) {
 		Map<F,S> map = new HashMap<>();
 		for (Pair<F,S> pair : pairs) map.put(pair.first,pair.second);
 		return map;
 	}
 	
-	public static <F,S> Pair<F,S>[] fromMap(Map<F,S> map) {
-		Pair<F,S>[] arr = (Pair<F,S>[]) Array.newInstance(Pair.class,map == null ? 0 : map.size());
-		if (map == null) return arr;
-		int i = 0;
-		for (Entry<F,S> entry : map.entrySet()) arr[i++] = (of(entry.getKey(),entry.getValue()));
-		return arr;
+	public static <F,S> List<Pair<F,S>> fromMap(Map<F,S> map) {
+		List<Pair<F,S>> list = new ArrayList<>();
+		if (map != null) for (Entry<F,S> entry : map.entrySet()) list.add(of(entry.getKey(),entry.getValue()));
+		return list;
+	}
+	
+	public int hashCode() {
+		return com.google.common.base.Objects.hashCode(this.first,this.second);
 	}
 }

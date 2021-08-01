@@ -43,15 +43,15 @@ public final class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	}
 	
 	@Override
-	public final @NotNull HandlerList getHandlers() {
+	public @NotNull HandlerList getHandlers() {
 		return handlers;
 	}
 	
-	public final void setCancelled(boolean cancel) {
+	public void setCancelled(boolean cancel) {
 		this.cancel = cancel;
 	}
 	
-	public final boolean isCancelled() {
+	public boolean isCancelled() {
 		return cancel;
 	}
 	

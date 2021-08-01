@@ -11,6 +11,8 @@ import org.bukkit.inventory.Inventory;
 import org.jetbrains.annotations.NotNull;
 
 public abstract class ListenerInventory extends Listener {
+	protected static final int LINE_SIZE = 9;
+	
 	protected final Inventory inventory;
 	protected boolean cancelCloseUnregister = false;
 	

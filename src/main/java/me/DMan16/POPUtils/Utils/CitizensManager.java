@@ -5,15 +5,23 @@ import net.citizensnpcs.api.trait.Trait;
 import net.citizensnpcs.api.trait.TraitInfo;
 import org.bukkit.entity.Entity;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class CitizensManager {
-	List<TraitInfo> newTraits;
+	private final List<TraitInfo> newTraits;
 	
 	public CitizensManager() {
 		newTraits = new ArrayList<>();
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public List<TraitInfo> getNewTraits() {
+		return Collections.unmodifiableList(newTraits);
 	}
 	
 	public void registerTrait(@NotNull Class<? extends Trait> clazz, @NotNull String name) {

@@ -21,7 +21,8 @@ public class POPUtilsMain extends JavaPlugin {
 	private static WorldGuardManager WorldGuardManager = null;
 	private static PlaceholderManager PAPIManager = null;
 	private static CitizensManager CitizensManager = null;
-	private static ProtocolManager ProtocolManager;
+	private static ProtocolManager ProtocolManager = null;
+	private static CancelPlayers CancelPlayers = null;
 	
 	public void onLoad() {
 		if (getServer().getPluginManager().getPlugin("WorldGuard") != null) WorldGuardManager = new WorldGuardManager();
@@ -45,7 +46,7 @@ public class POPUtilsMain extends JavaPlugin {
 	
 	private void firstOfAll() {
 		new EventCallers();
-		new CancelPlayers(instance);
+		CancelPlayers = new CancelPlayers(instance);
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) PAPIManager = new PlaceholderManager();
 		if (getServer().getPluginManager().getPlugin("Citizens") != null) CitizensManager = new CitizensManager();
 		if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) ProtocolManager = ProtocolLibrary.getProtocolManager();
@@ -73,5 +74,9 @@ public class POPUtilsMain extends JavaPlugin {
 	
 	public static ProtocolManager getProtocolManager() {
 		return ProtocolManager;
+	}
+	
+	public static CancelPlayers getCancelPlayers() {
+		return CancelPlayers;
 	}
 }

@@ -16,14 +16,14 @@ import java.util.stream.Collectors;
 
 @SuppressWarnings("deprecation")
 public class ReflectionUtils {
-	public static final String version = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
-	public static final Class<?> ClassCraftItemStack = getClassCraftBukkit("inventory.CraftItemStack");
-	public static final Class<?> ClassItemStackNMS = getClassNMS("ItemStack","world.item");
-	public static final Class<?> ClassItemNMS = getClassNMS("Item","world.item");
-	public static final Class<?> ClassCraftPlayer = getClassCraftBukkit("entity.CraftPlayer");
-	public static final Class<?> ClassEntityLivingNMS = getClassNMS("EntityLiving","world.entity");
-	public static final Class<?> ClassMobEffectNMS = getClassNMS("MobEffect","world.effect");
-	public static final Class<?> ClassMobEffectListNMS = getClassNMS("MobEffectList","world.effect");
+	public static final String VERSION = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
+	public static final Class<?> CLASS_CRAFT_ITEM_STACK = getClassCraftBukkit("inventory.CraftItemStack");
+	public static final Class<?> CLASS_ITEM_STACK_NMS = getClassNMS("ItemStack","world.item");
+	public static final Class<?> CLASS_ITEM_NMS = getClassNMS("Item","world.item");
+	public static final Class<?> CLASS_CRAFT_PLAYER = getClassCraftBukkit("entity.CraftPlayer");
+	public static final Class<?> CLASS_ENTITY_LIVING_NMS = getClassNMS("EntityLiving","world.entity");
+	public static final Class<?> CLASS_MOB_EFFECT_NMS = getClassNMS("MobEffect","world.effect");
+	public static final Class<?> CLASS_MOB_EFFECT_LIST_NMS = getClassNMS("MobEffectList","world.effect");
 	
 	@NotNull
 	private static String removeUnnecessaryDots(@NotNull String str) {
@@ -32,14 +32,14 @@ public class ReflectionUtils {
 	
 	public static Class<?> getClassNMS(@NotNull String name, @NotNull String subPackageNameNewNMS) {
 		try {
-			return Class.forName(removeUnnecessaryDots("net.minecraft." + (Utils.getVersionInt() >= 17 ? subPackageNameNewNMS : "server." + version) + "." + name));
+			return Class.forName(removeUnnecessaryDots("net.minecraft." + (Utils.getVersionInt() >= 17 ? subPackageNameNewNMS : "server." + VERSION) + "." + name));
 		} catch (Exception e) {}
 		return null;
 	}
 	
 	public static Class<?> getClassCraftBukkit(@NotNull String name) {
 		try {
-			return Class.forName(removeUnnecessaryDots("org.bukkit.craftbukkit." + version + "." + name));
+			return Class.forName(removeUnnecessaryDots("org.bukkit.craftbukkit." + VERSION + "." + name));
 		} catch (Exception e) {}
 		return null;
 	}
@@ -50,8 +50,8 @@ public class ReflectionUtils {
 	 */
 	public static String ItemTranslatableName(@NotNull ItemStack item) {
 		try {
-			Method getItem = ClassItemStackNMS.getDeclaredMethod("getItem");
-			Method getName = ClassItemNMS.getDeclaredMethod("getName");
+			Method getItem = CLASS_ITEM_STACK_NMS.getDeclaredMethod("getItem");
+			Method getName = CLASS_ITEM_NMS.getDeclaredMethod("getName");
 			return (String) getName.invoke(getItem.invoke(ItemAsNMSCopy(item)));
 		} catch (Exception e) {}
 		return null;
@@ -63,7 +63,7 @@ public class ReflectionUtils {
 	 */
 	public static Object ItemAsNMSCopy(@NotNull ItemStack item) {
 		try {
-			Method asNMSCopy = ClassCraftItemStack.getDeclaredMethod("asNMSCopy",ItemStack.class);
+			Method asNMSCopy = CLASS_CRAFT_ITEM_STACK.getDeclaredMethod("asNMSCopy",ItemStack.class);
 			return asNMSCopy.invoke(null,item);
 		} catch (Exception e) {}
 		return null;
@@ -75,7 +75,7 @@ public class ReflectionUtils {
 	 */
 	public static ItemStack ItemAsBukkitCopy(@NotNull Object item) {
 		try {
-			Method asCraftMirror = ClassCraftItemStack.getDeclaredMethod("asCraftMirror",ClassItemStackNMS);
+			Method asCraftMirror = CLASS_CRAFT_ITEM_STACK.getDeclaredMethod("asCraftMirror",CLASS_ITEM_STACK_NMS);
 			return (ItemStack) asCraftMirror.invoke(null,item);
 		} catch (Exception e) {}
 		return null;
@@ -87,7 +87,7 @@ public class ReflectionUtils {
 	 */
 	public static ItemStack CloneWithNBT(@NotNull ItemStack item) {
 		try {
-			Method asCraftMirror = ClassCraftItemStack.getDeclaredMethod("asCraftMirror", ClassItemStackNMS);
+			Method asCraftMirror = CLASS_CRAFT_ITEM_STACK.getDeclaredMethod("asCraftMirror",CLASS_ITEM_STACK_NMS);
 			return (ItemStack) asCraftMirror.invoke(null,item);
 		} catch (Exception e) {}
 		return item.clone();
@@ -113,7 +113,7 @@ public class ReflectionUtils {
 	
 	public static Object getHandle(@NotNull Player player) {
 		try {
-			Method getHandle = ClassCraftPlayer.getDeclaredMethod("getHandle");
+			Method getHandle = CLASS_CRAFT_PLAYER.getDeclaredMethod("getHandle");
 			return getHandle.invoke(player);
 		} catch (Exception e) {}
 		return null;
@@ -145,7 +145,7 @@ public class ReflectionUtils {
 	
 	public static Object MobEffectFromID(int ID) {
 		try {
-			Method fromId = ClassMobEffectListNMS.getMethod("fromId",int.class);
+			Method fromId = CLASS_MOB_EFFECT_LIST_NMS.getMethod("fromId",int.class);
 			return fromId.invoke(null,ID);
 		} catch (Exception e) {}
 		return null;
@@ -156,9 +156,9 @@ public class ReflectionUtils {
 		boolean[] result = new boolean[effects.size()];
 		Arrays.fill(result,false);
 		try {
-			Constructor<?> MobEffectConstructor = ClassMobEffectNMS.getConstructor(ClassMobEffectListNMS,int.class,int.class,
+			Constructor<?> MobEffectConstructor = CLASS_MOB_EFFECT_NMS.getConstructor(CLASS_MOB_EFFECT_LIST_NMS,int.class,int.class,
 					boolean.class,boolean.class,boolean.class);
-			Method addEffect = ClassEntityLivingNMS.getMethod("addEffect",ClassMobEffectNMS,cause.getClass());
+			Method addEffect = CLASS_ENTITY_LIVING_NMS.getMethod("addEffect",CLASS_MOB_EFFECT_NMS,cause.getClass());
 			for (int i = 0; i < effects.size(); i++) {
 				PotionEffect effect = effects.get(i);
 				try {
@@ -180,7 +180,7 @@ public class ReflectionUtils {
 		boolean[] result = new boolean[effects.size()];
 		Arrays.fill(result,false);
 		try {
-			Method removeEffect = ClassEntityLivingNMS.getMethod("removeEffect",ClassMobEffectListNMS,cause.getClass());
+			Method removeEffect = CLASS_ENTITY_LIVING_NMS.getMethod("removeEffect",CLASS_MOB_EFFECT_LIST_NMS,cause.getClass());
 			for (int i = 0; i < effects.size(); i++) {
 				PotionEffectType effect = effects.get(i);
 				try {

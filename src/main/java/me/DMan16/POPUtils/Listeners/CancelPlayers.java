@@ -19,18 +19,18 @@ import org.jetbrains.annotations.NotNull;
 import java.util.HashMap;
 
 public class CancelPlayers extends Listener {
-	private static final HashMap<Player, Trio<Boolean,Boolean,Integer>> players = new HashMap<>();
-	private static MoveListener move = null;
+	private final HashMap<Player,Trio<Boolean,Boolean,Integer>> players = new HashMap<>();
+	private MoveListener move = null;
 	
 	public CancelPlayers(@NotNull JavaPlugin plugin) {
 		if (plugin == POPUtilsMain.getInstance()) register(plugin);
 	}
 	
-	public static void addPlayer(@NotNull Player player) {
+	public void addPlayer(@NotNull Player player) {
 		addPlayer(player,false,false);
 	}
 	
-	public static void addPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
+	public void addPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
 		if (Utils.isPlayerNPC(player)) return;
 		int count = 1;
 		if (players.containsKey(player)) {
@@ -46,16 +46,16 @@ public class CancelPlayers extends Listener {
 	/**
 	 * @return First - allow rotation, Second - disable damage, Third - counter
 	 */
-	public static Trio<Boolean,Boolean,Integer> getPlayer(@NotNull Player player) {
+	public Trio<Boolean,Boolean,Integer> getPlayer(@NotNull Player player) {
 		if (Utils.isPlayerNPC(player)) return null;
 		return players.get(player);
 	}
 	
-	public static void removePlayer(@NotNull Player player) {
+	public void removePlayer(@NotNull Player player) {
 		removePlayer(player,false);
 	}
 	
-	public static void removePlayer(@NotNull Player player, boolean force) {
+	public void removePlayer(@NotNull Player player, boolean force) {
 		if (!players.containsKey(player)) return;
 		if (force) players.remove(player);
 		else {
@@ -66,11 +66,11 @@ public class CancelPlayers extends Listener {
 		check();
 	}
 	
-	public static boolean isPlayerCancelled(@NotNull Player player) {
+	public boolean isPlayerCancelled(@NotNull Player player) {
 		return players.containsKey(player);
 	}
 	
-	private static void check() {
+	private void check() {
 		if (players.isEmpty()) {
 			if (move != null) {
 				move.unregister();
@@ -145,7 +145,7 @@ public class CancelPlayers extends Listener {
 		if (players.containsKey(event.getPlayer()) && players.get(event.getPlayer()).second()) event.setCancelled(true);
 	}
 	
-	private static class MoveListener extends Listener {
+	private class MoveListener extends Listener {
 		private MoveListener() {
 			register(POPUtilsMain.getInstance());
 		}

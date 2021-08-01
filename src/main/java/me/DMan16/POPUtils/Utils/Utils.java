@@ -2,9 +2,9 @@ package me.DMan16.POPUtils.Utils;
 
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
-import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.POPUtilsMain;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
@@ -25,11 +25,13 @@ import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Serial;
+import java.io.Serializable;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -43,9 +45,16 @@ public class Utils {
 	private static final Pattern unicode = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
+	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.login_error",NamedTextColor.RED);
+	@Unmodifiable private static final List<Integer> playerInventorySlots;
 	
 	static {
 		createInteractable();
+		List<Integer> slots = new ArrayList<>();
+		slots.add(-106);
+		for (int i = 0; i < 4 * 9; i++) slots.add(i);
+		for (int i = 100; i <= 103; i++) slots.add(i);
+		playerInventorySlots = Collections.unmodifiableList(slots);
 	}
 	
 	@NotNull
@@ -145,13 +154,15 @@ public class Utils {
 		return chatColorsToString(list,"&");
 	}
 	
+	@NotNull
+	@Unmodifiable
 	public static List<String> chatColorsToString(@NotNull List<String> list, @NotNull String colorCode) {
 		List<String> newList = new ArrayList<>();
 		for (String str : list) if (str != null) {
 			if (str.trim().isEmpty()) newList.add("");
 			else newList.add(chatColorsToString(str,colorCode));
 		}
-		return newList;
+		return Collections.unmodifiableList(newList);
 	}
 	
 	public static void chatColorsActionBar(@NotNull Player player, @NotNull Component ... components) {
@@ -214,12 +225,9 @@ public class Utils {
 	}
 	
 	@NotNull
+	@Unmodifiable
 	public static List<Integer> getPlayerInventorySlots() {
-		List<Integer> slots = new ArrayList<>();
-		slots.add(-106);
-		for (int i = 0; i < 4 * 9; i++) slots.add(i);
-		for (int i = 100; i <= 103; i++) slots.add(i);
-		return slots;
+		return playerInventorySlots;
 	}
 	
 	@Nullable
@@ -306,11 +314,12 @@ public class Utils {
 	 * Pick up items properly from custom set results, example: Anvil, Smithing Table
 	 */
 	public static void uniqueCraftingHandle(@NotNull InventoryClickEvent event, int reduce, float pitch) {
-		if (!(event.getWhoClicked() instanceof Player player) || isNull(event.getInventory().getItem(0)) || isNull(event.getInventory().getItem(1)) ||
-				event.getInventory().getItem(1).getAmount() < reduce || (!event.isShiftClick() && !event.isLeftClick() &&
+		Inventory inv = event.getInventory();
+		ItemStack item1 = inv.getItem(1);
+		if (!(event.getWhoClicked() instanceof Player player) || isNull(inv.getItem(0)) || isNull(item1) ||
+				item1.getAmount() < reduce || (!event.isShiftClick() && !event.isLeftClick() &&
 				!event.isRightClick() && event.getHotbarButton() <= -1)) return;
 		if (event.getRawSlot() != 2) return;
-		Inventory inv = event.getInventory();
 		ItemStack result = inv.getItem(2);
 		if (event.isShiftClick()) {
 			if (player.getInventory().firstEmpty() == -1) {
@@ -326,7 +335,7 @@ public class Utils {
 			setItemSlot(player,result,event.getHotbarButton());
 		} else player.setItemOnCursor(result);
 		inv.setItem(0,null);
-		if (inv.getItem(1).getAmount() > reduce) inv.getItem(1).setAmount(inv.getItem(1).getAmount() - reduce);
+		if (item1.getAmount() > reduce) item1.setAmount(item1.getAmount() - reduce);
 		else inv.setItem(1,null);
 		inv.setItem(2,null);
 		player.updateInventory();
@@ -385,16 +394,17 @@ public class Utils {
 		return new JString(str);
 	}
 	
-	private static class JString implements java.io.Serializable {
+	private static class JString implements Serializable {
 		@Serial
-		private static final long serialVersionUID = 1L;
-		String value;
+		private static final long SERIAL_VERSION_UID = 1L;
+		private String value;
+		
 		public JString(@NotNull String value) {
-			super();
 			this.value = value;
 		}
 		
-		public @NotNull String getValue() {
+		@NotNull
+		public String getValue() {
 			return value;
 		}
 		
@@ -409,8 +419,12 @@ public class Utils {
 	}
 	
 	public static class PairInt extends Pair<Integer,Integer> {
-		public PairInt(int first, int second) {
+		private PairInt(int first, int second) {
 			super(first,second);
+		}
+		
+		public static PairInt of(int first, int second) {
+			return new PairInt(first,second);
 		}
 		
 		public PairInt add(@NotNull PairInt add) {
@@ -534,7 +548,7 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static List<Component> ListStringToListComponent(@NotNull List<String> strs) {
+	public static List<Component> listStringToListComponent(@NotNull List<String> strs) {
 		List<Component> list = new ArrayList<>();
 		for (String str : strs) list.add(Component.text(str).decoration(TextDecoration.ITALIC,false));
 		return list;
@@ -645,8 +659,9 @@ public class Utils {
 		if (list != null && materials != null && !materials.isEmpty()) materials.stream().filter(Objects::nonNull).forEach(list::add);
 	}
 	
+	@NotNull
 	@SafeVarargs
-	public static <V> @NotNull List<V> joinLists(List<? extends V> ... lists) {
+	public static <V> List<V> joinLists(List<? extends V> ... lists) {
 		List<V> list = new ArrayList<>();
 		for (List<? extends V> l : lists) if (l != null) list.addAll(l);
 		return list;
@@ -685,19 +700,19 @@ public class Utils {
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player) {
-		CancelPlayers.addPlayer(player);
+		POPUtilsMain.getCancelPlayers().addPlayer(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		CancelPlayers.addPlayer(player,allowRotation,disableDamage);
+		POPUtilsMain.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player) {
-		CancelPlayers.removePlayer(player);
+		POPUtilsMain.getCancelPlayers().removePlayer(player);
 	}
 	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
-		return CancelPlayers.isPlayerCancelled(player);
+		return POPUtilsMain.getCancelPlayers().isPlayerCancelled(player);
 	}
 	
 	public static void savePlayer(@NotNull Player player) {
