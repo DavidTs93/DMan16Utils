@@ -113,20 +113,11 @@ public class Utils {
 	
 	@NotNull
 	public static String chatColorsPlugin(@NotNull String str) {
-		return chatColors("&d[" + POPUtilsMain.pluginNameColors + "&d]&r " + str);
+		return chatColors("&d[&bP&ar&di&#d552ccs&#df88eco&en&#fe51e2P&bO&#cd7979P&d]&r " + str);
 	}
 
 	public static void chatColorsPlugin(@NotNull CommandSender sender, @NotNull String str) {
 		sender.sendMessage(chatColorsPlugin(str));
-	}
-
-	@NotNull
-	public static String chatColorsUsage(@NotNull String str) {
-		return chatColors("&cUsage: &r/" + POPUtilsMain.pluginNameColors + "&r " + str);
-	}
-
-	public static void chatColorsUsage(@NotNull CommandSender sender, @NotNull String str) {
-		sender.sendMessage(chatColorsUsage(str));
 	}
 	
 	/**
