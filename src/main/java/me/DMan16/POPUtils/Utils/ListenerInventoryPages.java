@@ -2,15 +2,11 @@ package me.DMan16.POPUtils.Utils;
 
 import me.DMan16.POPUtils.POPUtilsMain;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -20,10 +16,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Objects;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
-	protected static final ItemStack close = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack next = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack previous = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	
 	protected int currentPage = 1;
 	protected int closeSlot = inventory.getSize() - 5;
 	protected int nextSlot = inventory.getSize() - 1;
@@ -46,9 +38,9 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		player.openInventory(inventory);
 	}
 	
-	@EventHandler(ignoreCancelled = true)
+	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (!event.getView().getTopInventory().equals(inventory)) return;
+		if (!event.getView().getTopInventory().equals(inventory) || checkCancelled(event)) return;
 		int slot = event.getRawSlot();
 		ClickType click = event.getClick();
 		if (firstSlotCheck(slot,click)) return;
@@ -61,6 +53,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		else if (slot == nextSlot) next(click);
 		else if (slot == previousSlot) previous(click);
 		else otherSlot(event,slot,slotItem);
+	}
+	
+	protected boolean checkCancelled(InventoryClickEvent event) {
+		return event.isCancelled();
 	}
 	
 	protected void next(@NotNull ClickType click) {
@@ -107,21 +103,21 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	@NotNull
 	protected ItemStack close(int page) {
-		return close;
+		return CLOSE;
 	}
 	
 	@NotNull
 	protected ItemStack next(int page) {
-		return next;
+		return NEXT;
 	}
 	
 	@NotNull
 	protected ItemStack previous(int page) {
-		return previous;
+		return PREVIOUS;
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {
-		return Utils.isNull(item);
+		return Utils.isNull(item) || Utils.sameItem(ITEM_EMPTY,item);
 	}
 	
 	protected boolean cancelCheck(int slot, @NotNull ClickType click) {

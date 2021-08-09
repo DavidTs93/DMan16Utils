@@ -1,14 +1,12 @@
 package me.DMan16.POPUtils.Enums;
 
-import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 public enum Tags {
 	SWORDS(Arrays.asList("WOODEN_SWORD","STONE_SWORD","IRON_SWORD","DIAMOND_SWORD","GOLDEN_SWORD","NETHERITE_SWORD"),EquipmentSlot.HAND),
@@ -38,91 +36,112 @@ public enum Tags {
 	NETHERITE(Arrays.asList("NETHERITE_SWORD","NETHERITE_AXE","NETHERITE_PICKAXE","NETHERITE_SHOVEL","NETHERITE_HOE","NETHERITE_CHESTPLATE","NETHERITE_LEGGINGS",
 			"NETHERITE_BOOTS","NETHERITE_HELMET"),null);
 	
-	private final List<String> materials;
+	private final List<Material> materials;
 	public final EquipmentSlot slot;
 	
-	Tags(List<String> materials, EquipmentSlot slot) {
-		this.materials = materials;
+	Tags(@NotNull List<@NotNull String> names, @Nullable EquipmentSlot slot) {
+		this.materials = names.stream().map(Material::getMaterial).filter(Objects::nonNull).toList();
 		this.slot = slot;
 	}
 	
 	public boolean contains(@NotNull Material material) {
-		return materials.contains(material.name());
+		return materials.contains(material);
 	}
 	
-	public static boolean isArmor(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		String type = item.getType().name();
-		Boolean isBoots = BOOTS.materials.contains(type);
-		Boolean isChestplate = CHESTPLATES.materials.contains(type);
-		Boolean isHelmet = HELMETS.materials.contains(type);
-		Boolean isLeggings = LEGGINGS.materials.contains(type);
-		return (isBoots || isChestplate || isHelmet || isLeggings);
+	public boolean contains(@NotNull ItemStack item) {
+		return contains(item.getType());
 	}
 	
-	public static boolean isArmorExtra(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		String type = item.getType().name();
-		return EXTRAARMORY.materials.contains(type) || SHIELD.materials.contains(type);
+	public static boolean isArmor(@NotNull Material material) {
+		return BOOTS.materials.contains(material) || CHESTPLATES.materials.contains(material) || HELMETS.materials.contains(material) || LEGGINGS.materials.contains(material);
 	}
 	
-	public static boolean isTool(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		String type = item.getType().name();
-		Boolean isAxe = AXES.materials.contains(type);
-		Boolean isHoe = HOES.materials.contains(type);
-		Boolean isPickaxe = PICKAXES.materials.contains(type);
-		Boolean isShovel = SHOVELS.materials.contains(type);
-		return (isAxe || isHoe || isPickaxe || isShovel);
+	public static boolean isArmor(@NotNull ItemStack item) {
+		return isArmor(item.getType());
 	}
 	
-	public static boolean isToolExtra(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		return EXTRATOOLS.materials.contains(item.getType().name());
+	public static boolean isArmorExtra(@NotNull Material material) {
+		return EXTRAARMORY.materials.contains(material) || SHIELD.materials.contains(material);
 	}
 	
-	public static boolean isWeapon(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		String type = item.getType().name();
-		Boolean isWeapon = SWORDS.materials.contains(type) || TRIDENT.materials.contains(type);
-		Boolean isBow = BOWS.materials.contains(type);
-		return (isWeapon || isBow);
+	public static boolean isArmorExtra(@NotNull ItemStack item) {
+		return isArmorExtra(item.getType());
 	}
 	
-	public static boolean isExtra(ItemStack item) {
-		if (Utils.isNull(item)) return false;
-		String type = item.getType().name();
-		Boolean isWeapon = SHIELD.materials.contains(type);
-		Boolean isTool = EXTRATOOLS.materials.contains(type);
-		Boolean isArmor = EXTRAARMORY.materials.contains(type);
-		return (isWeapon || isTool || isArmor);
+	public static boolean isTool(@NotNull Material material, boolean includeAxe) {
+		return (includeAxe && AXES.materials.contains(material)) || HOES.materials.contains(material) || PICKAXES.materials.contains(material) || SHOVELS.materials.contains(material);
+	}
+	
+	/**
+	 * Includes Axes
+	 */
+	public static boolean isTool(@NotNull Material material) {
+		return isTool(material,true);
+	}
+	
+	public static boolean isTool(@NotNull ItemStack item, boolean includeAxe) {
+		return isTool(item.getType(),includeAxe);
+	}
+	
+	/**
+	 * Includes Axes
+	 */
+	public static boolean isTool(@NotNull ItemStack item) {
+		return isTool(item.getType());
+	}
+	
+	public static boolean isToolExtra(@NotNull Material material) {
+		return EXTRATOOLS.contains(material);
+	}
+	
+	public static boolean isToolExtra(@NotNull ItemStack item) {
+		return isToolExtra(item.getType());
+	}
+	
+	public static boolean isWeapon(@NotNull Material material, boolean includeAxe) {
+		return SWORDS.materials.contains(material) || TRIDENT.materials.contains(material) || BOWS.materials.contains(material) || (includeAxe && AXES.materials.contains(material));
+	}
+	
+	/**
+	 * Includes Axes
+	 */
+	public static boolean isWeapon(@NotNull Material material) {
+		return isWeapon(material,true);
+	}
+	
+	public static boolean isWeapon(@NotNull ItemStack item, boolean includeAxe) {
+		return isWeapon(item.getType(),includeAxe);
+	}
+	
+	/**
+	 * Includes Axes
+	 */
+	public static boolean isWeapon(@NotNull ItemStack item) {
+		return isWeapon(item.getType());
+	}
+	
+	public static boolean isExtra(@NotNull Material material) {
+		return (SHIELD.materials.contains(material) || EXTRATOOLS.materials.contains(material) || EXTRAARMORY.materials.contains(material));
+	}
+	
+	public static boolean isExtra(@NotNull ItemStack item) {
+		return isExtra(item.getType());
 	}
 	
 	@NotNull
-	public static List<Tags> get(ItemStack item) {
-		if (Utils.isNull(item)) return new ArrayList<>();
+	public static List<Tags> get(@NotNull ItemStack item) {
 		return get(item.getType());
 	}
 	
 	@NotNull
 	public static List<Tags> get(@NotNull Material material) {
 		List<Tags> tags = new ArrayList<>();
-		for (Tags tag : values()) if (tag.materials.contains(material.name())) tags.add(tag);
+		for (Tags tag : values()) if (tag.materials.contains(material)) tags.add(tag);
 		return tags;
 	}
 	
 	@NotNull
-	public static List<Material> getMaterials(@NotNull Tags tag) {
-		List<Material> materials = new ArrayList<>();
-		for (String name : tag.materials) {
-			Material material = Material.getMaterial(name);
-			if (material != null) materials.add(material);
-		}
-		return materials;
-	}
-	
-	@NotNull
 	public List<Material> getMaterials() {
-		return getMaterials(this);
+		return Collections.unmodifiableList(materials);
 	}
 }

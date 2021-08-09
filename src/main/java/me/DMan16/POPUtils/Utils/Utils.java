@@ -45,7 +45,7 @@ public class Utils {
 	private static final Pattern unicode = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
-	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.login_error",NamedTextColor.RED);
+	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
 	
 	static {

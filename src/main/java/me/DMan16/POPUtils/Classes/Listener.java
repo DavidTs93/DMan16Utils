@@ -9,16 +9,13 @@ import org.jetbrains.annotations.NotNull;
  * Listener class with functions to register and unregister.
  * Extend this class with your listener. Don't forget to register the listener via {@link #register}! 
  */
-public abstract class Listener implements org.bukkit.event.Listener {
-	protected boolean isRegistered = false;
+public interface Listener extends org.bukkit.event.Listener {
 	
-	protected void register(@NotNull JavaPlugin instance) {
+	default void register(@NotNull JavaPlugin instance) {
 		Bukkit.getServer().getPluginManager().registerEvents(this,instance);
-		isRegistered = true;
 	}
 	
-	protected void unregister() {
+	default void unregister() {
 		HandlerList.unregisterAll(this);
-		isRegistered = false;
 	}
 }

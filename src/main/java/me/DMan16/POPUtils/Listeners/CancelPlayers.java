@@ -18,7 +18,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 
-public class CancelPlayers extends Listener {
+public class CancelPlayers implements Listener {
 	private final HashMap<Player,Trio<Boolean,Boolean,Integer>> players = new HashMap<>();
 	private MoveListener move = null;
 	
@@ -145,14 +145,9 @@ public class CancelPlayers extends Listener {
 		if (players.containsKey(event.getPlayer()) && players.get(event.getPlayer()).second()) event.setCancelled(true);
 	}
 	
-	private class MoveListener extends Listener {
+	private class MoveListener implements Listener {
 		private MoveListener() {
 			register(POPUtilsMain.getInstance());
-		}
-		
-		@Override
-		public void unregister() {
-			super.unregister();
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

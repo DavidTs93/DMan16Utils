@@ -25,7 +25,7 @@ import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public class ArmorEquipListener extends Listener {
+public class ArmorEquipListener implements Listener {
 	public ArmorEquipListener() {
 		register(POPUtilsMain.getInstance());
 	}
