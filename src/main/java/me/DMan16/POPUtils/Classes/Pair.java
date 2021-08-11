@@ -29,6 +29,10 @@ public class Pair<F,S> {
 		return "(" + this.first + ", " + this.second + ")";
 	}
 	
+	public Pair<F,S> copy() {
+		return Pair.of(first,second);
+	}
+	
 	@Override
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Pair<?,?> other)) return false;
@@ -44,7 +48,7 @@ public class Pair<F,S> {
 	}
 	
 	public static <F,S> Pair<F,S> of(F first, S second) {
-		return new Pair<F,S>(first,second);
+		return new Pair<>(first,second);
 	}
 	
 	@SafeVarargs

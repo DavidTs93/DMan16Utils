@@ -24,10 +24,12 @@ public abstract class ListenerInventory implements Listener {
 	protected static final ItemStack ITEM_EMPTY = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
 	
 	protected final Inventory inventory;
+	protected final int size;
 	protected boolean cancelCloseUnregister = false;
 	
 	public ListenerInventory(@NotNull Inventory inv) {
 		this.inventory = inv;
+		size = inv.getSize();
 	}
 	
 	@EventHandler(ignoreCancelled = true)

@@ -17,20 +17,19 @@ import java.util.Objects;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected int currentPage = 1;
-	protected int closeSlot = inventory.getSize() - 5;
-	protected int nextSlot = inventory.getSize() - 1;
-	protected int previousSlot = inventory.getSize() - 9;
-	protected int size;
-	protected Player player;
+	protected int closeSlot = size - 5;
+	protected int nextSlot = size - 1;
+	protected int previousSlot = size - 9;
+	protected final Player player;
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
+	protected boolean resetWithBorder = false;
 	
 	/**
 	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
 	 */
 	public ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name, @NotNull JavaPlugin plugin, Object ... objs) {
 		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
-		size = (lines + 1) * 9;
 		this.player = player;
 		first(objs);
 		setPage(1);
@@ -72,7 +71,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void reset() {
-		for (int i = 0; i < inventory.getSize(); i++) inventory.setItem(i,null);
+		for (int i = 0; i < size; i++) inventory.setItem(i,resetWithBorder ? (isBorder(i) ? ITEM_EMPTY : null) : null);
 	}
 	
 	public void setPage(int page) {
@@ -80,10 +79,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		beforeSetPage(page);
 		currentPage = page;
 		reset();
-		setPageContents(page);
-		inventory.setItem(closeSlot,close(page));
-		if (alwaysSetNext || page < maxPage()) inventory.setItem(nextSlot,next(page));
-		if (alwaysSetPrevious || page > 1) inventory.setItem(previousSlot,previous(page));
+		setPageContents();
+		inventory.setItem(closeSlot,close());
+		if (alwaysSetNext || currentPage < maxPage()) inventory.setItem(nextSlot,next());
+		if (alwaysSetPrevious || currentPage > 1) inventory.setItem(previousSlot,previous());
 		cancelCloseUnregister = true;
 		player.openInventory(inventory);
 		new BukkitRunnable() {
@@ -98,21 +97,21 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected void first(Object ... objs) {}
 	
 	protected boolean isBorder(int slot) {
-		return (slot >= 0 && slot < 9) || (slot >= inventory.getSize() - 9 && slot < inventory.getSize()) || (slot % 9) == 0 || ((slot + 1) % 9) == 0;
+		return (slot >= 0 && slot < 9) || (slot >= size - 9 && slot < size) || (slot % 9) == 0 || ((slot + 1) % 9) == 0;
 	}
 	
 	@NotNull
-	protected ItemStack close(int page) {
+	protected ItemStack close() {
 		return CLOSE;
 	}
 	
 	@NotNull
-	protected ItemStack next(int page) {
+	protected ItemStack next() {
 		return NEXT;
 	}
 	
 	@NotNull
-	protected ItemStack previous(int page) {
+	protected ItemStack previous() {
 		return PREVIOUS;
 	}
 	
@@ -132,7 +131,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return click.isCreativeAction();
 	}
 	
-	protected abstract void setPageContents(int page);
+	protected abstract void setPageContents();
 	public abstract int maxPage();
 	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem);
 }

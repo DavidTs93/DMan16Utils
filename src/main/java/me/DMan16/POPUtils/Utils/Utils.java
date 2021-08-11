@@ -1,10 +1,13 @@
 package me.DMan16.POPUtils.Utils;
 
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.POPUtilsMain;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
@@ -14,10 +17,8 @@ import org.bukkit.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.*;
+import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.EnchantmentStorageMeta;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.PotionMeta;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -32,6 +33,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -45,7 +47,9 @@ public class Utils {
 	private static final Pattern unicode = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
-	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
+//	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
+	public static final Component kickMessage = Component.text("An error occurred, please try to reconnect",NamedTextColor.RED);
+	public static final Component playerNotFound = Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED);
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
 	
 	static {
@@ -213,6 +217,18 @@ public class Utils {
 	@NotNull
 	public static String encode(@NotNull String str, @Nullable String regSplit, @Nullable String regJoin) {
 		return String.join(regJoin == null ? "" : regJoin,str.split(regSplit == null ? "" : regSplit));
+	}
+	
+	@Nullable
+	public static TextColor getColor(String str) {
+		TextColor color = null;
+		if (str != null) try {
+			str = str.trim();
+			if (str.startsWith("#")) color = TextColor.fromHexString(str);
+			else if ("0123456789".contains(str.substring(0,1))) color = TextColor.fromHexString("#" + str);
+			else color = NamedTextColor.NAMES.value(str.replace(" ","_").toLowerCase());
+		} catch (Exception e) {}
+		return color;
 	}
 	
 	@NotNull
@@ -720,5 +736,16 @@ public class Utils {
 	@Nullable
 	public static String getPlayerNameByUUID(@NotNull UUID ID) {
 		return POPUpdaterMain.getPlayerNameByUUID(ID);
+	}
+	
+	public static void setSkin(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
+		try {
+			Method metaSetProfileMethod = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
+			metaSetProfileMethod.setAccessible(true);
+			UUID id = new UUID(skin.substring(skin.length() - 20).hashCode(),skin.substring(skin.length() - 10).hashCode());
+			GameProfile profile = new GameProfile(id,name == null ? "D" : name);
+			profile.getProperties().put("textures", new Property("textures",skin));
+			metaSetProfileMethod.invoke(meta,profile);
+		} catch (Exception e) {}
 	}
 }
