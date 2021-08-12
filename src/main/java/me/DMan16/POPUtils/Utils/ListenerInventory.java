@@ -18,9 +18,17 @@ import org.jetbrains.annotations.NotNull;
 
 public abstract class ListenerInventory implements Listener {
 	protected static final int LINE_SIZE = 9;
-	protected static final ItemStack CLOSE = Utils.makeItem(Material.BARRIER, Component.translatable("spectatorMenu.close", NamedTextColor.RED).decoration(TextDecoration.ITALIC,false), ItemFlag.values());
-	protected static final ItemStack NEXT = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack PREVIOUS = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack CLOSE = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack NEXT = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack PREVIOUS = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack DONE = Utils.makeItem(Material.BARRIER,Component.translatable("gui.done",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack OK = Utils.makeItem(Material.BARRIER,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack CANCEL = Utils.makeItem(Material.BARRIER,Component.translatable("gui.cancel",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack BACK = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack UP = Utils.makeItem(Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack DOWN = Utils.makeItem(Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack YES = Utils.makeItem(Material.BARRIER,Component.translatable("gui.yes",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	protected static final ItemStack NO = Utils.makeItem(Material.BARRIER,Component.translatable("gui.yes",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
 	protected static final ItemStack ITEM_EMPTY = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
 	
 	protected final Inventory inventory;
