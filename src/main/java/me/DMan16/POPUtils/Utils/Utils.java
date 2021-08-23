@@ -501,8 +501,18 @@ public class Utils {
 	 */
 	public static double roundAfterDot(double num, int digitsAfterDot) {
 		if (digitsAfterDot < 0) return num;
-		if (digitsAfterDot == 0) return (double) Math.round(num);
+		if (digitsAfterDot == 0) return Math.round(num);
 		return Double.parseDouble((new DecimalFormat("0." + "0".repeat(digitsAfterDot))).format(num));
+	}
+	
+	/**
+	 * @param digitsAfterDot >= 0
+	 * @return the number rounded to specified digits after the dot
+	 */
+	public static float roundAfterDot(float num, int digitsAfterDot) {
+		if (digitsAfterDot < 0) return num;
+		if (digitsAfterDot == 0) return Math.round(num);
+		return Float.parseFloat((new DecimalFormat("0." + "0".repeat(digitsAfterDot))).format(num));
 	}
 	
 	/**
