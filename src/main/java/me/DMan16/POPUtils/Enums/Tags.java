@@ -48,8 +48,8 @@ public enum Tags {
 		return materials.contains(material);
 	}
 	
-	public boolean contains(@NotNull ItemStack item) {
-		return contains(item.getType());
+	public boolean contains(@Nullable ItemStack item) {
+		return item != null && contains(item.getType());
 	}
 	
 	public static boolean isArmor(@NotNull Material material) {

@@ -5,6 +5,7 @@ import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
@@ -24,6 +25,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -33,6 +35,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.Serial;
 import java.io.Serializable;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -167,6 +170,11 @@ public class Utils {
 	}
 	
 	@NotNull
+	public static String splitCapitalize(String str) {
+		return splitCapitalize(str,null,"&");
+	}
+	
+	@NotNull
 	public static String splitCapitalize(String str, String splitReg) {
 		return splitCapitalize(str,splitReg,"&");
 	}
@@ -283,7 +291,7 @@ public class Utils {
 		Damageable meta = (Damageable) item.getItemMeta();
 		if (meta.getDamage() >= maxDMG || damage >= maxDMG) return item;
 		meta.setDamage(Math.max(damage,0));
-		item.setItemMeta((ItemMeta) meta);
+		item.setItemMeta(meta);
 		return item;
 	}
 	
@@ -292,29 +300,42 @@ public class Utils {
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		if (item1 == null || item2 == null) return item1 == item2;
-		return item1.isSimilar(item2);
+		ItemStack cmp1 = clone(item1);
+		ItemStack cmp2 = clone(item2);
+		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
+		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
+		return cmp1.isSimilar(cmp2);
+	}
+	
+	/**
+	 * @return if the items are the identical besides the amount, the display name, and the durability
+	 */
+	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability, boolean ignoreFlags) {
+		if (item1 == null || item2 == null) return item1 == item2;
+		ItemStack cmp1 = clone(item1);
+		ItemStack cmp2 = clone(item2);
+		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
+		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
+		if (cmp1.isSimilar(cmp2)) return true;
+		if (ignoreDurability) return similarItem(setDamage(cmp1,0),setDamage(cmp2,0),false);
+		ItemMeta meta1 = cmp1.getItemMeta();
+		ItemMeta meta2 = cmp2.getItemMeta();
+		meta1.displayName(null);
+		meta2.displayName(null);
+		if (ignoreFlags) {
+			meta1.removeItemFlags(ItemFlag.values());
+			meta2.removeItemFlags(ItemFlag.values());
+		}
+		cmp1.setItemMeta(meta1);
+		cmp2.setItemMeta(meta2);
+		return cmp1.isSimilar(cmp2);
 	}
 	
 	/**
 	 * @return if the items are the identical besides the amount, the display name, and the durability
 	 */
 	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability) {
-		if (item1 == null || item2 == null) return item1 == item2;
-		if (item1.isSimilar(item2)) return true;
-		ItemStack cmp1 = item1.clone();
-		ItemStack cmp2 = item2.clone();
-		if (ignoreDurability) {
-			cmp1 = setDamage(cmp1,0);
-			cmp2 = setDamage(cmp2,0);
-			return similarItem(cmp1,cmp2,false);
-		}
-		ItemMeta meta1 = cmp1.getItemMeta();
-		ItemMeta meta2 = cmp2.getItemMeta();
-		meta1.displayName(null);
-		meta2.displayName(null);
-		cmp1.setItemMeta(meta1);
-		cmp2.setItemMeta(meta2);
-		return cmp1.isSimilar(cmp2);
+		return similarItem(item1,item2,ignoreDurability,false);
 	}
 	
 	/**
@@ -333,7 +354,7 @@ public class Utils {
 				event.setCancelled(true);
 				return;
 			}
-			givePlayer(player,result,false);
+			givePlayer(player,player.getLocation(),false,result);
 		} else if(event.getHotbarButton() != -1) {
 			if (!isNull(getFromSlot(player,event.getHotbarButton()))) {
 				event.setCancelled(true);
@@ -388,6 +409,7 @@ public class Utils {
 		return null;
 	}
 	
+	@Contract("null -> true")
 	public static boolean isNull(@Nullable ItemStack item) {
 		return item == null || isNull(item.getType());
 	}
@@ -447,16 +469,29 @@ public class Utils {
 	 * Give an item to a player.
 	 * If their inventory is full, drops the item at the given location.
 	 */
-	@Nullable
-	public static Item givePlayer(@NotNull Player player, ItemStack item, @Nullable Location drop, boolean glow) {
-		if (isNull(item)) return null;
-		if (!player.isDead() && player.getInventory().addItem(item).isEmpty()) return null;
-		if (drop != null) {
-			Item droppedItem = dropItem(drop,item);
-			droppedItem.setGlowing(glow);
-			return droppedItem;
-		}
-		return null;
+	@NotNull
+	public static List<@NotNull Item> givePlayer(@NotNull Player player, @Nullable Location drop, boolean glow, ItemStack ... items) {
+		return givePlayer(player,drop,glow,Arrays.asList(items));
+	}
+	
+	@NotNull
+	public static List<@NotNull Item> givePlayer(@NotNull Player player, @Nullable Location drop, boolean glow, @NotNull List<ItemStack> items) {
+		if (player.isDead()) return new ArrayList<>();
+		List<ItemStack> leftovers = addItems(player,items);
+		if (drop == null) return new ArrayList<>();
+		return dropItems(drop,glow,leftovers);
+	}
+	
+	@NotNull
+	public static List<@NotNull ItemStack> addItems(@NotNull LivingEntity entity, ItemStack ... items) {
+		return addItems(entity,Arrays.asList(items));
+	}
+	
+	@NotNull
+	public static List<@NotNull ItemStack> addItems(@NotNull LivingEntity entity, List<ItemStack> items) {
+		if (items == null || items.isEmpty()) return new ArrayList<>();
+		if (!(entity instanceof InventoryHolder e)) return items;
+		return new ArrayList<>(e.getInventory().addItem(items.stream().filter(item -> !Utils.isNull(item)).toArray(ItemStack[]::new)).values());
 	}
 	
 	/**
@@ -464,13 +499,31 @@ public class Utils {
 	 * @return the dropped item
 	 */
 	@NotNull
-	public static Item dropItem(@NotNull Location drop, @NotNull ItemStack item) {
-		return drop.getWorld().dropItemNaturally(drop,item);
+	public static List<Item> dropItems(@NotNull Location loc, boolean glow, @NotNull ItemStack ... items) {
+		return dropItems(loc,glow,Arrays.asList(items));
 	}
 	
-	@Nullable
-	public static Item givePlayer(@NotNull Player player, ItemStack item, boolean glow) {
-		return givePlayer(player,item,player.getLocation(),glow);
+	@NotNull
+	public static List<Item> dropItems(@NotNull Location loc, boolean glow, @NotNull List<ItemStack> items) {
+		if (items.isEmpty()) return new ArrayList<>();
+		items = new ArrayList<>(items);
+		ListIterator<ItemStack> iter = items.listIterator();
+		ItemStack item;
+		List<Item> drops = new ArrayList<>();
+		Item drop;
+		while (iter.hasNext()) {
+			item = iter.next();
+			int amount = item.getAmount();
+			item.setAmount(1);
+			while (amount > 0) {
+				drop = loc.getWorld().dropItemNaturally(loc,item);
+				amount--;
+				if (drop.isDead()) continue;
+				if (glow) drop.setGlowing(true);
+				drops.add(drop);
+			}
+		}
+		return drops;
 	}
 	
 	/**
@@ -572,17 +625,16 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static ItemStack cloneChange(@NotNull ItemStack base, @Nullable Component name, @Nullable List<Component> lore, int model, boolean removeFlags, ItemFlag ... flags) {
-		ItemStack item = base.clone();
+	public static ItemStack cloneChange(@NotNull ItemStack base, boolean changeName, @Nullable Component name, boolean changeLore, @Nullable List<Component> lore,
+										int model, boolean removeFlags, ItemFlag ... flags) {
+		ItemStack item = clone(base);
 		ItemMeta meta = item.getItemMeta();
-		if (name == null) meta.displayName(null);
-		else if (!name.equals(Component.empty())) meta.displayName(name);
+		if (changeName) meta.displayName(name);
 		if (removeFlags) for (ItemFlag flag : ItemFlag.values()) meta.removeItemFlags(flag);
 		for (ItemFlag flag : flags) if (flag != null) meta.addItemFlags(flag);
 		if (model > 0) meta.setCustomModelData(model);
 		else if (model == 0) meta.setCustomModelData(null);
-		if (lore == null) meta.lore(null);
-		else if (!lore.isEmpty()) meta.lore(lore);
+		if (changeLore) meta.lore(lore);
 		item.setItemMeta(meta);
 		return item;
 	}
@@ -748,14 +800,36 @@ public class Utils {
 		return POPUpdaterMain.getPlayerNameByUUID(ID);
 	}
 	
-	public static void setSkin(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
+	public static boolean setSkin(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
 		try {
-			Method metaSetProfileMethod = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
-			metaSetProfileMethod.setAccessible(true);
+			Method setProfileMethod = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
+			setProfileMethod.setAccessible(true);
 			UUID id = new UUID(skin.substring(skin.length() - 20).hashCode(),skin.substring(skin.length() - 10).hashCode());
 			GameProfile profile = new GameProfile(id,name == null ? "D" : name);
 			profile.getProperties().put("textures", new Property("textures",skin));
-			metaSetProfileMethod.invoke(meta,profile);
+			setProfileMethod.invoke(meta,profile);
+			return true;
 		} catch (Exception e) {}
+		return false;
+	}
+	
+	@Nullable
+	public static GameProfile getProfile(@NotNull SkullMeta meta) {
+		try {
+			Field profileField = meta.getClass().getDeclaredField("profile");
+			profileField.setAccessible(true);
+			return (GameProfile) profileField.get(meta);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	public static String toString(double duration) {
+		double floor = Math.floor(duration);
+		return floor == duration ? Double.toString(floor).replace(".0","") : Double.toString(duration);
+	}
+	
+	@NotNull
+	public static ItemStack clone(@NotNull ItemStack item) {
+		return ReflectionUtils.CloneWithNBT(item);
 	}
 }

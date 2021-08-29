@@ -1,13 +1,16 @@
-package me.DMan16.POPUtils.Utils;
+package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +27,8 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
 	protected boolean resetWithBorder = false;
+	protected int rightJump = 1;
+	protected boolean fancyButtons = false;
 	
 	/**
 	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
@@ -47,23 +52,29 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		if (!click.isRightClick() && !click.isLeftClick()) return;
 		if (secondSlotCheck(slot,click)) return;
 		ItemStack slotItem = event.getView().getItem(slot);
-		if (isEmpty(slotItem)) return;
-		if (slot == closeSlot) event.getView().close();
+		if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
+		else if (slot == closeSlot) event.getView().close();
 		else if (slot == nextSlot) next(click);
 		else if (slot == previousSlot) previous(click);
-		else otherSlot(event,slot,slotItem);
+		else otherSlot(event,slot,slotItem,click);
 	}
 	
-	protected boolean checkCancelled(InventoryClickEvent event) {
+	protected void empty(@NotNull InventoryClickEvent event, int slot, @NotNull ClickType click, boolean isNull) {}
+	
+	protected boolean checkCancelled(@NotNull InventoryClickEvent event) {
 		return event.isCancelled();
 	}
 	
 	protected void next(@NotNull ClickType click) {
-		changePage(1);
+		changePage(change(click));
 	}
 	
 	protected void previous(@NotNull ClickType click) {
-		changePage(-1);
+		changePage(-change(click));
+	}
+	
+	private int change(@NotNull ClickType click) {
+		return Math.max(1,click.isRightClick() ? rightJump : 1);
 	}
 	
 	protected void changePage(int num) {
@@ -92,7 +103,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		}.runTask(POPUtilsMain.getInstance());
 	}
 	
-	protected void beforeSetPage(int page) {}
+	protected void beforeSetPage(int newPage) {}
 	
 	protected void first(Object ... objs) {}
 	
@@ -107,12 +118,22 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	@NotNull
 	protected ItemStack next() {
-		return NEXT;
+		if (!fancyButtons) return NEXT;
+		ItemStack newNext = NEXT.clone();
+		ItemMeta meta = newNext.getItemMeta();
+		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage + 1) + ")").decoration(TextDecoration.ITALIC,false)));
+		newNext.setItemMeta(meta);
+		return newNext;
 	}
 	
 	@NotNull
 	protected ItemStack previous() {
-		return PREVIOUS;
+		if (!fancyButtons) return PREVIOUS;
+		ItemStack newPrevious = PREVIOUS.clone();
+		ItemMeta meta = newPrevious.getItemMeta();
+		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage - 1) + ")").decoration(TextDecoration.ITALIC,false)));
+		newPrevious.setItemMeta(meta);
+		return newPrevious;
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {
@@ -133,5 +154,5 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	protected abstract void setPageContents();
 	public abstract int maxPage();
-	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem);
+	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click);
 }

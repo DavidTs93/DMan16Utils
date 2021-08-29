@@ -85,6 +85,7 @@ public class ReflectionUtils {
 	 * @param item Item to clone
 	 * @return Clone of the original item with NBT tags maintained
 	 */
+	@NotNull
 	public static ItemStack CloneWithNBT(@NotNull ItemStack item) {
 		try {
 			Method asCraftMirror = CLASS_CRAFT_ITEM_STACK.getDeclaredMethod("asCraftMirror",CLASS_ITEM_STACK_NMS);

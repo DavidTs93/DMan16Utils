@@ -1,6 +1,7 @@
-package me.DMan16.POPUtils.Utils;
+package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
