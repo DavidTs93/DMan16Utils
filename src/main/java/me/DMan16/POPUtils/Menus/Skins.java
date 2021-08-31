@@ -1,6 +1,8 @@
 package me.DMan16.POPUtils.Menus;
 
+import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.Interfaces.Purchasable;
+import me.DMan16.POPUtils.Interfaces.Sortable;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -17,34 +19,33 @@ import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPages {
-	private static final Material SORT_MATERIAL = Material.PAPER;
-	private static final TranslatableComponent SORT_NAME = Component.translatable("pickaxe.prisonpop.sort",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false);
-	private static final TextColor SORT_COLOR = NamedTextColor.AQUA;
-	private static final List<ItemStack> sort;
+public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventoryPages implements Sortable {
+	protected static final Material SORT_MATERIAL = Material.PAPER;
+	protected static final TranslatableComponent SORT_NAME = Component.translatable("menu.prisonpop.sort",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false);
+	protected static final TextColor SORT_COLOR = NamedTextColor.AQUA;
+	@Unmodifiable private static final List<ItemStack> SORTS;
 	
 	static {
-		sort = IntStream.range(0,6).mapToObj(i -> Utils.makeItem(SORT_MATERIAL, SORT_NAME,Arrays.asList(
+		SORTS = IntStream.range(0,6).mapToObj(i -> Utils.makeItem(SORT_MATERIAL,SORT_NAME,Arrays.asList(
 				Component.empty(),
 				Component.translatable("generator.default",(i / 2) == 0 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("pickaxe.prisonpop.rarity",(i / 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("pickaxe.prisonpop.name",(i / 2) == 2 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
+				Component.translatable("menu.prisonpop.rarity",(i / 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
+				Component.translatable("menu.prisonpop.name",(i / 2) == 2 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
 				Component.empty(),
-				Component.translatable("pickaxe.prisonpop.ascending",(i % 2) == 0 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("pickaxe.prisonpop.descending",(i % 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false)
+				Component.translatable("menu.prisonpop.ascending",(i % 2) == 0 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
+				Component.translatable("menu.prisonpop.descending",(i % 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false)
 		),ItemFlag.values())).toList();
 	}
 	
-	protected int backSlot = 0;
-	protected int sortSlot = 4;
-	protected int resetSkinSlot = 4;
-	protected boolean canGoBack = true;
+	protected int SLOT_SORT = 4;
+	protected int SLOT_RESET_SKIN = 8;
 	
 	protected V currentSkin = null;
 	protected int currentSort = 0;
@@ -60,23 +61,21 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 	protected void first(Object ... objs) {
 		resetWithBorder = true;
 		this.skins = (List<V>) objs[0];
-		firstMore(objs[1].getClass().isArray() ? (Object[]) objs[1] : objs[1]);
+		Utils.chatColorsLogPlugin("Skins objs[1] array: " + objs[1].getClass().isArray());
+		firstMore((Object[]) objs[1]);
 	}
 	
 	@Override
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
-		if (canGoBack && slot == backSlot) goBack();
-		else if (slot == sortSlot) {
+		if ((this instanceof Backable) && slot == slotBack()) ((Backable) this).goBack();
+		else if (slot == SLOT_SORT) {
 			if (event.isRightClick()) ascending = !ascending;
 			else currentSort = (currentSort + 1) % 3;
-			if (currentSort == 0) skins = Skin.sortModel(skins,ascending);
-			else if (currentSort == 1) skins = Skin.sortRarity(skins,ascending);
-			else skins = Skin.sortName(skins, ascending);
-			setPage(currentPage);
+			sort();
 		} else if (!otherSlots(event,slot,slotItem)) {
 			V skin;
 			int idx;
-			if (slot == resetSkinSlot) skin = null;
+			if (slot == SLOT_RESET_SKIN) skin = null;
 			else if ((idx = getIndex(slot)) >= 0 && idx < skins.size()) skin = skins.get(idx);
 			else return;
 			if (skin != currentSkin && setSkin(skin)) {
@@ -86,9 +85,16 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 		}
 	}
 	
+	public void sort() {
+		if (currentSort == 0) skins = Skin.sortModel(skins,ascending);
+		else if (currentSort == 1) skins = Skin.sortRarity(skins,ascending);
+		else skins = Skin.sortName(skins,ascending);
+		setPage(currentPage);
+	}
+	
 	@Override
 	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
-		return super.secondSlotCheck(slot,click) || slot >= size || slot < 0;
+		return super.secondSlotCheck(slot,click) || slot >= size;
 	}
 	
 	@Override
@@ -101,10 +107,9 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 		int idx;
 		V skin;
 		for (int i = 0; i < size; i++) if (!isBorder(i) && (idx = getIndex(i)) >= 0 && idx < skins.size()) inventory.setItem(i,(skin = skins.get(idx)).item(true,skin == currentSkin));
-		if (canGoBack) inventory.setItem(backSlot,BACK);
-		inventory.setItem(sortSlot,sort.get((currentSort * 2) + (ascending ? 0 : 1)));
+		inventory.setItem(SLOT_SORT,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
 		ItemStack resetSkinItem = resetSkinItem();
-		if (resetSkinItem != null) inventory.setItem(resetSkinSlot,resetSkinItem);
+		if (resetSkinItem != null) inventory.setItem(SLOT_RESET_SKIN,resetSkinItem);
 		setPageContentsMore();
 	}
 	
@@ -123,13 +128,11 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 	
 	protected void setPageContentsMore() {}
 	
-	protected void goBack() {}
-	
 	protected abstract void firstMore(Object ... objs);
 	
 	protected abstract boolean setSkin(@Nullable V skin);
 	
-	public abstract static class Skin<V> implements Purchasable<V> {
+	public abstract static class Skin<V,T> implements Purchasable<V,T> {
 		protected static final String translatable = "translatable: ";
 		protected static final Component chosenSkin = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN);
 		
@@ -160,13 +163,19 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 			return this.ShopPrice != null;
 		}
 		
+		@Override
+		@Nullable
+		public ItemStack itemCantPurchase(@NotNull Player player, T val) {
+			return null;
+		}
+		
 		@NotNull
-		public ItemStack asPurchaseItem(@NotNull Player player) {
+		public ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val) {
 			return item(null,false,false);
 		}
 		
 		@Nullable
-		public BigInteger getPrice() {
+		public BigInteger getPrice(@NotNull Player player, @Nullable T val) {
 			return this.ShopPrice;
 		}
 		
@@ -186,21 +195,21 @@ public abstract class Skins<V extends Skins.Skin<?>> extends ListenerInventoryPa
 		}
 		
 		@NotNull
-		public static <V extends Skin> List<V> sortModel(@NotNull List<V> skins, boolean ascending) {
+		public static <V extends Skin<?,?>> List<V> sortModel(@NotNull List<V> skins, boolean ascending) {
 			List<V> sorted = skins.stream().filter(Objects::nonNull).sorted(Comparator.comparing(skin -> skin.model)).collect(Collectors.toList());
 			if (!ascending) Collections.reverse(sorted);
 			return sorted;
 		}
 		
 		@NotNull
-		public static <V extends Skin> List<V> sortName(@NotNull List<V> skins, boolean ascending) {
+		public static <V extends Skin<?,?>> List<V> sortName(@NotNull List<V> skins, boolean ascending) {
 			List<V> sorted = skins.stream().filter(Objects::nonNull).sorted(Comparator.comparing(skin -> skin.name)).collect(Collectors.toList());
 			if (!ascending) Collections.reverse(sorted);
 			return sorted;
 		}
 		
 		@NotNull
-		public static <V extends Skin> List<V> sortRarity(@NotNull List<V> skins, boolean ascending) {
+		public static <V extends Skin<?,?>> List<V> sortRarity(@NotNull List<V> skins, boolean ascending) {
 			List<V> sorted = sortName(skins,ascending).stream().filter(Objects::nonNull).sorted(Comparator.comparing(skin -> skin.rarity)).collect(Collectors.toList());
 			if (!ascending) Collections.reverse(sorted);
 			return sorted;

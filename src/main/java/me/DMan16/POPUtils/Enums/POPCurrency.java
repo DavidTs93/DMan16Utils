@@ -7,7 +7,7 @@ import org.bukkit.Material;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public enum CurrencyType {
+public enum POPCurrency {
 	Money(Material.PAPER,Utils.chatColors("&a$")),
 	Tokens(Material.EMERALD,Utils.chatColors("&2\u23E3")),
 	XP(Material.EXPERIENCE_BOTTLE,Utils.chatColors("&aXP"),null);
@@ -16,21 +16,21 @@ public enum CurrencyType {
 	public final String suffix;
 	public final Component name;
 	
-	CurrencyType(@NotNull Material material, String suffix) {
+	POPCurrency(@NotNull Material material, String suffix) {
 		this.material = material;
 		this.suffix = suffix;
-		this.name = Component.text("suffix").decoration(TextDecoration.ITALIC,false);
+		this.name = Component.text(Utils.splitCapitalize(name()) + " " + suffix).decoration(TextDecoration.ITALIC,false);
 	}
 	
-	CurrencyType(@NotNull Material material, String suffix, Component name) {
+	POPCurrency(@NotNull Material material, String suffix, Component name) {
 		this.material = material;
 		this.suffix = suffix;
 		this.name = name;
 	}
 	
 	@Nullable
-	public static CurrencyType get(@NotNull String name) {
-		if (!name.trim().isEmpty()) for (CurrencyType type : values()) if (type.name().equalsIgnoreCase(name.trim())) return type;
+	public static POPCurrency get(String name) {
+		if (name != null && !name.trim().isEmpty()) for (POPCurrency type : values()) if (type.name().equalsIgnoreCase(name.trim())) return type;
 		return null;
 	}
 }

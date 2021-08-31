@@ -7,19 +7,38 @@ import org.jetbrains.annotations.Nullable;
 
 import java.math.BigInteger;
 
-public interface Purchasable<V> {
+public interface Purchasable<V,T> {
 	@NotNull
 	V getCurrencyType();
 	
 	@Nullable
-	BigInteger getPrice();
+	BigInteger getPrice(@NotNull Player player, @Nullable T val);
 	
 	boolean isPurchasable();
 	
-	boolean canAfford(@NotNull Player player);
+	boolean canAfford(@NotNull Player player, T val);
+	
+	boolean isOwned(@NotNull Player player, T val);
+	
+	@Nullable
+	ItemStack itemOwned(@NotNull Player player, T val);
+	
+	@Nullable
+	ItemStack itemCantAfford(@NotNull Player player, T val);
+	
+	@Nullable
+	ItemStack itemCantPurchase(@NotNull Player player, T val);
 	
 	@NotNull
-	ItemStack asPurchaseItem(@NotNull Player player);
+	ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val);
 	
-	void purchase(@NotNull Player player);
+	@Nullable
+	default ItemStack itemPurchase(@NotNull Player player, T val) {
+		if (isOwned(player,val)) return itemOwned(player,val);
+		else if (!isPurchasable()) return itemCantPurchase(player,val);
+		else if (!canAfford(player,val)) return itemCantAfford(player,val);
+		else return itemCanPurchaseAndAfford(player,val);
+	}
+	
+	boolean purchase(@NotNull Player player, T val);
 }

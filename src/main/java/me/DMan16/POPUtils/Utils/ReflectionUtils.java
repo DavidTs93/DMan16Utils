@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation","ConstantConditions"})
 public class ReflectionUtils {
 	public static final String VERSION = Bukkit.getServer().getClass().getPackage().getName().split("\\.")[3];
 	public static final Class<?> CLASS_CRAFT_ITEM_STACK = getClassCraftBukkit("inventory.CraftItemStack");
@@ -93,24 +93,6 @@ public class ReflectionUtils {
 		} catch (Exception e) {}
 		return item.clone();
 	}
-	
-	/*public static ItemStack getTridentAsItemStack(Trident trident) {
-		try {
-			Class<?> craftClass = getClassCraftBukkit("inventory.CraftItemStack");
-			Class<?> itemClass = getClassNMS("ItemStack","world.item");
-			Class<?> tridentClass = getClassCraftBukkit("entity.CraftTrident");
-			Method methodBukkitCopy = craftClass.getMethod("asBukkitCopy",itemClass);
-			Method methodGetHandle = tridentClass.getDeclaredMethod("getHandle");
-			Object castTrident = tridentClass.cast(trident);
-			Object tridentEntity = methodGetHandle.invoke(castTrident);
-			Field field = tridentEntity.getClass().getDeclaredField("trident");
-			field.setAccessible(true);
-			Object tridentHandle = field.get(tridentEntity);
-			Object obj = methodBukkitCopy.invoke(tridentHandle.getClass(),tridentHandle);
-			return (ItemStack) obj;
-		} catch (Exception e) {}
-		return null;
-	}*/
 	
 	public static Object getHandle(@NotNull Player player) {
 		try {

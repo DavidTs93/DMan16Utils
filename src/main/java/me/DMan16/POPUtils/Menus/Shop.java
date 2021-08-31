@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Menus;
 
+import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Interfaces.Purchasable;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -8,13 +9,14 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public abstract class Shop<V extends Purchasable<?>> extends ListenerInventoryPages {
-	protected final List<@NotNull HashMap<@NotNull Integer,@NotNull V>> purchases = new ArrayList<>();
+public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
+	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
 	public Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull JavaPlugin plugin, Object ... objs) {
 		super(player,player,lines,name,plugin,objs);
@@ -22,6 +24,7 @@ public abstract class Shop<V extends Purchasable<?>> extends ListenerInventoryPa
 	
 	@Override
 	protected void first(Object ... objs) {
+		purchases = new ArrayList<>();
 		resetWithBorder = true;
 		fancyButtons = true;
 		firstMore(objs);
@@ -33,10 +36,22 @@ public abstract class Shop<V extends Purchasable<?>> extends ListenerInventoryPa
 	}
 	
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
-		HashMap<Integer,V> page = purchases.get(currentPage - 1);
-		V purchase = page.get(slot);
-		if (purchase != null) purchase.purchase(player);
-		else otherOtherSlot(event,slot,slotItem,click);
+		HashMap<Integer,Pair<V,T>> page = purchases.get(currentPage - 1);
+		Pair<V,T> purchase = page.get(slot);
+		if (purchase != null) {
+			handlePurchase(event,slot,page,purchase,slotItem,click);
+			handleAfterPurchase(event,slot,page,purchase,slotItem,click);
+		} else otherOtherSlot(event,slot,slotItem,click);
+	}
+	
+	protected void handlePurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,
+										   @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
+		purchase.first().purchase(player,purchase.second());
+	}
+	
+	protected void handleAfterPurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,
+								  @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
+		setPage(currentPage);
 	}
 	
 	@Override
@@ -49,8 +64,8 @@ public abstract class Shop<V extends Purchasable<?>> extends ListenerInventoryPa
 		setMoreContents();
 	}
 	
-	protected void setPagePurchases(@NotNull HashMap<@NotNull Integer, @NotNull V> page) {
-		page.forEach((slot,item) -> inventory.setItem(slot,item.asPurchaseItem(player)));
+	protected void setPagePurchases(@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page) {
+		page.forEach((slot,info) -> inventory.setItem(slot,info.first().itemPurchase(player,info.second())));
 	}
 	
 	protected void firstMore(Object ... objs) {}

@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Menus;
 
+import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -20,24 +21,32 @@ import java.util.Objects;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected int currentPage = 1;
-	protected int closeSlot = size - 5;
-	protected int nextSlot = size - 1;
-	protected int previousSlot = size - 9;
+	protected int slotClose = size - 5;
+	protected int slotNext = size - 1;
+	protected int slotPrevious = size - 9;
+	protected int slotBack = 0;
 	protected final Player player;
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
 	protected boolean resetWithBorder = false;
 	protected int rightJump = 1;
 	protected boolean fancyButtons = false;
+	protected boolean openOnInitialize = true;
+	protected @NotNull JavaPlugin plugin;
 	
 	/**
 	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
 	 */
 	public ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name, @NotNull JavaPlugin plugin, Object ... objs) {
 		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
+		this.plugin = plugin;
 		this.player = player;
 		first(objs);
 		setPage(1);
+		if (openOnInitialize) open();
+	}
+	
+	protected void open() {
 		register(plugin);
 		player.openInventory(inventory);
 	}
@@ -49,14 +58,22 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		ClickType click = event.getClick();
 		if (firstSlotCheck(slot,click)) return;
 		if (cancelCheck(slot,click)) event.setCancelled(true);
-		if (!click.isRightClick() && !click.isLeftClick()) return;
+		if (cickCheck(click)) return;
 		if (secondSlotCheck(slot,click)) return;
 		ItemStack slotItem = event.getView().getItem(slot);
 		if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
-		else if (slot == closeSlot) event.getView().close();
-		else if (slot == nextSlot) next(click);
-		else if (slot == previousSlot) previous(click);
+		else if (slot == slotClose) event.getView().close();
+		else if (slot == slotNext) next(click);
+		else if (slot == slotPrevious) previous(click);
+		else if (slot == slotBack() && (this instanceof Backable)) ((Backable) this).goBack();
 		else otherSlot(event,slot,slotItem,click);
+	}
+	public int slotBack() {
+		return slotBack;
+	}
+	
+	protected boolean cickCheck(@NotNull ClickType click) {
+		return click == ClickType.DOUBLE_CLICK || (!click.isRightClick() && !click.isLeftClick() && !click.isCreativeAction());
 	}
 	
 	protected void empty(@NotNull InventoryClickEvent event, int slot, @NotNull ClickType click, boolean isNull) {}
@@ -91,9 +108,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		currentPage = page;
 		reset();
 		setPageContents();
-		inventory.setItem(closeSlot,close());
-		if (alwaysSetNext || currentPage < maxPage()) inventory.setItem(nextSlot,next());
-		if (alwaysSetPrevious || currentPage > 1) inventory.setItem(previousSlot,previous());
+		inventory.setItem(slotClose,close());
+		if (alwaysSetNext || currentPage < maxPage()) inventory.setItem(slotNext,next());
+		if (alwaysSetPrevious || currentPage > 1) inventory.setItem(slotPrevious,previous());
+		if (this instanceof Backable) inventory.setItem(slotBack(),BACK);
 		cancelCloseUnregister = true;
 		player.openInventory(inventory);
 		new BukkitRunnable() {
@@ -149,7 +167,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
-		return click.isCreativeAction();
+		return click.isCreativeAction() || slot < 0;
 	}
 	
 	protected abstract void setPageContents();

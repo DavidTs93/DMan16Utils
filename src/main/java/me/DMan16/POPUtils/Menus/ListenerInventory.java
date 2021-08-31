@@ -1,6 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Interfaces.Menu;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,7 +18,7 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class ListenerInventory implements Listener {
+public abstract class ListenerInventory implements Listener,Menu {
 	protected static final int LINE_SIZE = 9;
 	protected static final ItemStack CLOSE = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
 	protected static final ItemStack NEXT = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false),ItemFlag.values());

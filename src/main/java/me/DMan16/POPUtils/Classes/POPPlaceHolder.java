@@ -8,7 +8,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 public abstract class POPPlaceHolder extends PlaceholderExpansion {
 	private final JavaPlugin plugin;
 	
-	public POPPlaceHolder(JavaPlugin plugin) {
+	protected POPPlaceHolder(JavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 	

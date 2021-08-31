@@ -66,7 +66,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	
 	@Override
 	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
-		return slot >= size || slot < size - 9 || click.isCreativeAction();
+		return super.secondSlotCheck(slot,click) || slot >= size || slot < size - 9;
 	}
 	
 	@Override
