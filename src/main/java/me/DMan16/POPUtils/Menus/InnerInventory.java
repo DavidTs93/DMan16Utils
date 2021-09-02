@@ -51,7 +51,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		first = true;
 		rightJump = 10;
 		fancyButtons = true;
-		firstMore(objs[4].getClass().isArray() ? (Object[]) objs[4] : objs[4]);
+		firstMore((Object[]) objs[4]);
 	}
 	
 	protected void updatingMenu() {
@@ -130,7 +130,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	
 	protected void saveExit() {
 		savePage();
-		save();
+//		save();
 	}
 	
 	protected V cloneOriginal(V item) {

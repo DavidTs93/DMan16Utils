@@ -17,7 +17,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.Arrays;
 import java.util.List;
 
 public abstract class Confirmation extends ListenerInventory {
@@ -27,9 +26,9 @@ public abstract class Confirmation extends ListenerInventory {
 			decoration(TextDecoration.ITALIC,false).decoration(TextDecoration.STRIKETHROUGH,true),ItemFlag.values());
 	private static final ItemStack ITEM_CANCEL = Utils.makeItem(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED).
 			decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected int SLOT_CONFIRM = 0;
-	protected final int SLOT_CANCEL = 4;
 	
+	protected int slotCancel;
+	protected int slotConfirm;
 	protected final Player player;
 	protected final boolean canConfirm;
 	
@@ -37,12 +36,14 @@ public abstract class Confirmation extends ListenerInventory {
 		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,menuName));
 		this.player = player;
 		this.canConfirm = canConfirm();
-		this.inventory.setItem(SLOT_CONFIRM,this.canConfirm ? ITEM_CONFIRM_YES : (noConfirmLore == null ? ITEM_CONFIRM_NO :
-				Utils.cloneChange(ITEM_CONFIRM_NO,false,null,true,noConfirmLore,-1,false)));
+		this.slotConfirm = 0;
+		this.slotCancel = 4;
 		ITEM_CONFIRM_NO.lore();
-		this.inventory.setItem(SLOT_CANCEL,ITEM_CANCEL);
 		this.register(plugin);
 		first(objs);
+		this.inventory.setItem(slotCancel,ITEM_CANCEL);
+		this.inventory.setItem(slotConfirm,this.canConfirm ? ITEM_CONFIRM_YES : (noConfirmLore == null ? ITEM_CONFIRM_NO :
+				Utils.cloneChange(ITEM_CONFIRM_NO,false,null,true,noConfirmLore,-1,false)));
 		player.openInventory(this.inventory);
 	}
 	
@@ -52,8 +53,8 @@ public abstract class Confirmation extends ListenerInventory {
 		event.setCancelled(true);
 		int slot = event.getRawSlot();
 		if (slot > 4 || (!event.isRightClick() && !event.isLeftClick())) return;
-		if (slot == SLOT_CONFIRM && this.canConfirm) confirm();
-		if (slot == SLOT_CANCEL || (slot == SLOT_CONFIRM && this.canConfirm)) done();
+		if (slot == slotConfirm && this.canConfirm) confirm();
+		if (slot == slotCancel || (slot == slotConfirm && this.canConfirm)) done();
 	}
 	
 	

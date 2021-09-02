@@ -16,10 +16,11 @@ public interface PurchasableUpgrade<V,T> extends Purchasable<V,T> {
 		return false;
 	}
 	
+	@NotNull
 	default ItemStack itemCantPurchase(@NotNull Player player, T val) {
 		ItemStack item = itemCanPurchaseAndAfford(player,val);
 		ItemMeta meta = item.getItemMeta();
-		meta.displayName(Component.translatable("menu.prisonpop.backpack_max_level_reached", NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false));
+		meta.displayName(Component.translatable("menu.prisonpop.backpack_max_level_reached",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false));
 		item.setItemMeta(meta);
 		return item;
 	}

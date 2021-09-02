@@ -48,6 +48,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	protected void open() {
 		register(plugin);
+		openInventory();
+	}
+	
+	protected void openInventory() {
 		player.openInventory(inventory);
 	}
 	
@@ -58,7 +62,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		ClickType click = event.getClick();
 		if (firstSlotCheck(slot,click)) return;
 		if (cancelCheck(slot,click)) event.setCancelled(true);
-		if (cickCheck(click)) return;
+		if (clickCheck(click)) return;
 		if (secondSlotCheck(slot,click)) return;
 		ItemStack slotItem = event.getView().getItem(slot);
 		if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
@@ -72,7 +76,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return slotBack;
 	}
 	
-	protected boolean cickCheck(@NotNull ClickType click) {
+	protected boolean clickCheck(@NotNull ClickType click) {
 		return click == ClickType.DOUBLE_CLICK || (!click.isRightClick() && !click.isLeftClick() && !click.isCreativeAction());
 	}
 	
@@ -113,7 +117,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		if (alwaysSetPrevious || currentPage > 1) inventory.setItem(slotPrevious,previous());
 		if (this instanceof Backable) inventory.setItem(slotBack(),BACK);
 		cancelCloseUnregister = true;
-		player.openInventory(inventory);
+		openInventory();
 		new BukkitRunnable() {
 			public void run() {
 				cancelCloseUnregister = false;

@@ -44,38 +44,41 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 		),ItemFlag.values())).toList();
 	}
 	
-	protected int SLOT_SORT = 4;
-	protected int SLOT_RESET_SKIN = 8;
+	protected int slotSort;
+	protected int slotResetSkin;
+	protected V currentSkin;
+	protected int currentSort;
+	protected boolean ascending;
+	protected List<V> skins;
 	
-	protected V currentSkin = null;
-	protected int currentSort = 0;
-	protected boolean ascending = true;
-	protected List<V> skins = null;
-	
-	public Skins(@NotNull Player player, @NotNull Component menuName, @NotNull JavaPlugin plugin, @NotNull List<V> skins, Object ... objs) {
-		super(player,player,5,menuName,plugin,skins,objs);
+	public Skins(@NotNull Player player, @NotNull Component menuName, @NotNull JavaPlugin plugin, @NotNull List<V> skins, @Nullable V currentSkin, Object ... objs) {
+		super(player,player,5,menuName,plugin,skins,currentSkin,objs);
 	}
 	
 	@SuppressWarnings("unchecked")
 	@Override
 	protected void first(Object ... objs) {
 		resetWithBorder = true;
+		this.slotSort = 4;
+		this.slotResetSkin = 8;
+		this.currentSort = 0;
+		this.ascending = true;
 		this.skins = (List<V>) objs[0];
-		Utils.chatColorsLogPlugin("Skins objs[1] array: " + objs[1].getClass().isArray());
-		firstMore((Object[]) objs[1]);
+		this.currentSkin = objs[1] == null ? null : (V) objs[1];
+		firstMore((Object[]) objs[2]);
 	}
 	
 	@Override
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
 		if ((this instanceof Backable) && slot == slotBack()) ((Backable) this).goBack();
-		else if (slot == SLOT_SORT) {
+		else if (slot == slotSort) {
 			if (event.isRightClick()) ascending = !ascending;
 			else currentSort = (currentSort + 1) % 3;
 			sort();
 		} else if (!otherSlots(event,slot,slotItem)) {
 			V skin;
 			int idx;
-			if (slot == SLOT_RESET_SKIN) skin = null;
+			if (slot == slotResetSkin) skin = null;
 			else if ((idx = getIndex(slot)) >= 0 && idx < skins.size()) skin = skins.get(idx);
 			else return;
 			if (skin != currentSkin && setSkin(skin)) {
@@ -107,9 +110,9 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 		int idx;
 		V skin;
 		for (int i = 0; i < size; i++) if (!isBorder(i) && (idx = getIndex(i)) >= 0 && idx < skins.size()) inventory.setItem(i,(skin = skins.get(idx)).item(true,skin == currentSkin));
-		inventory.setItem(SLOT_SORT,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
+		inventory.setItem(slotSort,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
 		ItemStack resetSkinItem = resetSkinItem();
-		if (resetSkinItem != null) inventory.setItem(SLOT_RESET_SKIN,resetSkinItem);
+		if (resetSkinItem != null) inventory.setItem(slotResetSkin,resetSkinItem);
 		setPageContentsMore();
 	}
 	
@@ -128,13 +131,13 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 	
 	protected void setPageContentsMore() {}
 	
-	protected abstract void firstMore(Object ... objs);
+	protected void firstMore(Object ... objs) {}
 	
 	protected abstract boolean setSkin(@Nullable V skin);
 	
 	public abstract static class Skin<V,T> implements Purchasable<V,T> {
 		protected static final String translatable = "translatable: ";
-		protected static final Component chosenSkin = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN);
+		protected static final Component chosenSkin = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
 		
 		public final int model;
 		public final int rarity;
@@ -142,6 +145,21 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 		@NotNull public final Component displayName;
 		protected final ItemStack displayItem;
 		@Nullable protected final BigInteger ShopPrice;
+		
+		// NullSkin
+		protected Skin(@NotNull String displayName, Object ... objs) {
+			this.model = 0;
+			this.rarity = 0;
+			this.name = "null";
+			Component display = (displayName.toLowerCase().startsWith(translatable) ? Component.translatable(displayName.substring(translatable.length()),NamedTextColor.WHITE) : Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
+			this.displayItem = displayItem(model,rarity,name,display,objs);
+			ItemStack bundle = Utils.makeItem(Material.BUNDLE,display,lore(false,0),ItemFlag.values());
+			BundleMeta meta = (BundleMeta) bundle.getItemMeta();
+			meta.addItem(this.displayItem);
+			bundle.setItemMeta(meta);
+			this.displayName = display.hoverEvent(bundle.asHoverEvent());
+			this.ShopPrice = null;
+		}
 		
 		protected Skin(int model, int rarity, @NotNull String name, @NotNull String displayName, @Nullable String color, @Nullable BigInteger ShopPrice, Object ... objs) throws IllegalArgumentException {
 			if (model <= 0 || rarity < 0) throw new IllegalArgumentException();
@@ -191,7 +209,7 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 		protected abstract ItemStack displayItem(int model, int rarity, @NotNull String name, @NotNull Component display, Object ... objs);
 		
 		protected static List<Component> lore(boolean chosen, int rarity) {
-			return chosen ? Arrays.asList(Component.empty(), SkinRarity.get(rarity).displayName(),Component.empty(),chosenSkin) : Arrays.asList(Component.empty(), SkinRarity.get(rarity).displayName());
+			return chosen ? Arrays.asList(Component.empty(),SkinRarity.get(rarity).displayName(),Component.empty(),chosenSkin) : Arrays.asList(Component.empty(), SkinRarity.get(rarity).displayName());
 		}
 		
 		@NotNull

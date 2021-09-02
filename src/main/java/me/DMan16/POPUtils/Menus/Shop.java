@@ -22,6 +22,10 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		super(player,player,lines,name,plugin,objs);
 	}
 	
+	protected void setPagePurchases() {
+		purchases.get(currentPage - 1).forEach((slot,info) -> inventory.setItem(slot,info.first().itemPurchase(player,info.second())));
+	}
+	
 	@Override
 	protected void first(Object ... objs) {
 		purchases = new ArrayList<>();
@@ -38,34 +42,28 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
 		HashMap<Integer,Pair<V,T>> page = purchases.get(currentPage - 1);
 		Pair<V,T> purchase = page.get(slot);
-		if (purchase != null) {
-			handlePurchase(event,slot,page,purchase,slotItem,click);
-			handleAfterPurchase(event,slot,page,purchase,slotItem,click);
-		} else otherOtherSlot(event,slot,slotItem,click);
+		if (purchase != null) handlePurchase(event,slot,page,purchase,slotItem,click);
+		else otherOtherSlot(event,slot,slotItem,click);
+	}
+	
+	protected void setPageContents() {
+		setPagePurchases();
+		setMoreContents();
 	}
 	
 	protected void handlePurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,
 										   @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
-		purchase.first().purchase(player,purchase.second());
+		handleAfterPurchase(purchase.first().purchase(player,purchase.second()),event,slot,page,purchase,slotItem,click);
 	}
 	
-	protected void handleAfterPurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,
-								  @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
+	protected void handleAfterPurchase(boolean purchaseSuccessful, @NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,
+			@NotNull Pair<@NotNull V,@Nullable T>> page, @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
 		setPage(currentPage);
 	}
 	
 	@Override
 	protected void beforeSetPage(int newPage) {
 		alterPurchases(newPage);
-	}
-	
-	protected void setPageContents() {
-		setPagePurchases(purchases.get(currentPage - 1));
-		setMoreContents();
-	}
-	
-	protected void setPagePurchases(@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page) {
-		page.forEach((slot,info) -> inventory.setItem(slot,info.first().itemPurchase(player,info.second())));
 	}
 	
 	protected void firstMore(Object ... objs) {}
