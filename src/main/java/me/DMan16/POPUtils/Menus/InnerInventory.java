@@ -24,9 +24,9 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu;
 	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> updatingMenu;
 	protected UUID ID;
-	private boolean owner;
-	private boolean first;
-	private boolean allowEdit;
+	protected boolean owner;
+	protected boolean first;
+	protected boolean allowEdit;
 	
 	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
 							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
@@ -130,7 +130,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	
 	protected void saveExit() {
 		savePage();
-//		save();
+		save();
 	}
 	
 	protected V cloneOriginal(V item) {

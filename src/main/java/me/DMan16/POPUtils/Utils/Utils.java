@@ -823,9 +823,9 @@ public class Utils {
 		return null;
 	}
 	
-	public static String toString(double duration) {
-		double floor = Math.floor(duration);
-		return floor == duration ? Double.toString(floor).replace(".0","") : Double.toString(duration);
+	public static String toString(double var) {
+		double floor = Math.floor(var);
+		return floor == var ? Double.toString(floor).replace(".0","") : Double.toString(var);
 	}
 	
 	@NotNull

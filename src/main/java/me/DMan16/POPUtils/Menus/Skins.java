@@ -5,7 +5,6 @@ import me.DMan16.POPUtils.Interfaces.Purchasable;
 import me.DMan16.POPUtils.Interfaces.Sortable;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -19,31 +18,12 @@ import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
 
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventoryPages implements Sortable {
-	protected static final Material SORT_MATERIAL = Material.PAPER;
-	protected static final TranslatableComponent SORT_NAME = Component.translatable("menu.prisonpop.sort",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false);
-	protected static final TextColor SORT_COLOR = NamedTextColor.AQUA;
-	@Unmodifiable private static final List<ItemStack> SORTS;
-	
-	static {
-		SORTS = IntStream.range(0,6).mapToObj(i -> Utils.makeItem(SORT_MATERIAL,SORT_NAME,Arrays.asList(
-				Component.empty(),
-				Component.translatable("generator.default",(i / 2) == 0 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("menu.prisonpop.rarity",(i / 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("menu.prisonpop.name",(i / 2) == 2 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.empty(),
-				Component.translatable("menu.prisonpop.ascending",(i % 2) == 0 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false),
-				Component.translatable("menu.prisonpop.descending",(i % 2) == 1 ? SORT_COLOR : NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false)
-		),ItemFlag.values())).toList();
-	}
-	
 	protected int slotSort;
 	protected int slotResetSkin;
 	protected V currentSkin;
@@ -202,7 +182,7 @@ public abstract class Skins<V extends Skins.Skin<?,?>> extends ListenerInventory
 		
 		@NotNull
 		public ItemStack item(boolean skinChooser, boolean chosen) {
-			return item(null,skinChooser,chosen);
+			return item(displayName,skinChooser,chosen);
 		}
 		
 		@NotNull

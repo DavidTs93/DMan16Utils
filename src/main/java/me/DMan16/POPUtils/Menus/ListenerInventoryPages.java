@@ -5,6 +5,7 @@ import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
@@ -60,18 +61,28 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		if (!event.getView().getTopInventory().equals(inventory) || checkCancelled(event)) return;
 		int slot = event.getRawSlot();
 		ClickType click = event.getClick();
-		if (firstSlotCheck(slot,click)) return;
-		if (cancelCheck(slot,click)) event.setCancelled(true);
-		if (clickCheck(click)) return;
-		if (secondSlotCheck(slot,click)) return;
-		ItemStack slotItem = event.getView().getItem(slot);
-		if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
-		else if (slot == slotClose) event.getView().close();
-		else if (slot == slotNext) next(click);
-		else if (slot == slotPrevious) previous(click);
-		else if (slot == slotBack() && (this instanceof Backable)) ((Backable) this).goBack();
-		else otherSlot(event,slot,slotItem,click);
+		if (!firstSlotCheck(slot,click)) {
+			if (cancelCheck(slot,click)) event.setCancelled(true);
+			if (!clickCheck(click)) {
+				if (!secondSlotCheck(slot,click)) {
+					ItemStack slotItem = event.getView().getItem(slot);
+					if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
+					else if (slot == slotClose) event.getView().close();
+					else if (slot == slotNext) next(click);
+					else if (slot == slotPrevious) previous(click);
+					else if (slot == slotBack && (this instanceof Backable)) ((Backable) this).goBack();
+					else otherSlot(event,slot,slotItem,click);
+				}
+			}
+		}
+		if (event.isCancelled() && click == ClickType.SWAP_OFFHAND && Utils.isNull(event.getWhoClicked().getInventory().getItemInOffHand())) new BukkitRunnable() {
+			public void run() {
+				event.getWhoClicked().getInventory().setItemInOffHand(new ItemStack(Material.AIR));
+				event.getWhoClicked().getInventory().setItemInOffHand(null);
+			}
+		}.runTaskLater(POPUtilsMain.getInstance(),1);
 	}
+	
 	public int slotBack() {
 		return slotBack;
 	}
