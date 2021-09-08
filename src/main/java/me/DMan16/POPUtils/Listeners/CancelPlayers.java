@@ -22,8 +22,8 @@ public class CancelPlayers implements Listener {
 	private final HashMap<Player,Trio<Boolean,Boolean,Integer>> players = new HashMap<>();
 	private MoveListener move = null;
 	
-	public CancelPlayers(@NotNull JavaPlugin plugin) {
-		if (plugin == POPUtilsMain.getInstance()) register(plugin);
+	public CancelPlayers() {
+		register(POPUtilsMain.getInstance());
 	}
 	
 	public void addPlayer(@NotNull Player player) {

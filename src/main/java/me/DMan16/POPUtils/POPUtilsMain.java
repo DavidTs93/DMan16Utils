@@ -5,6 +5,7 @@ import com.comphenix.protocol.ProtocolManager;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
+import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.Utils.CitizensManager;
 import me.DMan16.POPUtils.Utils.PlaceholderManager;
 import me.DMan16.POPUtils.Utils.Utils;
@@ -23,6 +24,7 @@ public class POPUtilsMain extends JavaPlugin {
 	private static CitizensManager CitizensManager = null;
 	private static ProtocolManager ProtocolManager = null;
 	private static CancelPlayers CancelPlayers = null;
+	private static PlayerVersionLogger PlayerVersionLogger;
 	
 	public void onLoad() {
 		if (getServer().getPluginManager().getPlugin("WorldGuard") != null) WorldGuardManager = new WorldGuardManager();
@@ -41,15 +43,16 @@ public class POPUtilsMain extends JavaPlugin {
 
 	public void onDisable() {
 		Bukkit.getScheduler().cancelTasks(this);
-		Utils.chatColorsLogPlugin(pluginNameColors + " &adisabed");
+		Utils.chatColorsLogPlugin(pluginNameColors + "&a disabled");
 	}
 	
 	private void firstOfAll() {
 		new EventCallers();
-		CancelPlayers = new CancelPlayers(instance);
+		CancelPlayers = new CancelPlayers();
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) PAPIManager = new PlaceholderManager();
 		if (getServer().getPluginManager().getPlugin("Citizens") != null) CitizensManager = new CitizensManager();
 		if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) ProtocolManager = ProtocolLibrary.getProtocolManager();
+		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) PlayerVersionLogger = new PlayerVersionLogger();
 	}
 	
 	public static POPUtilsMain getInstance() {
@@ -78,5 +81,9 @@ public class POPUtilsMain extends JavaPlugin {
 	
 	public static CancelPlayers getCancelPlayers() {
 		return CancelPlayers;
+	}
+	
+	public static PlayerVersionLogger getPlayerVersionLogger() {
+		return PlayerVersionLogger;
 	}
 }
