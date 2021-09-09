@@ -6,9 +6,12 @@ import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -108,7 +111,12 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 		if (uses.isEmpty()) Utils.chatColors(sender,"&aNo versions recorded yet");
 		else {
 			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).collect(Collectors.joining(";"));
-			sender.sendMessage(Component.text(Utils.chatColors("&aVersions graph")).clickEvent(ClickEvent.openUrl("https://DavidTs93.github.io/pie_chart.html?v=" + Base64Coder.encodeString(str))));
+			String url = "https://DavidTs93.github.io/pie_chart.html?v=" + Base64Coder.encodeString(str);
+			ClickEvent click = ClickEvent.openUrl(url);
+			Component msg;
+			if (sender instanceof Player) msg = Component.text("Versions graph",NamedTextColor.GREEN).clickEvent(click);
+			else msg = Component.text("Versions graph: ",NamedTextColor.GREEN).append(Component.text(url,NamedTextColor.BLUE).decoration(TextDecoration.UNDERLINED,true).clickEvent(click));
+			sender.sendMessage(msg.decoration(TextDecoration.ITALIC,false));
 		}
 		return true;
 	}

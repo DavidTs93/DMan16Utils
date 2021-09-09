@@ -830,6 +830,7 @@ public class Utils {
 	
 	@NotNull
 	public static ItemStack clone(@NotNull ItemStack item) {
-		return ReflectionUtils.CloneWithNBT(item);
+//		return ReflectionUtils.CloneWithNBT(item);
+		return item.clone();
 	}
 }
