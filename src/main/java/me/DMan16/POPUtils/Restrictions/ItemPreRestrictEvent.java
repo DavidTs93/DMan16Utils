@@ -11,11 +11,11 @@ public final class ItemPreRestrictEvent extends ItemRestrictItEvent implements C
 		super(restriction,player,item);
 	}
 	
-	public final void setCancelled(final boolean cancel) {
+	public void setCancelled(final boolean cancel) {
 		this.cancel = cancel;
 	}
 	
-	public final boolean isCancelled() {
+	public boolean isCancelled() {
 		return cancel;
 	}
 }

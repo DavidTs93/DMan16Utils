@@ -35,12 +35,11 @@ public abstract class Confirmation extends ListenerInventory {
 	protected Confirmation(@NotNull Player player, @NotNull Component menuName, @Nullable List<Component> noConfirmLore, @NotNull JavaPlugin plugin, Object ... objs) {
 		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,menuName));
 		this.player = player;
-		this.canConfirm = canConfirm();
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
-		ITEM_CONFIRM_NO.lore();
-		this.register(plugin);
 		first(objs);
+		this.canConfirm = canConfirm();
+		this.register(plugin);
 		this.inventory.setItem(slotCancel,ITEM_CANCEL);
 		this.inventory.setItem(slotConfirm,this.canConfirm ? ITEM_CONFIRM_YES : (noConfirmLore == null ? ITEM_CONFIRM_NO :
 				Utils.cloneChange(ITEM_CONFIRM_NO,false,null,true,noConfirmLore,-1,false)));

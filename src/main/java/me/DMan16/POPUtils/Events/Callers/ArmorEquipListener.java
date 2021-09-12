@@ -5,7 +5,6 @@ import me.DMan16.POPUtils.Enums.EquipMethod;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Event.Result;
@@ -39,6 +38,7 @@ public class ArmorEquipListener implements Listener {
 		EquipmentSlot equipSlot = null;
 		ItemStack oldArmor = null;
 		ItemStack newArmor = null;
+		int hotbar = -1;
 		switch (event.getAction()) {
 			case PICKUP_ALL:
 			case PICKUP_SOME:
@@ -60,7 +60,8 @@ public class ArmorEquipListener implements Listener {
 					method = EquipMethod.HOTBAR_SWAP;
 					equipSlot = fromSlot(event.getSlot());
 					oldArmor = event.getCurrentItem();
-					newArmor = player.getInventory().getItem(event.getHotbarButton());
+					hotbar = event.getHotbarButton();
+					newArmor = player.getInventory().getItem(hotbar);
 				}
 				break;
 			case MOVE_TO_OTHER_INVENTORY:
@@ -72,9 +73,12 @@ public class ArmorEquipListener implements Listener {
 			default: return;
 		}
 		if (method == null || equipSlot == null || oldArmor == null || newArmor == null) return;
-		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,method,equipSlot,oldArmor,newArmor);
-		Bukkit.getServer().getPluginManager().callEvent(armorEquipEvent);
-		if (armorEquipEvent.isCancelled()) event.setCancelled(true);
+		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,method,equipSlot,oldArmor,newArmor,hotbar);
+		if (!armorEquipEvent.callEvent()) event.setCancelled(true);
+		else {
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
 	}
 	
 	private EquipmentSlot fromSlot(int slot) {
@@ -151,8 +155,11 @@ public class ArmorEquipListener implements Listener {
 		if (nonArmorHelmet(item.getType())) return;
 		if (!Utils.isNull(player.getInventory().getItem(method))) return;
 		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(event.getPlayer(),EquipMethod.RIGHT_CLICK,method,null,item);
-		Bukkit.getServer().getPluginManager().callEvent(armorEquipEvent);
-		if (armorEquipEvent.isCancelled()) event.setCancelled(true);
+		if (!armorEquipEvent.callEvent()) event.setCancelled(true);
+		else {
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -162,10 +169,12 @@ public class ArmorEquipListener implements Listener {
 		EquipmentSlot method = event.getOldCursor().getType().getEquipmentSlot();
 		if (slot != getSlot(method)) return;
 		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent((Player) event.getWhoClicked(),EquipMethod.DRAG,method,null,event.getOldCursor());
-		Bukkit.getServer().getPluginManager().callEvent(armorEquipEvent);
-		if (armorEquipEvent.isCancelled()) {
+		if (!armorEquipEvent.callEvent()) {
 			event.setResult(Result.DENY);
 			event.setCancelled(true);
+		} else {
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
 		}
 	}
 	
@@ -181,7 +190,10 @@ public class ArmorEquipListener implements Listener {
 	public void itemBreakEvent(PlayerItemBreakEvent event) {
 		EquipmentSlot method = event.getBrokenItem().getType().getEquipmentSlot();
 		Player player = event.getPlayer();
-		Bukkit.getServer().getPluginManager().callEvent(new ArmorEquipEvent(player,EquipMethod.BROKE,method,event.getBrokenItem(),null));
+		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.BROKE,method,event.getBrokenItem(),null);
+		armorEquipEvent.callEvent();
+		armorEquipEvent.immediateTasks().forEach(Runnable::run);
+		armorEquipEvent.delayedTasks().forEach(Runnable::run);
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -192,11 +204,27 @@ public class ArmorEquipListener implements Listener {
 		ItemStack chestplate = player.getInventory().getChestplate();
 		ItemStack leggings = player.getInventory().getLeggings();
 		ItemStack boots = player.getInventory().getBoots();
-		if (!Utils.isNull(helmet)) Bukkit.getServer().getPluginManager().callEvent(new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.HEAD,helmet,null));
-		if (!Utils.isNull(chestplate))
-			Bukkit.getServer().getPluginManager().callEvent(new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.CHEST,chestplate,null));
-		if (!Utils.isNull(leggings)) Bukkit.getServer().getPluginManager().callEvent(new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.LEGS,leggings,null));
-		if (!Utils.isNull(boots)) Bukkit.getServer().getPluginManager().callEvent(new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.FEET,boots,null));
+		ArmorEquipEvent armorEquipEvent;
+		if (!Utils.isNull(helmet)) {
+			armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.HEAD,helmet,null);
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
+		if (!Utils.isNull(chestplate)) {
+			armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.CHEST,chestplate,null);
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
+		if (!Utils.isNull(leggings)) {
+			armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.LEGS,leggings,null);
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
+		if (!Utils.isNull(boots)) {
+			armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.FEET,boots,null);
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
@@ -205,8 +233,11 @@ public class ArmorEquipListener implements Listener {
 		if (!(event.getTargetEntity() instanceof Player player)) return;
 		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.DISPENSER,event.getItem().getType().getEquipmentSlot(),
 				event.getItem(),null);
-		Bukkit.getServer().getPluginManager().callEvent(armorEquipEvent);
-		if (armorEquipEvent.isCancelled()) event.setCancelled(true);
+		if (!armorEquipEvent.callEvent()) event.setCancelled(true);
+		else {
+			armorEquipEvent.immediateTasks().forEach(Runnable::run);
+			armorEquipEvent.delayedTasks().forEach(Runnable::run);
+		}
 	}
 	
 	/*public static EquipmentSlot getEquipSlot(Material material) {

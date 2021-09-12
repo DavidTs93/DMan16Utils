@@ -1,4 +1,4 @@
-package me.DMan16.POPUtils.Restrictions;
+package me.DMan16.POPUtils.Listeners;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;

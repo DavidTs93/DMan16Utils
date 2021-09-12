@@ -1,9 +1,9 @@
 package me.DMan16.POPUtils.Restrictions;
 
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
+import me.DMan16.POPUtils.Listeners.Listener;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
-import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Cancellable;
@@ -279,7 +279,7 @@ public class Restrictions {
 			return item;
 		}
 		
-		@Contract("null -> false")
+		@Contract(value = "null -> false",pure = true)
 		public boolean is(ItemStack item) {
 			if (Utils.isNull(item)) return false;
 			ItemMeta meta = item.getItemMeta();
@@ -289,11 +289,14 @@ public class Restrictions {
 		
 		protected boolean restrictionEvent(Event event, ItemStack item, HumanEntity player, boolean cancelIfPossible) {
 			ItemPreRestrictEvent preRestrictEvent = new ItemPreRestrictEvent(this,player,item);
-			Bukkit.getServer().getPluginManager().callEvent(preRestrictEvent);
-			if (preRestrictEvent.isCancelled()) return false;
+			if (!preRestrictEvent.callEvent()) return false;
+			preRestrictEvent.immediateTasks().forEach(Runnable::run);
+			preRestrictEvent.delayedTasks().forEach(Runnable::run);
 			if (cancelIfPossible && (event instanceof Cancellable)) ((Cancellable) event).setCancelled(true);
 			ItemPostRestrictEvent postRestrictEvent = new ItemPostRestrictEvent(this,player,item);
-			Bukkit.getServer().getPluginManager().callEvent(postRestrictEvent);
+			postRestrictEvent.callEvent();
+			postRestrictEvent.immediateTasks().forEach(Runnable::run);
+			postRestrictEvent.delayedTasks().forEach(Runnable::run);
 			return true;
 		}
 	}

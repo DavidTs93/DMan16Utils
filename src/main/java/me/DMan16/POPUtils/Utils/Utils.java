@@ -409,11 +409,12 @@ public class Utils {
 		return null;
 	}
 	
-	@Contract("null -> true")
+	@Contract(value = "null -> true",pure = true)
 	public static boolean isNull(@Nullable ItemStack item) {
 		return item == null || isNull(item.getType());
 	}
 	
+	@Contract(value = "null -> true",pure = true)
 	public static boolean isNull(@Nullable Material material) {
 		return material == null || material.isAir();
 	}
@@ -830,7 +831,6 @@ public class Utils {
 	
 	@NotNull
 	public static ItemStack clone(@NotNull ItemStack item) {
-//		return ReflectionUtils.CloneWithNBT(item);
-		return item.clone();
+		return ReflectionUtils.CloneWithNBT(item);
 	}
 }
