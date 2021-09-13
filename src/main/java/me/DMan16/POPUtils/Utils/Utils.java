@@ -33,8 +33,6 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.Serial;
-import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
@@ -76,8 +74,8 @@ public class Utils {
 	}
 	
 	/**
-	 * @return Strips the string from colors and converts to color code using {@code&}.
-	 * 1.16+ HEX colors can be used via {@code&#??????}.
+	 * @return Strips the string from colors and converts to color code using &.
+	 * 1.16+ HEX colors can be used via &#??????.
 	 */
 	@NotNull
 	public static String chatColors(@NotNull String str) {
@@ -128,7 +126,7 @@ public class Utils {
 	}
 	
 	/**
-	 * Revert color codes using {@code&}
+	 * Revert color codes using &
 	 */
 	@NotNull
 	public static String chatColorsToString(@NotNull String str) {
@@ -417,35 +415,6 @@ public class Utils {
 	@Contract(value = "null -> true",pure = true)
 	public static boolean isNull(@Nullable Material material) {
 		return material == null || material.isAir();
-	}
-	
-	@NotNull
-	public static JString JString(@NotNull String str) {
-		return new JString(str);
-	}
-	
-	private static class JString implements Serializable {
-		@Serial
-		private static final long SERIAL_VERSION_UID = 1L;
-		private String value;
-		
-		public JString(@NotNull String value) {
-			this.value = value;
-		}
-		
-		@NotNull
-		public String getValue() {
-			return value;
-		}
-		
-		public void setValue(@NotNull String value) {
-			this.value = value;
-		}
-		
-		@Override
-		public @NotNull String toString(){
-			return this.value;
-		}
 	}
 	
 	public static class PairInt extends Pair<Integer,Integer> {

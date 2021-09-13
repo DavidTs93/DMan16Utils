@@ -15,7 +15,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.Connection;
 
-public class POPUtilsMain extends JavaPlugin {
+public final class POPUtilsMain extends JavaPlugin {
 	private static POPUtilsMain instance = null;
 	public static final String pluginName = "PrisonPOP";
 	public static final String pluginNameColors = "&bPrison&d&lPOP";

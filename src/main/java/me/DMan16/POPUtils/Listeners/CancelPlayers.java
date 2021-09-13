@@ -36,7 +36,7 @@ public class CancelPlayers implements Listener {
 		if (players.containsKey(player)) {
 			Trio<Boolean,Boolean,Integer> info = players.get(player);
 			allowRotation = allowRotation && info.first();
-			disableDamage = disableDamage && info.second();
+			disableDamage = disableDamage || info.second();
 			count += info.third();
 		}
 		players.put(player,Trio.of(allowRotation,disableDamage,count));

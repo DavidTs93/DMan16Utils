@@ -7,11 +7,14 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.util.Arrays;
-import java.util.List;
+import java.lang.reflect.Modifier;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 @SuppressWarnings({"deprecation","ConstantConditions"})
@@ -176,5 +179,132 @@ public class ReflectionUtils {
 	
 	public static boolean[] RemoveEffects(@NotNull Player player, @NotNull Cause cause, @NotNull PotionEffectType ... effects) {
 		return RemoveEffects(player,cause,Arrays.asList(effects));
+	}
+	
+	public static List<Field> getFields(Class<?> clazz, Class<?> type) {
+		List<Field> list = new ArrayList<>();
+		if (clazz == null) return list;
+		Field[] arr = clazz.getDeclaredFields();
+		for (Field field : arr) {
+			field.setAccessible(true);
+			if (type == null || field.getType() == type) list.add(field);
+		}
+		return list;
+	}
+	
+	public static Map<String, Object> getStaticFields(Class<?> clazz) {
+		Map<String,Object> fields = new HashMap<>();
+		if (clazz == null) return fields;
+		for (Field field : getFields(clazz,null)) {
+			field.setAccessible(true);
+			if (Modifier.isStatic(field.getModifiers())) try {
+				fields.put(field.getName(),field.get((Object) null));
+			} catch (Exception e) {e.printStackTrace();}
+		}
+		return fields;
+	}
+	
+	public static String buildIChatBaseComponentString(String text, boolean translate, boolean italic, @Nullable String color, boolean bold, Object ... with) {
+		if (text == null) return null;
+		String str = "{\"";
+		str += (translate ? "translate" : "text");
+		str += "\":\"" + text + "\"";
+		str += ",\"italic\":" + italic;
+		if (color != null && !color.isEmpty()) str += ",\"color\":\"" + color + "\"";
+		if (translate && with.length > 0) {
+			List<String> extras = new ArrayList<>();
+			for (Object obj : with) {
+				String extra = IChatBaseComponentToString(obj);
+				if (extra != null) extras.add(extra);
+			}
+			if (!extras.isEmpty()) {
+				str += ",\"with\":[";
+				str += String.join(",",extras);
+				str += "]";
+			}
+		}
+		str += "}";
+		return str;
+	}
+	
+	public static String buildIChatBaseComponentString(String text, boolean translate, @Nullable String color) {
+		return buildIChatBaseComponentString(text,translate,false,color,false);
+	}
+	
+	public static Object buildIChatBaseComponentStringExtra(List<Object> comps) {
+		if (comps == null || comps.isEmpty()) return null;
+		String str = "{\"extra\":[";
+		List<String> components = new ArrayList<>();
+		for (Object obj : comps) components.add(IChatBaseComponentToString(obj));
+		str += String.join(",",components);
+		str += "],\"text\":\"\"}";
+		return StringToIChatBaseComponent(str);
+	}
+	
+	public static Object buildIChatBaseComponentStringExtra(Object ... components) {
+		return buildIChatBaseComponentStringExtra(Arrays.asList(components));
+	}
+	
+	public static String ChatColorsToIChatBaseComponent(String str) {
+		try {
+			Class<?> nmsCraftChatMessage = getClassCraftBukkit("util.CraftChatMessage");
+			Method methodfromStringOrNull = nmsCraftChatMessage.getDeclaredMethod("fromStringOrNull",String.class);
+			return IChatBaseComponentToString(methodfromStringOrNull.invoke(null,str));
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	public static Object StringToIChatBaseComponent(Object obj) {
+		try {
+			Class<?> nmsIChatBaseComponent = getClassNMS("IChatBaseComponent","network.chat");
+			return nmsIChatBaseComponent.cast(obj);
+		} catch (Exception e1) {
+			try {
+				String str = (String) obj;
+				if (str.trim().isEmpty()) return str;
+				if (!str.startsWith("{") || !(str.toLowerCase().contains("\"text\":\"") || str.toLowerCase().contains("\"translate\":\"")))
+					str = ChatColorsToIChatBaseComponent(str);
+				Class<?> nmsChatSerializer = getClassNMS("IChatBaseComponent$ChatSerializer","network.chat");
+				Method methodA = nmsChatSerializer.getDeclaredMethod("a",String.class);
+				return methodA.invoke(null,str);
+			} catch (Exception e2) {e2.printStackTrace();}
+		}
+		return null;
+	}
+	
+	public static String IChatBaseComponentToString(Object obj) {
+		try {
+			String str = (String) obj;
+			if (str.trim().isEmpty()) return str;
+			if (str.startsWith("{") && (str.toLowerCase().contains("\"text\":\"") || str.toLowerCase().contains("\"translate\":\""))) return str;
+			return ChatColorsToIChatBaseComponent(str);
+		} catch (Exception e1) {
+			try {
+				Class<?> nmsIChatBaseComponent = getClassNMS("IChatBaseComponent","network.chat");
+				Class<?> nmsChatSerializer = getClassNMS("IChatBaseComponent$ChatSerializer","network.chat");
+				Method methodA = nmsChatSerializer.getDeclaredMethod("a",nmsIChatBaseComponent);
+				return (String) methodA.invoke(null,obj);
+			} catch (Exception e2) {e2.printStackTrace();}
+		}
+		return null;
+	}
+	
+	public static int getNextEntityID() {
+		int ID = -1;
+		try {
+			Class<?> entityClass = getClassNMS("Entity","world.entity");
+			Field entityCount;
+			try {
+				entityCount = entityClass.getDeclaredField("entityCount");
+			} catch (Exception e) {
+				entityCount = entityClass.getDeclaredField("b");
+			}
+			entityCount.setAccessible(true);
+			if (Utils.getVersionInt() < 14) {
+				ID = (int) entityCount.get(null);
+				entityCount.set(null,ID + 1);
+			} else ID = (int) AtomicInteger.class.getDeclaredMethod("incrementAndGet").invoke(entityCount.get(null));
+		} catch (Exception e) {e.printStackTrace();}
+		return ID;
 	}
 }
