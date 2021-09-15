@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Restrictions;
 
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.Listeners.Listener;
-import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
@@ -222,7 +222,7 @@ public class Restrictions {
 					event.getWhoClicked().undiscoverRecipe((event.getRecipe() instanceof ShapedRecipe) ? ((ShapedRecipe) event.getRecipe()).getKey() :
 							((ShapelessRecipe) event.getRecipe()).getKey());
 				}
-			}.runTask(POPUtilsMain.getInstance());
+			}.runTask(POPUtils.getInstance());
 		}
 	}
 
@@ -245,7 +245,7 @@ public class Restrictions {
 		
 		Restriction(@NotNull String name) {
 			this.name = Utils.splitCapitalize(name.toLowerCase().replace("_"," ")).replace(" ","");
-			register(POPUtilsMain.getInstance());
+			register(POPUtils.getInstance());
 		}
 		
 		public String name() {
@@ -253,7 +253,7 @@ public class Restrictions {
 		}
 		
 		private NamespacedKey key() {
-			return new NamespacedKey(POPUtilsMain.getInstance(),name());
+			return new NamespacedKey(POPUtils.getInstance(),name());
 		}
 		
 		@NotNull

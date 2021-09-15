@@ -4,11 +4,12 @@ import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
-public abstract class POPPlaceHolder extends PlaceholderExpansion {
+public abstract class PlaceHolder extends PlaceholderExpansion {
 	private final JavaPlugin plugin;
 	
-	protected POPPlaceHolder(JavaPlugin plugin) {
+	protected PlaceHolder(@NotNull JavaPlugin plugin) {
 		this.plugin = plugin;
 	}
 	

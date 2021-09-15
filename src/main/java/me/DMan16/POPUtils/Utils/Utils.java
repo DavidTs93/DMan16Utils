@@ -4,7 +4,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
-import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -729,29 +729,29 @@ public class Utils {
 			public void run() {
 				sessionIDs.remove(ID);
 			}
-		}.runTaskLater(POPUtilsMain.getInstance(),10 * 60 * 20);
+		}.runTaskLater(POPUtils.getInstance(),10 * 60 * 20);
 		return id;
 	}
 	
 	public static boolean isPlayerNPC(@NotNull Player player) {
-		if (POPUtilsMain.getCitizensManager() == null) return false;
-		return POPUtilsMain.getCitizensManager().isNPC(player);
+		if (POPUtils.getCitizensManager() == null) return false;
+		return POPUtils.getCitizensManager().isNPC(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player) {
-		POPUtilsMain.getCancelPlayers().addPlayer(player);
+		POPUtils.getCancelPlayers().addPlayer(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		POPUtilsMain.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
+		POPUtils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player) {
-		POPUtilsMain.getCancelPlayers().removePlayer(player);
+		POPUtils.getCancelPlayers().removePlayer(player);
 	}
 	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
-		return POPUtilsMain.getCancelPlayers().isPlayerCancelled(player);
+		return POPUtils.getCancelPlayers().isPlayerCancelled(player);
 	}
 	
 	public static void savePlayer(@NotNull Player player) {

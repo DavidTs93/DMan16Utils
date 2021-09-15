@@ -3,7 +3,7 @@ package me.DMan16.POPUtils.Events.Callers;
 import me.DMan16.POPUtils.Classes.Listener;
 import me.DMan16.POPUtils.Enums.EquipMethod;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
-import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -26,7 +26,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class ArmorEquipListener implements Listener {
 	public ArmorEquipListener() {
-		register(POPUtilsMain.getInstance());
+		register(POPUtils.getInstance());
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)

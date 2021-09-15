@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public abstract class InnerInventory<V> extends ListenerInventoryPages {
@@ -30,28 +31,28 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	
 	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
 							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
-		this(viewer,menuName,plugin,owner,ID,null,originalMenu);
+		this(viewer,menuName,plugin,owner,ID,null,originalMenu,null);
 	}
 	
-	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner, @NotNull UUID ID, Boolean allowEdit,
-							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, Object ... objs) {
-		super(viewer,viewer,5,menuName,plugin,ID,owner,allowEdit,originalMenu,objs);
+	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner, @NotNull UUID ID, Boolean allowEdit,
+							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Consumer<T> doFirstMore) {
+		super(viewer,viewer,5,menuName,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
+//				ID,owner,allowEdit,originalMenu,objs);
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Override
-	protected void first(Object ... objs) {
-		this.ID = (UUID) objs[0];
-		this.owner = (boolean) objs[1];
-		Boolean edit = (Boolean) objs[2];
-		this.allowEdit = edit == null ? this.owner : edit;
-		this.originalMenu = (HashMap<Integer,List<V>>) objs[3];
-		if (this.originalMenu == null) throw new NullPointerException("Original menu can't be null!");
-		updatingMenu();
-		first = true;
-		rightJump = 10;
-		fancyButtons = true;
-		firstMore((Object[]) objs[4]);
+	private static <V,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner, @NotNull UUID ID, boolean owner, Boolean allowEdit, @NotNull HashMap<@NotNull Integer,
+			@NotNull List<@Nullable V>> originalMenu, @Nullable Consumer<T> doFirstMore) {
+		inner.ID = ID;
+		inner.owner = owner;
+		inner.allowEdit = allowEdit == null ? inner.owner : allowEdit;
+		inner.originalMenu = originalMenu;
+		inner.updatingMenu();
+		inner.first = true;
+		inner.rightJump = 10;
+		inner.fancyButtons = true;
+		if (doFirstMore != null) doFirstMore.accept((T) inner);
+		return true;
 	}
 	
 	protected void updatingMenu() {
@@ -114,14 +115,8 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		updateUpdatingMenu(pageItems);
 	}
 	
-	protected void firstMore(Object ... objs) {}
-	
 	protected boolean owner() {
 		return owner;
-	}
-	
-	protected boolean first() {
-		return first;
 	}
 	
 	protected boolean allowEdit() {

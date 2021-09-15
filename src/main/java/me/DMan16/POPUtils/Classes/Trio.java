@@ -32,7 +32,7 @@ public class Trio<F,S,T> {
 	
 	public boolean equals(Object obj) {
 		if (!(obj instanceof Trio<?,?,?> other)) return false;
-		return Objects.equals(this.first,other.first) && Objects.equals(this.second,other.second) && Objects.equals(this.third,other.third);
+		return other == this || (Objects.equals(this.first,other.first) && Objects.equals(this.second,other.second) && Objects.equals(this.third,other.third));
 	}
 	
 	public int hashCode() {

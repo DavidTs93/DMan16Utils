@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Listeners;
 
 import com.viaversion.viaversion.api.Via;
 import me.DMan16.POPUtils.Classes.Listener;
-import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -63,14 +63,14 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	public PlayerVersionLogger() {
 		try {
 			createTable();
-			register(POPUtilsMain.getInstance());
-			Objects.requireNonNull(POPUtilsMain.getInstance().getCommand("versions")).setExecutor(this);
+			register(POPUtils.getInstance());
+			Objects.requireNonNull(POPUtils.getInstance().getCommand("versions")).setExecutor(this);
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
 	private void createTable() throws SQLException {
-		try (Statement statement = POPUtilsMain.getConnection().createStatement()) {
-			DatabaseMetaData data = POPUtilsMain.getConnection().getMetaData();
+		try (Statement statement = POPUtils.getConnection().createStatement()) {
+			DatabaseMetaData data = POPUtils.getConnection().getMetaData();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + VERSIONS_PLAYERS_TABLE_NAME + " (UUID VARCHAR(36) NOT NULL UNIQUE," +
 					VERSIONS.values().stream().map(version -> "v" + version.replace("_","v") + " BIT(1) NOT NULL DEFAULT 0").collect(Collectors.joining(",")) + ");");
 			List<String> add = new ArrayList<>();
@@ -82,7 +82,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onJoin(PlayerJoinEvent event) {
-		if (event.getPlayer().isOnline()) try (Statement statement = POPUtilsMain.getConnection().createStatement()) {
+		if (event.getPlayer().isOnline()) try (Statement statement = POPUtils.getConnection().createStatement()) {
 			UUID ID = event.getPlayer().getUniqueId();
 			String version = Objects.requireNonNull(VERSIONS.get(Via.getAPI().getPlayerVersion(ID)));
 			statement.executeUpdate("INSERT IGNORE INTO " + VERSIONS_PLAYERS_TABLE_NAME + " (UUID) VALUES ('" + ID + "');");
@@ -93,7 +93,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	@NotNull
 	public HashMap<@NotNull String,@NotNull Integer> getUses() {
 		LinkedHashMap<@NotNull String,@NotNull Integer> map = new LinkedHashMap<>();
-		try (Statement statement = POPUtilsMain.getConnection().createStatement()) {
+		try (Statement statement = POPUtils.getConnection().createStatement()) {
 			for (String version : VERSIONS.values()) {
 				try (ResultSet results = statement.executeQuery("SELECT SUM(" + "v" + version.replace("_","v") + ") FROM " + VERSIONS_PLAYERS_TABLE_NAME)) {
 					results.next();

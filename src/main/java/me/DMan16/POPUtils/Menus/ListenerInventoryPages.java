@@ -1,7 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Interfaces.Backable;
-import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -19,6 +19,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Objects;
+import java.util.function.Function;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected int currentPage = 1;
@@ -38,11 +39,13 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	/**
 	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
 	 */
-	public ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name, @NotNull JavaPlugin plugin, Object ... objs) {
+	@SuppressWarnings("unchecked")
+	public <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name,
+																	 @NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
 		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
 		this.plugin = plugin;
 		this.player = player;
-		first(objs);
+		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		setPage(1);
 		if (openOnInitialize) open();
 	}
@@ -80,7 +83,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				event.getWhoClicked().getInventory().setItemInOffHand(new ItemStack(Material.AIR));
 				event.getWhoClicked().getInventory().setItemInOffHand(null);
 			}
-		}.runTaskLater(POPUtilsMain.getInstance(),1);
+		}.runTaskLater(POPUtils.getInstance(),1);
 	}
 	
 	public int slotBack() {
@@ -133,12 +136,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 			public void run() {
 				cancelCloseUnregister = false;
 			}
-		}.runTask(POPUtilsMain.getInstance());
+		}.runTask(POPUtils.getInstance());
 	}
 	
 	protected void beforeSetPage(int newPage) {}
-	
-	protected void first(Object ... objs) {}
 	
 	protected boolean isBorder(int slot) {
 		return (slot >= 0 && slot < 9) || (slot >= size - 9 && slot < size) || (slot % 9) == 0 || ((slot + 1) % 9) == 0;

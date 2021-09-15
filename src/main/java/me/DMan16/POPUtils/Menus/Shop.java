@@ -14,25 +14,27 @@ import org.jetbrains.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
 	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
-	public Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull JavaPlugin plugin, Object ... objs) {
-		super(player,player,lines,name,plugin,objs);
+	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull JavaPlugin plugin, @Nullable Function<P,@NotNull Boolean> doFirstMore) {
+		super(player,player,lines,name,plugin,doFirstMore);
 	}
 	
 	protected void setPagePurchases() {
 		purchases.get(currentPage - 1).forEach((slot,info) -> inventory.setItem(slot,info.first().itemPurchase(player,info.second())));
 	}
 	
-	@Override
-	protected void first(Object ... objs) {
-		purchases = new ArrayList<>();
-		resetWithBorder = true;
-		fancyButtons = true;
-		firstMore(objs);
-		setPurchases();
+	@SuppressWarnings("unchecked")
+	private static <V extends Purchasable<?,T>,T,P extends Shop<V,T>> void first(@NotNull Shop<V,T> shop, @Nullable Consumer<P> doFirstMore) {
+		shop.purchases = new ArrayList<>();
+		shop.resetWithBorder = true;
+		shop.fancyButtons = true;
+		if (doFirstMore != null) doFirstMore.accept((P) shop);
+		shop.setPurchases();
 	}
 	
 	public int maxPage() {
@@ -65,8 +67,6 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected void beforeSetPage(int newPage) {
 		alterPurchases(newPage);
 	}
-	
-	protected void firstMore(Object ... objs) {}
 	
 	protected void otherOtherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {}
 	

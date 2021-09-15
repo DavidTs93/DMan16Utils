@@ -17,6 +17,8 @@ import java.util.List;
 public class InterfacesUtils {
 	private static final Material SORT_MATERIAL = Material.PAPER;
 	private static final TranslatableComponent SORT_NAME = Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false);
+	public static final String TRANSLATABLE = "translatable: ";
+	public static final Component CHOSEN = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
 	
 	@NotNull
 	@Unmodifiable

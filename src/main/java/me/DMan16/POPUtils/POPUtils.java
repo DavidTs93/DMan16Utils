@@ -15,23 +15,23 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.sql.Connection;
 
-public final class POPUtilsMain extends JavaPlugin {
-	private static POPUtilsMain instance = null;
-	public static final String pluginName = "PrisonPOP";
-	public static final String pluginNameColors = "&bPrison&d&lPOP";
-	private static WorldGuardManager WorldGuardManager = null;
-	private static PlaceholderManager PAPIManager = null;
-	private static CitizensManager CitizensManager = null;
-	private static ProtocolManager ProtocolManager = null;
-	private static CancelPlayers CancelPlayers = null;
-	private static PlayerVersionLogger PlayerVersionLogger;
+public final class POPUtils extends JavaPlugin {
+	private static POPUtils INSTANCE = null;
+	public static final String PLUGIN_NAME = "PrisonPOP";
+	public static final String PLUGIN_NAME_COLORS = "&bPrison&d&lPOP";
+	private WorldGuardManager WorldGuardManager = null;
+	private PlaceholderManager PAPIManager = null;
+	private CitizensManager CitizensManager = null;
+	private ProtocolManager ProtocolManager = null;
+	private CancelPlayers CancelPlayers = null;
+	private PlayerVersionLogger PlayerVersionLogger = null;
 	
 	public void onLoad() {
 		if (getServer().getPluginManager().getPlugin("WorldGuard") != null) WorldGuardManager = new WorldGuardManager();
 	}
 	
 	public void onEnable() {
-		instance = this;
+		INSTANCE = this;
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		firstOfAll();
 		Utils.chatColorsLogPlugin("&aLoaded, running on version: &f" + Utils.getVersion() + "&a, Java version: &f" + Utils.javaVersion());
@@ -43,7 +43,7 @@ public final class POPUtilsMain extends JavaPlugin {
 
 	public void onDisable() {
 		Bukkit.getScheduler().cancelTasks(this);
-		Utils.chatColorsLogPlugin(pluginNameColors + "&a disabled");
+		Utils.chatColorsLogPlugin(PLUGIN_NAME_COLORS + "&a disabled");
 	}
 	
 	private void firstOfAll() {
@@ -55,8 +55,8 @@ public final class POPUtilsMain extends JavaPlugin {
 		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) PlayerVersionLogger = new PlayerVersionLogger();
 	}
 	
-	public static POPUtilsMain getInstance() {
-		return instance;
+	public static POPUtils getInstance() {
+		return INSTANCE;
 	}
 	
 	public static Connection getConnection() {
@@ -64,26 +64,26 @@ public final class POPUtilsMain extends JavaPlugin {
 	}
 	
 	public static WorldGuardManager getWorldGuardManager() {
-		return WorldGuardManager;
+		return INSTANCE.WorldGuardManager;
 	}
 	
 	public static PlaceholderManager getPAPIManager() {
-		return PAPIManager;
+		return INSTANCE.PAPIManager;
 	}
 	
 	public static CitizensManager getCitizensManager() {
-		return CitizensManager;
+		return INSTANCE.CitizensManager;
 	}
 	
 	public static ProtocolManager getProtocolManager() {
-		return ProtocolManager;
+		return INSTANCE.ProtocolManager;
 	}
 	
 	public static CancelPlayers getCancelPlayers() {
-		return CancelPlayers;
+		return INSTANCE.CancelPlayers;
 	}
 	
 	public static PlayerVersionLogger getPlayerVersionLogger() {
-		return PlayerVersionLogger;
+		return INSTANCE.PlayerVersionLogger;
 	}
 }
