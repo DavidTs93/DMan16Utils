@@ -1,7 +1,7 @@
 name: POPUtils
 version: 1.0
 description: Utilities for PrisonPOP
-main: me.DMan16.POPUtils.POPUtilsMain
+main: me.DMan16.POPUtils.POPUtils
 depend: [POPUpdater]
 softdepend: [Vault,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion]
 author: DMan16

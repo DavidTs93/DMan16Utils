@@ -27,11 +27,11 @@ public final class POPUtils extends JavaPlugin {
 	private PlayerVersionLogger PlayerVersionLogger = null;
 	
 	public void onLoad() {
+		INSTANCE = this;
 		if (getServer().getPluginManager().getPlugin("WorldGuard") != null) WorldGuardManager = new WorldGuardManager();
 	}
 	
 	public void onEnable() {
-		INSTANCE = this;
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		firstOfAll();
 		Utils.chatColorsLogPlugin("&aLoaded, running on version: &f" + Utils.getVersion() + "&a, Java version: &f" + Utils.javaVersion());
