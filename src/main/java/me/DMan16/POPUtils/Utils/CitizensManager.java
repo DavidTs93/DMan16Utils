@@ -66,4 +66,12 @@ public class CitizensManager {
 		} catch (Exception e) {}
 		return false;
 	}
+	
+	public boolean applySkin(@NotNull NPC npc, Player player) {
+		if (player != null && (npc.getEntity() instanceof Player)) try {
+			npc.getOrAddTrait(SkinTrait.class).setSkinName(player.getName());
+			return true;
+		} catch (Exception e) {}
+		return false;
+	}
 }
