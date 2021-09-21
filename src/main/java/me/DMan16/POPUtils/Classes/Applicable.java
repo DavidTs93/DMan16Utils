@@ -18,6 +18,7 @@ import org.jetbrains.annotations.Nullable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class Applicable<V,T> implements Purchasable<V,T> {
@@ -27,6 +28,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	@NotNull public final Component displayName;
 	protected final ItemStack displayItem;
 	@Nullable protected final BigInteger ShopPrice;
+	public final boolean isNull;
 	
 	// Null applicable
 	@SuppressWarnings("unchecked")
@@ -45,18 +47,20 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		bundle.setItemMeta(meta);
 		this.displayName = display.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = null;
+		this.isNull = true;
 	}
 	
 	@SuppressWarnings("unchecked")
 	protected <P extends Applicable<V,T>> Applicable(int ID, int rarity, @NotNull String name, @NotNull String displayName, @Nullable String color, @Nullable BigInteger shopPrice,
-													 @Nullable Consumer<P> doFirst)
+													 @Nullable Function<P,@NotNull Boolean> doFirst)
 			throws IllegalArgumentException {
 		if (ID <= 0) throw new IllegalArgumentException();
 		this.ID = ID;
 		this.rarity = Rarity.get(rarity);
-		this.name = name.toLowerCase();
-		if (doFirst != null) doFirst.accept((P) this);
-		TextColor textColor = Utils.getColor(color);
+		this.name = name.trim().replace(" ","_").toLowerCase();
+		if (this.name.isEmpty()) throw new IllegalArgumentException();
+		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
+		TextColor textColor = Utils.getTextColor(color);
 		Component display = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),textColor) :
 				Component.text(Utils.chatColors(displayName),textColor)).decoration(TextDecoration.ITALIC,false);
@@ -67,6 +71,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		bundle.setItemMeta(meta);
 		this.displayName = display.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = shopPrice == null || shopPrice.compareTo(BigInteger.ZERO) < 0 ? null : shopPrice;
+		this.isNull = false;
 	}
 	
 	public boolean isPurchasable() {

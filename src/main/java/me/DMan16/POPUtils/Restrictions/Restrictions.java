@@ -4,6 +4,7 @@ import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.Listeners.Listener;
 import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Utils.Utils;
+import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.event.Cancellable;
@@ -195,6 +196,27 @@ public class Restrictions {
 		@NotNull
 		protected String keyValue() {
 			return System.currentTimeMillis() + " + " + ThreadLocalRandom.current().nextInt(1000000) + " = " + UUID.randomUUID();
+		}
+		
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+		public void onClick(InventoryClickEvent event) {
+			if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE && is(event.getCursor())) new BukkitRunnable() {
+				public void run() {
+					ItemStack item = event.getWhoClicked().getInventory().getItem(event.getSlot());
+					if (is(item)) {
+						item.setAmount(1);
+						event.getWhoClicked().getInventory().setItem(event.getSlot(),add(remove(item)));
+					}
+				}
+			}.runTaskLater(POPUtils.getInstance(),1);
+		}
+		
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+		public void onDrop(PlayerDropItemEvent event) {
+			ItemStack item = event.getItemDrop().getItemStack();
+			if (event.getPlayer().getGameMode() != GameMode.CREATIVE || !is(item)) return;
+			item.setAmount(1);
+			event.getItemDrop().setItemStack(add(remove(item)));
 		}
 	}
 	

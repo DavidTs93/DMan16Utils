@@ -1,5 +1,9 @@
 package me.DMan16.POPUtils.Utils;
 
+import com.google.common.collect.Iterables;
+import com.mojang.authlib.GameProfile;
+import com.mojang.authlib.properties.Property;
+import me.DMan16.POPUtils.POPUtils;
 import net.citizensnpcs.api.CitizensAPI;
 import net.citizensnpcs.api.npc.NPC;
 import net.citizensnpcs.api.npc.NPCRegistry;
@@ -69,9 +73,17 @@ public class CitizensManager {
 	
 	public boolean applySkin(@NotNull NPC npc, Player player) {
 		if (player != null && (npc.getEntity() instanceof Player)) try {
-			npc.getOrAddTrait(SkinTrait.class).setSkinName(player.getName());
+			GameProfile profile = Utils.getProfile(player);
+			Property property = Iterables.getFirst(profile.getProperties().get("textures"),null);
+			assert property != null;
+			POPUtils.getCitizensManager().applySkin(npc,player.getName(),property.getSignature(),property.getValue());
 			return true;
-		} catch (Exception e) {}
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			try {
+				npc.getOrAddTrait(SkinTrait.class).setSkinName(player.getName());
+			} catch (Exception e2) {}
+		}
 		return false;
 	}
 }

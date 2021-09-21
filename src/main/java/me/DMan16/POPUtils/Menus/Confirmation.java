@@ -13,6 +13,7 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -20,13 +21,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 public abstract class Confirmation extends ListenerInventory {
-	private static final ItemStack ITEM_CONFIRM_YES = Utils.makeItem(Material.GREEN_STAINED_GLASS_PANE,
-			Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	private static final ItemStack ITEM_CONFIRM_NO = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).
-			decoration(TextDecoration.ITALIC,false).decoration(TextDecoration.STRIKETHROUGH,true),ItemFlag.values());
-	private static final ItemStack ITEM_CANCEL = Utils.makeItem(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED).
-			decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	
 	protected int slotCancel;
 	protected int slotConfirm;
 	protected final Player player;
@@ -40,9 +34,9 @@ public abstract class Confirmation extends ListenerInventory {
 		first(objs);
 		this.canConfirm = canConfirm();
 		this.register(plugin);
-		this.inventory.setItem(slotCancel,ITEM_CANCEL);
-		this.inventory.setItem(slotConfirm,this.canConfirm ? ITEM_CONFIRM_YES : (noConfirmLore == null ? ITEM_CONFIRM_NO :
-				Utils.cloneChange(ITEM_CONFIRM_NO,false,null,true,noConfirmLore,-1,false)));
+		this.inventory.setItem(slotCancel,CANCEL);
+		this.inventory.setItem(slotConfirm,this.canConfirm ? OK : (noConfirmLore == null ? OK_NO :
+				Utils.cloneChange(OK_NO,false,null,true,noConfirmLore,-1,false)));
 		player.openInventory(this.inventory);
 	}
 	

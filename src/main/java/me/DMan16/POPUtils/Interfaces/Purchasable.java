@@ -1,7 +1,6 @@
 package me.DMan16.POPUtils.Interfaces;
 
 import org.bukkit.entity.Player;
-import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,7 +9,7 @@ import java.math.BigInteger;
 
 public interface Purchasable<V,T> {
 	@NotNull
-	V getCurrencyType();
+	V getDefaultCurrencyType();
 	
 	@Nullable
 	BigInteger getPrice(@NotNull Player player, @Nullable T val);

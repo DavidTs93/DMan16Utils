@@ -34,6 +34,7 @@ import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -226,13 +227,25 @@ public class Utils {
 	}
 	
 	@Nullable
-	public static TextColor getColor(String str) {
+	public static TextColor getTextColor(String str) {
 		TextColor color = null;
 		if (str != null) try {
 			str = str.trim();
 			if (str.startsWith("#")) color = TextColor.fromHexString(str);
 			else if ("0123456789".contains(str.substring(0,1))) color = TextColor.fromHexString("#" + str);
 			else color = NamedTextColor.NAMES.value(str.replace(" ","_").toLowerCase());
+		} catch (Exception e) {}
+		return color;
+	}
+	
+	@Nullable
+	public static Color getColor(String str) {
+		Color color = null;
+		if (str != null) try {
+			str = str.trim();
+			if (str.startsWith("#")) str = str.replaceFirst("#","");
+			if ("0123456789".contains(str.substring(0,1))) color = Color.fromRGB(Integer.parseInt(str));
+			else color = ReflectionUtils.getStaticFields(Color.class,Color.class,true).get(str.replace(" ","_").toUpperCase());
 		} catch (Exception e) {}
 		return color;
 	}
@@ -542,8 +555,8 @@ public class Utils {
 	 * @return serialized version
 	 */
 	@Nullable
-	public static String ObjectToBase64(@NotNull Object obj) {
-		try {
+	public static String ObjectToBase64(@Nullable Object obj) {
+		if (obj != null) try {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 			BukkitObjectOutputStream dataOutput = new BukkitObjectOutputStream(outputStream);
 			dataOutput.writeInt(1);
@@ -558,8 +571,8 @@ public class Utils {
 	 * @return deserialized version
 	 */
 	@Nullable
-	public static Object ObjectFromBase64(@NotNull String data) {
-		try {
+	public static Object ObjectFromBase64(@Nullable String data) {
+		if (data != null) try {
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
 			BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
 			dataInput.readInt();
@@ -770,9 +783,18 @@ public class Utils {
 		return POPUpdaterMain.getPlayerNameByUUID(ID);
 	}
 	
+	@NotNull
+	public static ItemStack setSkin(@NotNull ItemStack item, @NotNull String skin, @Nullable String name) {
+		if (item.getType() != Material.PLAYER_HEAD && item.getType() != Material.PLAYER_WALL_HEAD) return item;
+		SkullMeta meta = (SkullMeta) item.getItemMeta();
+		setSkin(meta,skin,name);
+		item.setItemMeta(meta);
+		return item;
+	}
+	
 	public static boolean setSkin(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
 		try {
-			Method setProfileMethod = meta.getClass().getDeclaredMethod("setProfile", GameProfile.class);
+			Method setProfileMethod = meta.getClass().getDeclaredMethod("setProfile",GameProfile.class);
 			setProfileMethod.setAccessible(true);
 			UUID id = new UUID(skin.substring(skin.length() - 20).hashCode(),skin.substring(skin.length() - 10).hashCode());
 			GameProfile profile = new GameProfile(id,name == null ? "D" : name);
@@ -791,6 +813,12 @@ public class Utils {
 			return (GameProfile) profileField.get(meta);
 		} catch (Exception e) {}
 		return null;
+	}
+	
+	@NotNull
+	public static GameProfile getProfile(@NotNull Player player) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
+		Method getProfile = player.getClass().getDeclaredMethod("getProfile");
+		return (GameProfile) getProfile.invoke(player);
 	}
 	
 	public static String toString(double var) {
