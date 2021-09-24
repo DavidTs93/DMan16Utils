@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -35,6 +36,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
 	protected @NotNull JavaPlugin plugin;
+	protected InventoryView view;
 	
 	/**
 	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
@@ -56,7 +58,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void openInventory() {
-		player.openInventory(inventory);
+		view = player.openInventory(inventory);
 	}
 	
 	@EventHandler

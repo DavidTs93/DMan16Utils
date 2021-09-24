@@ -58,7 +58,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		this.ID = ID;
 		this.rarity = Rarity.get(rarity);
 		this.name = name.trim().replace(" ","_").toLowerCase();
-		if (this.name.isEmpty()) throw new IllegalArgumentException();
+		if (this.name.isEmpty()) throw new IllegalArgumentException("Empty name!");
 		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
 		TextColor textColor = Utils.getTextColor(color);
 		Component display = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?

@@ -45,13 +45,14 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Utils {
-	private static final Pattern pattern = Pattern.compile("&#[a-fA-F0-9]{6}");
-	private static final Pattern unicode = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
+	private static final Pattern COLOR_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
+	private static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
+	public static final Component KICK_MESSAGE = Component.text("An error occurred, please try to reconnect",NamedTextColor.RED);
+	public static final Component NOT_FINISHED_LOADING_MESSAGE = Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED);
+	public static final Component PLAYER_NOT_FOUND = Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED);
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
-//	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
-	public static final Component kickMessage = Component.text("An error occurred, please try to reconnect",NamedTextColor.RED);
-	public static final Component playerNotFound = Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED);
+	//	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
 	
 	static {
@@ -81,17 +82,17 @@ public class Utils {
 	@NotNull
 	public static String chatColors(@NotNull String str) {
 //		str = chatColorsStrip(str);
-		Matcher match = unicode.matcher(str);
+		Matcher match = UNICODE_PATTERN.matcher(str);
 		while (match.find()) {
 			String code = str.substring(match.start(),match.end());
 			str = str.replace(code,Character.toString((char) Integer.parseInt(code.replace("\\u+",""),16)));
-			match = unicode.matcher(str);
+			match = UNICODE_PATTERN.matcher(str);
 		}
-		match = pattern.matcher(str);
+		match = COLOR_PATTERN.matcher(str);
 		while (match.find()) {
 			String color = str.substring(match.start(),match.end());
 			str = str.replace(color, ChatColor.of(color.replace("&","")) + "");
-			match = pattern.matcher(str);
+			match = COLOR_PATTERN.matcher(str);
 		}
 		return ChatColor.translateAlternateColorCodes('&',str);
 	}
@@ -192,7 +193,7 @@ public class Utils {
 				try {
 					if (sub.substring(i - 1,i).equalsIgnoreCase(colorCode)) continue;
 				} catch (Exception e) {}
-				if (sub.substring(i,i+1).matches("[a-zA-Z]+")) {
+				if (sub.substring(i,i + 1).matches("[a-zA-Z]+")) {
 					found = true;
 					break;
 				}

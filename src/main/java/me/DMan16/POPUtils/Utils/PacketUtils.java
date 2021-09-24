@@ -55,8 +55,8 @@ public class PacketUtils {
 	
 	@Nullable
 	public static PacketPlayOutSpawnEntityLiving packetCreateArmorStand(int ID, @NotNull Location loc) {
-		Player player = Bukkit.getOnlinePlayers().iterator().next();
 		try {
+			Player player = Bukkit.getOnlinePlayers().iterator().next();
 			PacketPlayOutSpawnEntityLiving packet = new PacketPlayOutSpawnEntityLiving(ReflectionUtils.getHandle(player));
 			Class<?> PacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.class;
 			Field entityID = PacketPlayOutSpawnEntityLiving.getDeclaredField("a");
@@ -65,24 +65,40 @@ public class PacketUtils {
 			Field entityX = PacketPlayOutSpawnEntityLiving.getDeclaredField("d");
 			Field entityY = PacketPlayOutSpawnEntityLiving.getDeclaredField("e");
 			Field entityZ = PacketPlayOutSpawnEntityLiving.getDeclaredField("f");
+			Field entityMot1 = PacketPlayOutSpawnEntityLiving.getDeclaredField("g");
+			Field entityMot2 = PacketPlayOutSpawnEntityLiving.getDeclaredField("h");
+			Field entityMot3 = PacketPlayOutSpawnEntityLiving.getDeclaredField("i");
 			Field entityYaw = PacketPlayOutSpawnEntityLiving.getDeclaredField("j");
 			Field entityPitch = PacketPlayOutSpawnEntityLiving.getDeclaredField("k");
+			Field entityL = PacketPlayOutSpawnEntityLiving.getDeclaredField("l");
 			entityID.setAccessible(true);
 			entityUUID.setAccessible(true);
 			entityType.setAccessible(true);
 			entityX.setAccessible(true);
 			entityY.setAccessible(true);
 			entityZ.setAccessible(true);
+			entityMot1.setAccessible(true);
+			entityMot2.setAccessible(true);
+			entityMot3.setAccessible(true);
 			entityYaw.setAccessible(true);
 			entityPitch.setAccessible(true);
+			entityL.setAccessible(true);
 			entityID.set(packet,ID);
-			entityType.set(packet,IRegistry.Y.getId(EntityTypes.c));
-			entityYaw.set(packet,(byte) loc.getYaw());
-			entityPitch.set(packet,(byte) loc.getPitch());
 			entityUUID.set(packet,UUID.randomUUID());
+			entityType.set(packet,IRegistry.Y.getId(EntityTypes.c));
 			entityX.set(packet,loc.getX());
 			entityY.set(packet,loc.getY());
 			entityZ.set(packet,loc.getZ());
+			entityMot1.set(packet,0);
+			entityMot2.set(packet,0);
+			entityMot3.set(packet,0);
+			float yaw = loc.getYaw();
+			if (Float.isInfinite(yaw) || Float.isNaN(yaw)) yaw = 0;
+			entityYaw.set(packet,(byte) Math.round(yaw * 256 / 360));
+			float pitch = loc.getPitch();
+			if (Float.isInfinite(pitch) || Float.isNaN(pitch)) pitch = 0;
+			entityPitch.set(packet,(byte) Math.round(pitch * 256 / 360));
+			entityL.set(packet,(byte) 0);
 			return packet;
 		} catch (Exception e) {e.printStackTrace();}
 		return null;

@@ -21,8 +21,8 @@ import java.util.*;
 import java.util.function.Function;
 
 public abstract class ApplicableMenu<V extends Applicable<?,?>> extends ListenerInventoryPages implements Sortable {
-	private static final ItemStack DEFAULT_ITEM_RESET = Utils.makeItem(Material.PAPER,Component.translatable("controls.reset",NamedTextColor.GREEN).
-			decoration(TextDecoration.ITALIC,false),ItemFlag.values());
+	private static final Component RESET_NAME = Component.translatable("controls.reset",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
+	private static final ItemStack DEFAULT_ITEM_RESET = Utils.makeItem(Material.PAPER,RESET_NAME,ItemFlag.values());
 	
 	protected int slotSort;
 	protected int slotReset;
@@ -121,5 +121,10 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 		ItemStack item = DEFAULT_ITEM_RESET.clone();
 		item.setType(material);
 		return item;
+	}
+	
+	@NotNull
+	protected static ItemStack defaultItemReset(@NotNull ItemStack item) {
+		return Utils.cloneChange(item,true,RESET_NAME,false,null,-1,false,ItemFlag.values());
 	}
 }
