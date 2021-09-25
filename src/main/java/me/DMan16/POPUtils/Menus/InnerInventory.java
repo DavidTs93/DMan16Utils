@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public abstract class InnerInventory<V> extends ListenerInventoryPages {
@@ -35,14 +35,14 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	}
 	
 	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner, @NotNull UUID ID, Boolean allowEdit,
-							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Consumer<T> doFirstMore) {
+							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		super(viewer,viewer,5,menuName,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
 //				ID,owner,allowEdit,originalMenu,objs);
 	}
 	
 	@SuppressWarnings("unchecked")
 	private static <V,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner, @NotNull UUID ID, boolean owner, Boolean allowEdit, @NotNull HashMap<@NotNull Integer,
-			@NotNull List<@Nullable V>> originalMenu, @Nullable Consumer<T> doFirstMore) {
+			@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		inner.ID = ID;
 		inner.owner = owner;
 		inner.allowEdit = allowEdit == null ? inner.owner : allowEdit;
@@ -51,7 +51,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		inner.first = true;
 		inner.rightJump = 10;
 		inner.fancyButtons = true;
-		if (doFirstMore != null) doFirstMore.accept((T) inner);
+		if (doFirstMore != null) if (!doFirstMore.apply((T) inner)) throw new IllegalArgumentException();
 		return true;
 	}
 	
@@ -61,7 +61,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	}
 	
 	@Override
-	protected boolean cancelCheck(int slot, @NotNull ClickType click) {
+	protected boolean cancelCheck(int slot, @NotNull ClickType click, int hotbarSlot) {
 		return !allowEdit || (slot < size && slot >= size - 9);
 	}
 	
@@ -73,7 +73,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	@Override
 	protected void reset() {
 		for (int i = 0; i < size - 9; i++) inventory.setItem(i,null);
-		for (int i = size - 9; i < size; i++) inventory.setItem(i,ITEM_EMPTY);
+		for (int i = size - 9; i < size; i++) inventory.setItem(i, ITEM_EMPTY_BORDER);
 	}
 	
 	@Override

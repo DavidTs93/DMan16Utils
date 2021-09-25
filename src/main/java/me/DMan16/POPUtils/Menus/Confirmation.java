@@ -2,23 +2,18 @@ package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
-import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.ItemFlag;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.function.Function;
 
 public abstract class Confirmation extends ListenerInventory {
 	protected int slotCancel;
@@ -26,12 +21,14 @@ public abstract class Confirmation extends ListenerInventory {
 	protected final Player player;
 	protected final boolean canConfirm;
 	
-	protected Confirmation(@NotNull Player player, @NotNull Component menuName, @Nullable List<Component> noConfirmLore, @NotNull JavaPlugin plugin, Object ... objs) {
+	@SuppressWarnings("unchecked")
+	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component menuName, @Nullable List<Component> noConfirmLore, @NotNull JavaPlugin plugin,
+													@Nullable Function<V,@NotNull Boolean> doFirst) {
 		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,menuName));
 		this.player = player;
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
-		first(objs);
+		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		this.canConfirm = canConfirm();
 		this.register(plugin);
 		this.inventory.setItem(slotCancel,CANCEL);
@@ -49,9 +46,6 @@ public abstract class Confirmation extends ListenerInventory {
 		if (slot == slotConfirm && this.canConfirm) confirm();
 		if (slot == slotCancel || (slot == slotConfirm && this.canConfirm)) done();
 	}
-	
-	
-	protected void first(Object ... objs) {}
 	
 	protected abstract boolean canConfirm();
 	protected abstract void confirm();

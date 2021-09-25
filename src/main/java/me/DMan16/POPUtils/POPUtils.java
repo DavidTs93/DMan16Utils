@@ -59,31 +59,31 @@ public final class POPUtils extends JavaPlugin {
 		return INSTANCE;
 	}
 	
-	public static Connection getConnection() {
+	public Connection getConnection() {
 		return POPUpdaterMain.getConnection();
 	}
 	
-	public static WorldGuardManager getWorldGuardManager() {
-		return INSTANCE.WorldGuardManager;
+	public WorldGuardManager getWorldGuardManager() {
+		return WorldGuardManager;
 	}
 	
-	public static PlaceholderManager getPAPIManager() {
-		return INSTANCE.PAPIManager;
+	public PlaceholderManager getPAPIManager() {
+		return PAPIManager;
 	}
 	
-	public static CitizensManager getCitizensManager() {
-		return INSTANCE.CitizensManager;
+	public CitizensManager getCitizensManager() {
+		return CitizensManager;
 	}
 	
-	public static ProtocolManager getProtocolManager() {
-		return INSTANCE.ProtocolManager;
+	public ProtocolManager getProtocolManager() {
+		return ProtocolManager;
 	}
 	
-	public static CancelPlayers getCancelPlayers() {
-		return INSTANCE.CancelPlayers;
+	public CancelPlayers getCancelPlayers() {
+		return CancelPlayers;
 	}
 	
-	public static PlayerVersionLogger getPlayerVersionLogger() {
-		return INSTANCE.PlayerVersionLogger;
+	public PlayerVersionLogger getPlayerVersionLogger() {
+		return PlayerVersionLogger;
 	}
 }

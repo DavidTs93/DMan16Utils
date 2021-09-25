@@ -76,7 +76,7 @@ public class CitizensManager {
 			GameProfile profile = Utils.getProfile(player);
 			Property property = Iterables.getFirst(profile.getProperties().get("textures"),null);
 			assert property != null;
-			POPUtils.getCitizensManager().applySkin(npc,player.getName(),property.getSignature(),property.getValue());
+			Utils.getCitizensManager().applySkin(npc,player.getName(),property.getSignature(),property.getValue());
 			return true;
 		} catch (Exception e1) {
 			e1.printStackTrace();

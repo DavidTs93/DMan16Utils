@@ -32,7 +32,8 @@ public abstract class ListenerInventory implements Listener,Menu {
 	protected static final ItemStack DOWN = Utils.makeItem(Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
 	protected static final ItemStack YES = Utils.makeItem(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
 	protected static final ItemStack NO = Utils.makeItem(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack ITEM_EMPTY = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
+	protected static final ItemStack ITEM_EMPTY_BORDER = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
+	protected static final ItemStack ITEM_EMPTY_INSIDE = Utils.makeItem(Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
 	
 	protected final Inventory inventory;
 	protected final int size;

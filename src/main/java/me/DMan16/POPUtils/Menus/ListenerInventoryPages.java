@@ -32,6 +32,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
 	protected boolean resetWithBorder = false;
+	protected boolean resetFillInside = false;
 	protected int rightJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
@@ -67,7 +68,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		int slot = event.getRawSlot();
 		ClickType click = event.getClick();
 		if (!firstSlotCheck(slot,click)) {
-			if (cancelCheck(slot,click)) event.setCancelled(true);
+			if (cancelCheck(slot,click,event.getHotbarButton())) event.setCancelled(true);
 			if (!clickCheck(click)) {
 				if (!secondSlotCheck(slot,click)) {
 					ItemStack slotItem = event.getView().getItem(slot);
@@ -119,7 +120,8 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void reset() {
-		for (int i = 0; i < size; i++) inventory.setItem(i,resetWithBorder ? (isBorder(i) ? ITEM_EMPTY : null) : null);
+		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
+		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
 	}
 	
 	public void setPage(int page) {
@@ -173,10 +175,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {
-		return Utils.isNull(item) || Utils.sameItem(ITEM_EMPTY,item);
+		return Utils.isNull(item) || Utils.sameItem(ITEM_EMPTY_BORDER,item) || Utils.sameItem(ITEM_EMPTY_INSIDE,item);
 	}
 	
-	protected boolean cancelCheck(int slot, @NotNull ClickType click) {
+	protected boolean cancelCheck(int slot, @NotNull ClickType click, int hotbarSlot) {
 		return true;
 	}
 	

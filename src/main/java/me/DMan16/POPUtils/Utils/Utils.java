@@ -1,9 +1,12 @@
 package me.DMan16.POPUtils.Utils;
 
+import com.comphenix.protocol.ProtocolManager;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
+import me.DMan16.POPUtils.Listeners.CancelPlayers;
+import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.POPUtils;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
@@ -36,6 +39,7 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -261,12 +265,13 @@ public class Utils {
 	public static ItemStack getFromSlot(@NotNull Player player, int slot) {
 		ItemStack item = null;
 		if (slot == -106) item = player.getInventory().getItemInOffHand();
-		else if (slot < 0);
-		else if (slot == 100) item = player.getInventory().getBoots();
-		else if (slot == 101) item = player.getInventory().getLeggings();
-		else if (slot == 102) item = player.getInventory().getChestplate();
-		else if (slot == 103) item = player.getInventory().getHelmet();
-		else item = player.getInventory().getItem(slot);
+		else if (slot >= 0) {
+			if (slot == 100) item = player.getInventory().getBoots();
+			else if (slot == 101) item = player.getInventory().getLeggings();
+			else if (slot == 102) item = player.getInventory().getChestplate();
+			else if (slot == 103) item = player.getInventory().getHelmet();
+			else item = player.getInventory().getItem(slot);
+		}
 		return item;
 	}
 	
@@ -748,24 +753,24 @@ public class Utils {
 	}
 	
 	public static boolean isPlayerNPC(@NotNull Player player) {
-		if (POPUtils.getCitizensManager() == null) return false;
-		return POPUtils.getCitizensManager().isNPC(player);
+		if (Utils.getCitizensManager() == null) return false;
+		return Utils.getCitizensManager().isNPC(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player) {
-		POPUtils.getCancelPlayers().addPlayer(player);
+		Utils.getCancelPlayers().addPlayer(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		POPUtils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
+		Utils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player) {
-		POPUtils.getCancelPlayers().removePlayer(player);
+		Utils.getCancelPlayers().removePlayer(player);
 	}
 	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
-		return POPUtils.getCancelPlayers().isPlayerCancelled(player);
+		return Utils.getCancelPlayers().isPlayerCancelled(player);
 	}
 	
 	public static void savePlayer(@NotNull Player player) {
@@ -830,5 +835,33 @@ public class Utils {
 	@NotNull
 	public static ItemStack clone(@NotNull ItemStack item) {
 		return ReflectionUtils.CloneWithNBT(item);
+	}
+	
+	public static Connection getConnection() {
+		return POPUpdaterMain.getConnection();
+	}
+	
+	public static WorldGuardManager getWorldGuardManager() {
+		return POPUtils.getInstance().getWorldGuardManager();
+	}
+	
+	public static PlaceholderManager getPAPIManager() {
+		return POPUtils.getInstance().getPAPIManager();
+	}
+	
+	public static CitizensManager getCitizensManager() {
+		return POPUtils.getInstance().getCitizensManager();
+	}
+	
+	public static ProtocolManager getProtocolManager() {
+		return POPUtils.getInstance().getProtocolManager();
+	}
+	
+	public static CancelPlayers getCancelPlayers() {
+		return POPUtils.getInstance().getCancelPlayers();
+	}
+	
+	public static PlayerVersionLogger getPlayerVersionLogger() {
+		return POPUtils.getInstance().getPlayerVersionLogger();
 	}
 }
