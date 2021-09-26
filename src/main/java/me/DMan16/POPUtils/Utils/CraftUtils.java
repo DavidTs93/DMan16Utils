@@ -1,5 +1,7 @@
 package me.DMan16.POPUtils.Utils;
 
+import org.bukkit.World;
+import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLivingEntity;
@@ -46,5 +48,10 @@ public class CraftUtils {
 	@NotNull
 	public static CraftEntity toCraft(@NotNull Entity entity) {
 		return (CraftEntity) entity;
+	}
+	
+	@NotNull
+	public static CraftWorld toCraft(@NotNull World world) {
+		return (CraftWorld) world;
 	}
 }

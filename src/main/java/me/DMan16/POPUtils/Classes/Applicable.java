@@ -25,6 +25,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	public final int ID;
 	public final Rarity rarity;
 	@NotNull public final String name;
+	@NotNull protected final Component defaultName;
 	@NotNull public final Component displayName;
 	protected final ItemStack displayItem;
 	@Nullable protected final BigInteger ShopPrice;
@@ -37,15 +38,15 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		this.rarity = Rarity.get(0);
 		this.name = "null";
 		if (doFirst != null) doFirst.accept((P) this);
-		Component display = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
 				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
-		this.displayItem = displayItem(display);
-		ItemStack bundle = Utils.makeItem(Material.BUNDLE,display,lore(false,this.rarity), ItemFlag.values());
+		this.displayItem = displayItem(defaultName);
+		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity), ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
-		this.displayName = display.hoverEvent(bundle.asHoverEvent());
+		this.displayName = defaultName.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = null;
 		this.isNull = true;
 	}
@@ -61,15 +62,15 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		if (this.name.isEmpty()) throw new IllegalArgumentException("Empty name!");
 		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
 		TextColor textColor = Utils.getTextColor(color);
-		Component display = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),textColor) :
 				Component.text(Utils.chatColors(displayName),textColor)).decoration(TextDecoration.ITALIC,false);
-		this.displayItem = displayItem(display);
-		ItemStack bundle = Utils.makeItem(Material.BUNDLE,display,lore(false,this.rarity),ItemFlag.values());
+		this.displayItem = displayItem(defaultName);
+		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
-		this.displayName = display.hoverEvent(bundle.asHoverEvent());
+		this.displayName = defaultName.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = shopPrice == null || shopPrice.compareTo(BigInteger.ZERO) < 0 ? null : shopPrice;
 		this.isNull = false;
 	}

@@ -9,6 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.InventoryView;
@@ -32,7 +33,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
 	protected boolean resetWithBorder = false;
-	protected boolean resetFillInside = false;
+//	protected boolean resetFillInside = false;
 	protected int rightJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
@@ -66,11 +67,14 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	public void onInventoryClick(InventoryClickEvent event) {
 		if (!event.getView().getTopInventory().equals(inventory) || checkCancelled(event)) return;
 		int slot = event.getRawSlot();
+		int inventorySlot = event.getSlot();
 		ClickType click = event.getClick();
+		InventoryAction action = event.getAction();
+		int hotbar = event.getHotbarButton();
 		if (!firstSlotCheck(slot,click)) {
-			if (cancelCheck(slot,click,event.getHotbarButton())) event.setCancelled(true);
+			if (cancelCheck(slot,inventorySlot,click,action,hotbar)) event.setCancelled(true);
 			if (!clickCheck(click)) {
-				if (!secondSlotCheck(slot,click)) {
+				if (!secondSlotCheck(slot,inventorySlot,click,action,hotbar)) {
 					ItemStack slotItem = event.getView().getItem(slot);
 					if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
 					else if (slot == slotClose) event.getView().close();
@@ -120,8 +124,9 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void reset() {
-		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
-		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
+//		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
+//		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
+		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : null) : null);
 	}
 	
 	public void setPage(int page) {
@@ -178,7 +183,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return Utils.isNull(item) || Utils.sameItem(ITEM_EMPTY_BORDER,item) || Utils.sameItem(ITEM_EMPTY_INSIDE,item);
 	}
 	
-	protected boolean cancelCheck(int slot, @NotNull ClickType click, int hotbarSlot) {
+	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
 		return true;
 	}
 	
@@ -186,7 +191,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return false;
 	}
 	
-	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
+	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
 		return click.isCreativeAction() || slot < 0;
 	}
 	

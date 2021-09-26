@@ -1,10 +1,12 @@
 package me.DMan16.POPUtils.Utils;
 
 import net.minecraft.server.level.EntityPlayer;
+import net.minecraft.server.level.WorldServer;
 import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.EntityLiving;
 import net.minecraft.world.entity.player.EntityHuman;
+import org.bukkit.World;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.inventory.ItemStack;
@@ -104,6 +106,10 @@ public class ReflectionUtils {
 	
 	public static EntityLiving getHandle(@NotNull LivingEntity entity) {
 		return CraftUtils.toCraft(entity).getHandle();
+	}
+	
+	public static WorldServer getHandle(@NotNull World world) {
+		return CraftUtils.toCraft(world).getHandle();
 	}
 	
 	public static net.minecraft.world.entity.Entity getHandle(@NotNull Entity entity) {

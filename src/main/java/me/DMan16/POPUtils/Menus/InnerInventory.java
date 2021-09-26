@@ -6,6 +6,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -61,13 +62,13 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	}
 	
 	@Override
-	protected boolean cancelCheck(int slot, @NotNull ClickType click, int hotbarSlot) {
+	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
 		return !allowEdit || (slot < size && slot >= size - 9);
 	}
 	
 	@Override
-	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
-		return super.secondSlotCheck(slot,click) || slot >= size || slot < size - 9;
+	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+		return super.secondSlotCheck(slot,inventorySlot,click,action,hotbarSlot) || slot >= size || slot < size - 9;
 	}
 	
 	@Override

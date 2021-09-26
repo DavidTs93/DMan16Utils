@@ -10,6 +10,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -78,8 +79,8 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	}
 	
 	@Override
-	protected boolean secondSlotCheck(int slot, @NotNull ClickType click) {
-		return super.secondSlotCheck(slot,click) || slot >= size;
+	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+		return super.secondSlotCheck(slot,inventorySlot,click,action,hotbarSlot) || slot >= size;
 	}
 	
 	@Override
