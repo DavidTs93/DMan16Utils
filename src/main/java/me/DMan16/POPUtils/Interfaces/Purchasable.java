@@ -11,6 +11,9 @@ public interface Purchasable<V,T> {
 	@NotNull
 	V getDefaultCurrencyType();
 	
+	@NotNull
+	V getCurrencyType();
+	
 	@Nullable
 	BigInteger getPrice(@NotNull Player player, @Nullable T val);
 	

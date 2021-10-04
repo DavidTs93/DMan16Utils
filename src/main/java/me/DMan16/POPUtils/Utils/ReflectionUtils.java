@@ -91,11 +91,6 @@ public class ReflectionUtils {
 		return CraftUtils.asCraftMirror(item);
 	}
 	
-	@NotNull
-	public static ItemStack CloneWithNBT(@NotNull ItemStack item) {
-		return CraftUtils.asCraftCopy(item);
-	}
-	
 	public static EntityPlayer getHandle(@NotNull Player player) {
 		 return CraftUtils.toCraft(player).getHandle();
 	}

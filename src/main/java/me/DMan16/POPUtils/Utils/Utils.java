@@ -317,8 +317,8 @@ public class Utils {
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		if (item1 == null || item2 == null) return item1 == item2;
-		ItemStack cmp1 = clone(item1);
-		ItemStack cmp2 = clone(item2);
+		ItemStack cmp1 = item1.clone();
+		ItemStack cmp2 = item2.clone();
 		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
 		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
 		return cmp1.isSimilar(cmp2);
@@ -329,8 +329,8 @@ public class Utils {
 	 */
 	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability, boolean ignoreFlags) {
 		if (item1 == null || item2 == null) return item1 == item2;
-		ItemStack cmp1 = clone(item1);
-		ItemStack cmp2 = clone(item2);
+		ItemStack cmp1 = item1.clone();
+		ItemStack cmp2 = item2.clone();
 		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
 		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
 		if (cmp1.isSimilar(cmp2)) return true;
@@ -616,7 +616,7 @@ public class Utils {
 	@NotNull
 	public static ItemStack cloneChange(@NotNull ItemStack base, boolean changeName, @Nullable Component name, boolean changeLore, @Nullable List<Component> lore,
 										int model, boolean removeFlags, ItemFlag ... flags) {
-		ItemStack item = clone(base);
+		ItemStack item = base.clone();
 		ItemMeta meta = item.getItemMeta();
 		if (changeName) meta.displayName(name);
 		if (removeFlags) for (ItemFlag flag : ItemFlag.values()) meta.removeItemFlags(flag);
@@ -830,11 +830,6 @@ public class Utils {
 	public static String toString(double var) {
 		double floor = Math.floor(var);
 		return floor == var ? Double.toString(floor).replace(".0","") : Double.toString(var);
-	}
-	
-	@NotNull
-	public static ItemStack clone(@NotNull ItemStack item) {
-		return ReflectionUtils.CloneWithNBT(item);
 	}
 	
 	public static Connection getConnection() {

@@ -1,6 +1,5 @@
 package me.DMan16.POPUtils.Classes;
 
-import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
@@ -26,8 +25,7 @@ public class Equipment {
 	}
 	
 	private static ItemStack cloneOrNull(ItemStack item) {
-		if (item == null) return null;
-		return Utils.clone(item);
+		return item == null ? null : item.clone();
 	}
 	
 	public ItemStack mainHand() {

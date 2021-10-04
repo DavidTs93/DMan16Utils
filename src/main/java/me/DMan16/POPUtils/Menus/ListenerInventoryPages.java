@@ -77,10 +77,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				if (!secondSlotCheck(slot,inventorySlot,click,action,hotbar)) {
 					ItemStack slotItem = event.getView().getItem(slot);
 					if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
-					else if (slot == slotClose) event.getView().close();
-					else if (slot == slotNext) next(click);
-					else if (slot == slotPrevious) previous(click);
+					else if (slot == slotNext && shouldSetNext()) next(click);
+					else if (slot == slotPrevious && shouldSetPrevious()) previous(click);
 					else if (slot == slotBack && (this instanceof Backable)) ((Backable) this).goBack();
+					else if (slot == slotClose) event.getView().close();
 					else otherSlot(event,slot,slotItem,click);
 				}
 			}
@@ -136,9 +136,9 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		reset();
 		setPageContents();
 		inventory.setItem(slotClose,close());
-		if (alwaysSetNext || currentPage < maxPage()) inventory.setItem(slotNext,next());
-		if (alwaysSetPrevious || currentPage > 1) inventory.setItem(slotPrevious,previous());
-		if (this instanceof Backable) inventory.setItem(slotBack(),BACK);
+		if (shouldSetNext()) inventory.setItem(slotNext,next());
+		if (shouldSetPrevious()) inventory.setItem(slotPrevious,previous());
+		if (this instanceof Backable) inventory.setItem(slotBack,BACK);
 		cancelCloseUnregister = true;
 		openInventory();
 		new BukkitRunnable() {
@@ -146,6 +146,14 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				cancelCloseUnregister = false;
 			}
 		}.runTask(POPUtils.getInstance());
+	}
+	
+	protected boolean shouldSetNext() {
+		return alwaysSetNext || currentPage < maxPage();
+	}
+	
+	protected boolean shouldSetPrevious() {
+		return alwaysSetPrevious || currentPage > 1;
 	}
 	
 	protected void beforeSetPage(int newPage) {}

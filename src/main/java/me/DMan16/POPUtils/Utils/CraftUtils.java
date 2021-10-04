@@ -21,11 +21,6 @@ public class CraftUtils {
 	}
 	
 	@NotNull
-	public static ItemStack asCraftCopy(@NotNull ItemStack item) {
-		return CraftItemStack.asCraftCopy(item);
-	}
-	
-	@NotNull
 	public static ItemStack asCraftMirror(@NotNull net.minecraft.world.item.ItemStack item) {
 		return CraftItemStack.asCraftMirror(item);
 	}
