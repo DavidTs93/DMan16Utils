@@ -317,11 +317,10 @@ public class Utils {
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		if (item1 == null || item2 == null) return item1 == item2;
-		ItemStack cmp1 = item1.clone();
-		ItemStack cmp2 = item2.clone();
-		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
-		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
-		return cmp1.isSimilar(cmp2);
+		else if (item1.isSimilar(item2)) return true;
+		else if (Restrictions.Unstackable.is(item1) || Restrictions.Unstackable.is(item2))
+			return Restrictions.Unstackable.remove(item1.clone()).isSimilar(Restrictions.Unstackable.remove(item2.clone()));
+		return false;
 	}
 	
 	/**
@@ -656,16 +655,19 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static ItemStack makePotion(@Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color, @Nullable PotionData base, PotionEffect... effects) {
+	public static ItemStack makePotion(@Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color,
+									   @Nullable PotionData base, PotionEffect... effects) {
 		return makePotion(Material.POTION,name,model,lore,hide,color,base,effects);
 	}
 	
 	@NotNull
-	public static ItemStack makePotionSplash(@Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color, @Nullable PotionData base, PotionEffect ... effects) {
+	public static ItemStack makePotionSplash(@Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color,
+											 @Nullable PotionData base, PotionEffect ... effects) {
 		return makePotion(Material.SPLASH_POTION,name,model,lore,hide,color,base,effects);
 	}
 	
-	private static @NotNull ItemStack makePotion(@NotNull Material material, @Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color, @Nullable PotionData base, PotionEffect ... effects) {
+	private static @NotNull ItemStack makePotion(@NotNull Material material, @Nullable Component name, int model, @Nullable List<Component> lore, boolean hide, Color color,
+												 @Nullable PotionData base, PotionEffect ... effects) {
 		ItemStack item = hide ? makeItem(material,name,lore,model,ItemFlag.HIDE_POTION_EFFECTS) : makeItem(material,name,lore,model);
 		PotionMeta meta = (PotionMeta) item.getItemMeta();
 		if (base != null) meta.setBasePotionData(base);
@@ -858,5 +860,9 @@ public class Utils {
 	
 	public static PlayerVersionLogger getPlayerVersionLogger() {
 		return POPUtils.getInstance().getPlayerVersionLogger();
+	}
+	
+	public static boolean containsTabComplete(String arg1, String arg2) {
+		return (arg1 == null || arg1.isEmpty() || arg2.toLowerCase().contains(arg1.toLowerCase()));
 	}
 }
