@@ -12,12 +12,12 @@ public enum Rarity {
 	EPIC(100,NamedTextColor.BLUE),
 	MYTHICAL(200,NamedTextColor.RED),
 	LEGENDARY(500,NamedTextColor.LIGHT_PURPLE),
-	GOD(1000, TextColor.color(112,51,173));
+	GOD(1000,TextColor.color(112,51,173));
 	
 	private static final String prefix = "menu.prisonpop.rarity.";
 	
-	private final int level;
-	private final TextColor color;
+	public final int level;
+	public final TextColor color;
 	
 	Rarity(int level, TextColor color) {
 		this.level = level;

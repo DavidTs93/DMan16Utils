@@ -32,7 +32,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected final Player player;
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
-	protected boolean resetWithBorder = false;
+	protected Boolean resetWithBorder = false;
 //	protected boolean resetFillInside = false;
 	protected int rightJump = 1;
 	protected boolean fancyButtons = false;
@@ -126,7 +126,11 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected void reset() {
 //		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
 //		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
-		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : null) : null);
+		if (resetWithBorder == null) {
+			for (int i = 0; i < size - 9; i++) inventory.setItem(i,null);
+			for (int i = size - 9; i < size; i++) inventory.setItem(i,ITEM_EMPTY_BORDER);
+		} else if (resetWithBorder) for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? ITEM_EMPTY_BORDER : null);
+		else for (int i = 0; i < size; i++) inventory.setItem(i,null);
 	}
 	
 	public void setPage(int page) {

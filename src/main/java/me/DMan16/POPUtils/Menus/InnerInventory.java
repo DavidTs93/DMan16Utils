@@ -52,6 +52,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		inner.first = true;
 		inner.rightJump = 10;
 		inner.fancyButtons = true;
+		inner.resetWithBorder = null;
 		if (doFirstMore != null) if (!doFirstMore.apply((T) inner)) throw new IllegalArgumentException();
 		return true;
 	}
@@ -69,12 +70,6 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	@Override
 	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
 		return super.secondSlotCheck(slot,inventorySlot,click,action,hotbarSlot) || slot >= size || slot < size - 9;
-	}
-	
-	@Override
-	protected void reset() {
-		for (int i = 0; i < size - 9; i++) inventory.setItem(i,null);
-		for (int i = size - 9; i < size; i++) inventory.setItem(i, ITEM_EMPTY_BORDER);
 	}
 	
 	@Override
