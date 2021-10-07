@@ -19,8 +19,9 @@ import java.util.function.Function;
 public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
 	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
-	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull JavaPlugin plugin, @Nullable Function<P,@NotNull Boolean> doFirstMore) {
-		super(player,player,lines,name,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
+	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull String menuID, @NotNull JavaPlugin plugin,
+									  @Nullable Function<P,@NotNull Boolean> doFirstMore) {
+		super(player,player,lines,name,menuID,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
 	}
 	
 	protected void setPagePurchases() {
@@ -30,7 +31,6 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	@SuppressWarnings("unchecked")
 	private static <V extends Purchasable<?,T>,T,P extends Shop<V,T>> boolean first(@NotNull Shop<V,T> shop, @Nullable Function<P,@NotNull Boolean> doFirstMore) {
 		shop.purchases = new ArrayList<>();
-		shop.resetWithBorder = true;
 		shop.fancyButtons = true;
 		if (doFirstMore != null) if (!doFirstMore.apply((P) shop)) return false;
 		shop.setPurchases();

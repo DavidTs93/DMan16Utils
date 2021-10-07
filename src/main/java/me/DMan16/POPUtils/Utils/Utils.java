@@ -4,7 +4,10 @@ import com.comphenix.protocol.ProtocolManager;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
+import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
 import me.DMan16.POPUtils.Classes.Pair;
+import me.DMan16.POPUtils.Classes.PluginItems;
+import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.POPUtils;
@@ -40,6 +43,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -56,8 +61,24 @@ public class Utils {
 	public static final Component PLAYER_NOT_FOUND = Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED);
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
-	//	public static final Component kickMessage = Component.translatable("multiplayer.prisonpop.kick_error",NamedTextColor.RED);
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
+	public static final PluginItems ITEMS = new PluginItems(
+			new ItemInitializerInfo("sort",Material.PAPER,Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_close",Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_next",Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_previous",Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_done",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_ok",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_ok_no",Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false).decoration(TextDecoration.STRIKETHROUGH,true),0,null),
+			new ItemInitializerInfo("menu_cancel",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_back",Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_up",Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_down",Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_yes",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_no",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
+			new ItemInitializerInfo("menu_border",Material.GRAY_STAINED_GLASS_PANE,Component.empty(),0,null),
+			new ItemInitializerInfo("menu_inside",Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty(),0,null)
+	);
 	
 	static {
 		createInteractable();
@@ -69,7 +90,7 @@ public class Utils {
 	}
 	
 	@NotNull
-	public  static String javaVersion() {
+	public static String javaVersion() {
 		String javaVersion = "";
 		Iterator<Entry<Object,Object>> systemProperties = System.getProperties().entrySet().iterator();
 		while (systemProperties.hasNext() && javaVersion.isEmpty()) {
@@ -95,7 +116,7 @@ public class Utils {
 		match = COLOR_PATTERN.matcher(str);
 		while (match.find()) {
 			String color = str.substring(match.start(),match.end());
-			str = str.replace(color, ChatColor.of(color.replace("&","")) + "");
+			str = str.replace(color,ChatColor.of(color.replace("&","")) + "");
 			match = COLOR_PATTERN.matcher(str);
 		}
 		return ChatColor.translateAlternateColorCodes('&',str);
@@ -208,17 +229,17 @@ public class Utils {
 		Matcher match = pattern.matcher(newStr.toString());
 		while (match.find()) {
 			String code = newStr.substring(match.start(),match.end());
-			newStr = new StringBuilder(newStr.toString().replace(code, code.replace("Of ", "of ")));
+			newStr = new StringBuilder(newStr.toString().replace(code,code.replace("Of ","of ")));
 			match = pattern.matcher(newStr.toString());
 		}
 		pattern = Pattern.compile(" " + colorCode + "[a-zA-Z0-9]The ");
 		match = pattern.matcher(newStr.toString());
 		while (match.find()) {
 			String code = newStr.substring(match.start(),match.end());
-			newStr = new StringBuilder(newStr.toString().replace(code, code.replace("The ", "the ")));
+			newStr = new StringBuilder(newStr.toString().replace(code,code.replace("The ","the ")));
 			match = pattern.matcher(newStr.toString());
 		}
-		return newStr.toString().replace(" Of ", " of ").replace(" The ", " the ").trim();
+		return newStr.toString().replace(" Of "," of ").replace(" The "," the ").trim();
 	}
 	
 	@NotNull
@@ -316,7 +337,7 @@ public class Utils {
 	 * @return if the items are the identical besides the amount
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
-		if (item1 == null || item2 == null) return item1 == item2;
+		if (isNull(item1) || isNull(item2)) return item1 == item2;
 		else if (item1.isSimilar(item2)) return true;
 		else if (Restrictions.Unstackable.is(item1) || Restrictions.Unstackable.is(item2))
 			return Restrictions.Unstackable.remove(item1.clone()).isSimilar(Restrictions.Unstackable.remove(item2.clone()));
@@ -327,7 +348,7 @@ public class Utils {
 	 * @return if the items are the identical besides the amount, the display name, and the durability
 	 */
 	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability, boolean ignoreFlags) {
-		if (item1 == null || item2 == null) return item1 == item2;
+		if (isNull(item1) || isNull(item2)) return item1 == item2;
 		ItemStack cmp1 = item1.clone();
 		ItemStack cmp2 = item2.clone();
 		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
@@ -864,5 +885,150 @@ public class Utils {
 	
 	public static boolean containsTabComplete(String arg1, String arg2) {
 		return (arg1 == null || arg1.isEmpty() || arg2.toLowerCase().contains(arg1.toLowerCase()));
+	}
+	
+	public static void initializeMenuPrefixSuffix(@NotNull String ... names) {
+		try (Statement statement = getConnection().createStatement()) {
+			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Menus (ID) VALUES ('" +
+					Arrays.stream(names).filter(name -> name.length() > 0).map(name -> "('" + name + "')").collect(Collectors.joining(",")) + "');");
+		} catch (Exception e) {}
+	}
+	
+	@NotNull
+	public static Pair<@Nullable Component,@Nullable Component> getMenuPrefixSuffix(@NotNull String name) {
+		Component prefix = null;
+		Component suffix = null;
+		if (!name.isEmpty()) try (Statement statement = getConnection().createStatement();
+								  ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Menus WHERE ID='" + name + "'")) {
+			result.next();
+			String text = result.getString("Prefix");
+			if (text != null && !text.isEmpty()) prefix = (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+					Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length())) : Component.text(text)).decoration(TextDecoration.ITALIC,false);
+			text = result.getString("Suffix");
+			if (text != null && !text.isEmpty()) suffix = (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+					Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length())) : Component.text(chatColors(text))).decoration(TextDecoration.ITALIC,false);
+		} catch (Exception e) {}
+		return Pair.of(prefix,suffix);
+	}
+	
+	@Nullable
+	public static Boolean getMenuBorder(@NotNull String name) {
+		Boolean border = null;
+		if (!name.isEmpty()) try (Statement statement = getConnection().createStatement();
+								  ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Menus WHERE ID='" + name + "'")) {
+			border = result.getBoolean("Border");
+		} catch (Exception e) {}
+		return border;
+	}
+	
+	@Nullable
+	@Contract("_,!null -> !null")
+	public static Component addMenuPrefixSuffix(@NotNull String name, @Nullable Component base) {
+		Pair<Component,Component> info = getMenuPrefixSuffix(name);
+		Component menuName = null;
+		if (base == null) {
+			if (info.first() != null) menuName = info.first();
+			if (info.second() != null) menuName = menuName == null ? info.second() : menuName.append(info.second());
+		} else {
+			menuName = info.first() == null ? base : info.first().append(base);
+			if (info.second() != null) menuName = menuName.append(info.second());
+		}
+		return menuName;
+	}
+	
+	@Nullable
+	@Contract("null,null -> null")
+	public static <V> V thisOrThatOrNull(@Nullable V obj1, @Nullable V obj2) {
+		if (obj1 instanceof Material) return !isNull((Material) obj1) ? obj1 : (isNull((Material) obj2) ? null : obj2);
+		if (obj1 instanceof ItemStack) return !isNull((ItemStack) obj1) ? obj1 : (isNull((ItemStack) obj2) ? null : obj2);
+		return obj1 != null ? obj1 : obj2;
+	}
+	
+	@Nullable
+	@Contract("!null,_ -> !null; null,_ -> null")
+	public static Component textToComponent(@Nullable String text, @Nullable String color) {
+		return textToComponent(text,getTextColor(color));
+	}
+	
+	@Nullable
+	@Contract("!null,_ -> !null; null,_ -> null")
+	public static Component textToComponent(@Nullable String text, @Nullable TextColor color) {
+		return text == null ? null : (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) :
+				(text.isEmpty() ? Component.empty() : Component.text(Utils.chatColors(text),color)).decoration(TextDecoration.ITALIC,false));
+	}
+	
+	@Nullable
+	@Contract("!null -> !null; null -> null")
+	public static String textColorToString(@Nullable TextColor color) {
+		return color == null ? null : (color instanceof NamedTextColor c ? c.toString() : color.asHexString());
+	}
+	
+	public static void initializeItemDatabase(@NotNull List<@NotNull ItemInitializerInfo> infos) {
+		try (Statement statement = getConnection().createStatement()) {
+			List<List<String>> values = new ArrayList<>();
+			List<String> val;
+			for (ItemInitializerInfo info : infos) {
+				val = new ArrayList<>();
+				val.add(info.ID());
+				val.add(isNull(info.material()) ? null : info.material().name());
+				val.add(String.valueOf(Math.max(info.model(),0)));
+				val.add(info.skin());
+				values.add(val);
+			}
+			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Items (ID,Material,Model,Skin) VALUES ('" +
+					values.stream().map(list -> "('" + String.join("','") + "')").collect(Collectors.joining(",")) + "');");
+		} catch (Exception e) {}
+	}
+	
+	@NotNull
+	public static HashMap<@NotNull String,@Nullable ItemStack> getItemsDatabase(List<@NotNull ItemInitializerInfo> infos) {
+		HashMap<String,ItemStack> map = new HashMap<>();
+		infos.forEach(info -> map.put(info.ID(),null));
+		ItemStack item;
+		try (Statement statement = getConnection().createStatement()) {
+			for (ItemInitializerInfo info : infos) {
+				item = getItemDatabase(statement,info.ID(),info.name(),info.material());
+				if (info.alterItem() != null && !isNull(item)) item = info.alterItem().apply(item);
+				map.put(info.ID(),item);
+			}
+		} catch (Exception e) {}
+		return map;
+	}
+	
+	@Nullable
+	@Contract("_,_,_,!null -> !null")
+	private static ItemStack getItemDatabase(@NotNull Statement statement, @NotNull String nameID, @Nullable Component name, @Nullable Material defaultMaterial) {
+		try (ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Items WHERE ID='" + nameID + "'")) {
+			result.next();
+			ItemStack item;
+			Material material = Material.getMaterial(result.getString("Material"));
+			int model = result.getInt("Model");
+			String skin = result.getString("Skin");
+			if (skin != null) {
+				item = makeItem(Material.PLAYER_HEAD,name,ItemFlag.values());
+				SkullMeta meta = (SkullMeta) item.getItemMeta();
+				if (Utils.setSkin(meta,skin,null)) {
+					item.setItemMeta(meta);
+					return item;
+				}
+			}
+			item = makeItem(Objects.requireNonNull(thisOrThatOrNull(material,defaultMaterial)),name,ItemFlag.values());
+			if (model > 0) {
+				ItemMeta meta = item.getItemMeta();
+				meta.setCustomModelData(model);
+				item.setItemMeta(meta);
+			}
+			return item;
+		} catch (Exception e) {}
+		return isNull(defaultMaterial) ? null : makeItem(defaultMaterial,name,ItemFlag.values());
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null")
+	public static ItemStack setLore(@Nullable ItemStack item, @Nullable List<Component> lore) {
+		if (isNull(item)) return null;
+		item.lore(lore);
+		return item;
 	}
 }

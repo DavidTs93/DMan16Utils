@@ -42,7 +42,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
 				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
 		this.displayItem = displayItem(defaultName);
-		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity), ItemFlag.values());
+		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
@@ -109,7 +109,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	}
 	
 	protected static List<Component> lore(boolean chosen, @NotNull Rarity rarity) {
-		return chosen ? Arrays.asList(Component.empty(),rarity.displayName(),Component.empty(), InterfacesUtils.CHOSEN) :
+		return chosen ? Arrays.asList(Component.empty(),rarity.displayName(),Component.empty(),InterfacesUtils.CHOSEN) :
 				Arrays.asList(Component.empty(),rarity.displayName());
 	}
 	

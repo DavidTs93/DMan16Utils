@@ -8,40 +8,60 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
 
 public abstract class ListenerInventory implements Listener,Menu {
 	protected static final int LINE_SIZE = 9;
-	protected static final ItemStack CLOSE = Utils.makeItem(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack NEXT = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack PREVIOUS = Utils.makeItem(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack DONE = Utils.makeItem(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack OK = Utils.makeItem(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack OK_NO = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false).decoration(TextDecoration.STRIKETHROUGH,true),ItemFlag.values());
-	protected static final ItemStack CANCEL = Utils.makeItem(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack BACK = Utils.makeItem(Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack UP = Utils.makeItem(Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack DOWN = Utils.makeItem(Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack YES = Utils.makeItem(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack NO = Utils.makeItem(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),ItemFlag.values());
-	protected static final ItemStack ITEM_EMPTY_BORDER = Utils.makeItem(Material.GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
-	protected static final ItemStack ITEM_EMPTY_INSIDE = Utils.makeItem(Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty(),ItemFlag.values());
+	private static final HashMap<@NotNull Player,@NotNull ListenerInventory> playerMenus = new HashMap<>();
 	
 	protected final Inventory inventory;
 	protected final int size;
 	protected boolean cancelCloseUnregister = false;
+	private InventoryView view;
 	
-	public ListenerInventory(@NotNull Inventory inv) {
+	protected ListenerInventory(@NotNull Inventory inv) {
 		this.inventory = inv;
 		size = inv.getSize();
+	}
+	
+	@Nullable
+	public static ListenerInventory getOpenInventory(@NotNull Player player) {
+		return playerMenus.get(player);
+	}
+	
+	@Override
+	public final void unregister() {
+		HandlerList.unregisterAll(this);
+		playerMenus.values().remove(this);
+	}
+	
+	protected final void open(@NotNull JavaPlugin plugin, @NotNull Player player) {
+		register(plugin);
+		view = player.openInventory(inventory);
+		playerMenus.put(player,this);
+	}
+	
+	protected final void openInventory(@NotNull Player player) {
+		view = player.openInventory(inventory);
+	}
+	
+	protected InventoryView view() {
+		return view;
 	}
 	
 	@EventHandler(ignoreCancelled = true)
@@ -61,5 +81,41 @@ public abstract class ListenerInventory implements Listener,Menu {
 			event.setCancelled(true);
 			return;
 		}
+	}
+	
+	protected ItemStack itemClose() {
+		return Utils.ITEMS.getItem("menu_close");
+	}
+	
+	protected ItemStack itemNext() {
+		return Utils.ITEMS.getItem("menu_next");
+	}
+	
+	protected ItemStack itemPevious() {
+		return Utils.ITEMS.getItem("menu_previous");
+	}
+	
+	protected ItemStack itemOk() {
+		return Utils.ITEMS.getItem("menu_ok");
+	}
+	
+	protected ItemStack itemOkNo() {
+		return Utils.ITEMS.getItem("menu_ok_no");
+	}
+	
+	protected ItemStack itemCancel() {
+		return Utils.ITEMS.getItem("menu_cancel");
+	}
+	
+	protected ItemStack itemBack() {
+		return Utils.ITEMS.getItem("menu_back");
+	}
+	
+	protected ItemStack itemBorder() {
+		return Utils.ITEMS.getItem("menu_border");
+	}
+	
+	protected ItemStack itemInside() {
+		return Utils.ITEMS.getItem("menu_inside");
 	}
 }

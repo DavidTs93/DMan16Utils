@@ -12,7 +12,6 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,35 +31,26 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected final Player player;
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
-	protected Boolean resetWithBorder = false;
+	private final Boolean border;
 //	protected boolean resetFillInside = false;
 	protected int rightJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
 	protected @NotNull JavaPlugin plugin;
-	protected InventoryView view;
 	
 	/**
-	 * @param lines Number of lines NOT including the bottom (Close,Next,Previous)
+	 * @param lines Number of lines - NOT including the bottom (Close,Next,Previous) - 1-5
 	 */
 	@SuppressWarnings("unchecked")
-	public <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name,
-																	 @NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
+	public <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name, @NotNull String menuID,
+				@NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
+		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),Utils.addMenuPrefixSuffix(menuID,name)));
 		this.plugin = plugin;
 		this.player = player;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		setPage(1);
-		if (openOnInitialize) open();
-	}
-	
-	protected void open() {
-		register(plugin);
-		openInventory();
-	}
-	
-	protected void openInventory() {
-		view = player.openInventory(inventory);
+		this.border = Utils.getMenuBorder(menuID);
+		if (openOnInitialize) open(plugin,player);
 	}
 	
 	@EventHandler
@@ -97,6 +87,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return slotBack;
 	}
 	
+	protected Boolean border() {
+		return border;
+	}
+	
 	protected boolean clickCheck(@NotNull ClickType click) {
 		return click == ClickType.DOUBLE_CLICK || (!click.isRightClick() && !click.isLeftClick() && !click.isCreativeAction());
 	}
@@ -126,10 +120,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected void reset() {
 //		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
 //		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
-		if (resetWithBorder == null) {
+		if (border == null) {
 			for (int i = 0; i < size - 9; i++) inventory.setItem(i,null);
-			for (int i = size - 9; i < size; i++) inventory.setItem(i,ITEM_EMPTY_BORDER);
-		} else if (resetWithBorder) for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? ITEM_EMPTY_BORDER : null);
+			for (int i = size - 9; i < size; i++) inventory.setItem(i,itemBorder());
+		} else if (border) for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? itemBorder() : null);
 		else for (int i = 0; i < size; i++) inventory.setItem(i,null);
 	}
 	
@@ -139,12 +133,12 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		currentPage = page;
 		reset();
 		setPageContents();
-		inventory.setItem(slotClose,close());
+		inventory.setItem(slotClose,itemClose());
 		if (shouldSetNext()) inventory.setItem(slotNext,next());
 		if (shouldSetPrevious()) inventory.setItem(slotPrevious,previous());
-		if (this instanceof Backable) inventory.setItem(slotBack,BACK);
+		if (this instanceof Backable) inventory.setItem(slotBack,itemBack());
 		cancelCloseUnregister = true;
-		openInventory();
+		openInventory(player);
 		new BukkitRunnable() {
 			public void run() {
 				cancelCloseUnregister = false;
@@ -167,14 +161,9 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	@NotNull
-	protected ItemStack close() {
-		return CLOSE;
-	}
-	
-	@NotNull
 	protected ItemStack next() {
-		if (!fancyButtons) return NEXT;
-		ItemStack newNext = NEXT.clone();
+		if (!fancyButtons) return super.itemNext();
+		ItemStack newNext = super.itemNext();
 		ItemMeta meta = newNext.getItemMeta();
 		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage + 1) + ")").decoration(TextDecoration.ITALIC,false)));
 		newNext.setItemMeta(meta);
@@ -183,8 +172,8 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	@NotNull
 	protected ItemStack previous() {
-		if (!fancyButtons) return PREVIOUS;
-		ItemStack newPrevious = PREVIOUS.clone();
+		if (!fancyButtons) return super.itemPevious();
+		ItemStack newPrevious = super.itemPevious();
 		ItemMeta meta = newPrevious.getItemMeta();
 		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage - 1) + ")").decoration(TextDecoration.ITALIC,false)));
 		newPrevious.setItemMeta(meta);
@@ -192,7 +181,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {
-		return Utils.isNull(item) || Utils.sameItem(ITEM_EMPTY_BORDER,item) || Utils.sameItem(ITEM_EMPTY_INSIDE,item);
+		return Utils.isNull(item) || Utils.sameItem(itemBorder(),item) || Utils.sameItem(itemInside(),item);
 	}
 	
 	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {

@@ -2,11 +2,8 @@ package me.DMan16.POPUtils.Interfaces;
 
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Material;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
@@ -15,8 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class InterfacesUtils {
-	private static final Material SORT_MATERIAL = Material.PAPER;
-	private static final TranslatableComponent SORT_NAME = Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false);
 	public static final String TRANSLATABLE = "translatable: ";
 	public static final Component CHOSEN = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
 	
@@ -37,7 +32,8 @@ public class InterfacesUtils {
 			lore.add(line("menu.prisonpop.descending",(i % 2) == 1));
 			lores.add(lore);
 		}
-		return lores.stream().map(lore -> Utils.makeItem(SORT_MATERIAL,SORT_NAME,lore,ItemFlag.values())).toList();
+		ItemStack sort = Utils.ITEMS.getItem("sort");
+		return lores.stream().map(lore -> Utils.setLore(sort.clone(),lore)).toList();
 	}
 	
 	private static Component line(@NotNull String name, boolean selected) {

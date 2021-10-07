@@ -123,7 +123,7 @@ public class ReflectionUtils {
 			PotionEffect effect = effects.get(i);
 			MobEffectList mobEffectList = MobEffectFromID(effect.getType().getId());
 			if (mobEffectList == null) continue;
-			MobEffect mobEffect = new MobEffect(mobEffectList, effect.getDuration() * 20, effect.getAmplifier(), effect.isAmbient(), effect.hasParticles(), effect.hasIcon());
+			MobEffect mobEffect = new MobEffect(mobEffectList,effect.getDuration() * 20,effect.getAmplifier(),effect.isAmbient(),effect.hasParticles(),effect.hasIcon());
 			result[i] = getHandle(player).addEffect(mobEffect,cause);
 		}
 		return result;

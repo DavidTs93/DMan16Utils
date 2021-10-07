@@ -30,14 +30,15 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	protected boolean first;
 	protected boolean allowEdit;
 	
-	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
+	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
 							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
-		this(viewer,menuName,plugin,owner,ID,null,originalMenu,null);
+		this(viewer,menuName,menuID,plugin,owner,ID,null,originalMenu,null);
 	}
 	
-	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull JavaPlugin plugin, boolean owner, @NotNull UUID ID, Boolean allowEdit,
-							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		super(viewer,viewer,5,menuName,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
+	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin,
+										   boolean owner, @NotNull UUID ID, Boolean allowEdit,
+										   @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
+		super(viewer,viewer,5,menuName,menuID,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
 //				ID,owner,allowEdit,originalMenu,objs);
 	}
 	
@@ -52,7 +53,6 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		inner.first = true;
 		inner.rightJump = 10;
 		inner.fancyButtons = true;
-		inner.resetWithBorder = null;
 		if (doFirstMore != null) if (!doFirstMore.apply((T) inner)) throw new IllegalArgumentException();
 		return true;
 	}

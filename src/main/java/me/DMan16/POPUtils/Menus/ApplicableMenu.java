@@ -32,15 +32,14 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	protected boolean ascending;
 	protected List<V> applicables;
 	
-	public <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @NotNull Component menuName, @NotNull JavaPlugin plugin, @NotNull List<V> applicables, @Nullable V current,
-														@Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		super(player,player,5,menuName,plugin,(ApplicableMenu<V> menu) -> first(menu,applicables,current,doFirstMore));
+	public <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin,
+														@NotNull List<V> applicables, @Nullable V current, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
+		super(player,player,5,menuName,menuID,plugin,(ApplicableMenu<V> menu) -> first(menu,applicables,current,doFirstMore));
 	}
 	
 	@SuppressWarnings("unchecked")
 	private static <V extends Applicable<?,?>,T extends ApplicableMenu<V>> boolean first(@NotNull ApplicableMenu<V> menu, @NotNull List<V> applicables, @Nullable V current,
 																						 @Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		menu.resetWithBorder = true;
 		menu.slotSort = 4;
 		menu.slotReset = 8;
 		menu.currentSort = 0;

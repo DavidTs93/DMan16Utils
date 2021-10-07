@@ -6,7 +6,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 
 public enum Rarity {
-	COMMON(0, NamedTextColor.WHITE),
+	COMMON(0,NamedTextColor.WHITE),
 	UNCOMMON(20,NamedTextColor.GRAY),
 	RARE(50,NamedTextColor.YELLOW),
 	EPIC(100,NamedTextColor.BLUE),

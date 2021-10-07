@@ -19,22 +19,20 @@ public abstract class Confirmation extends ListenerInventory {
 	protected int slotCancel;
 	protected int slotConfirm;
 	protected final Player player;
-	protected final boolean canConfirm;
 	
 	@SuppressWarnings("unchecked")
-	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component menuName, @Nullable List<Component> noConfirmLore, @NotNull JavaPlugin plugin,
-													@Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,menuName));
+	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component menuName, @NotNull String menuID, @Nullable List<Component> noConfirmLore,
+													@NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
+		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,Utils.addMenuPrefixSuffix(menuID,menuName)));
 		this.player = player;
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
-		this.canConfirm = canConfirm();
 		this.register(plugin);
-		this.inventory.setItem(slotCancel,CANCEL);
-		this.inventory.setItem(slotConfirm,this.canConfirm ? OK : (noConfirmLore == null ? OK_NO :
-				Utils.cloneChange(OK_NO,false,null,true,noConfirmLore,-1,false)));
-		player.openInventory(this.inventory);
+		this.inventory.setItem(slotCancel,itemCancel());
+		this.inventory.setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() :
+				Utils.cloneChange(itemOkNo(),false,null,true,noConfirmLore,-1,false)));
+		open(plugin,player);
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -43,8 +41,10 @@ public abstract class Confirmation extends ListenerInventory {
 		event.setCancelled(true);
 		int slot = event.getRawSlot();
 		if (slot > 4 || (!event.isRightClick() && !event.isLeftClick())) return;
-		if (slot == slotConfirm && this.canConfirm) confirm();
-		if (slot == slotCancel || (slot == slotConfirm && this.canConfirm)) done();
+		if (slot == slotConfirm && canConfirm()) {
+			confirm();
+			done();
+		} else if (slot == slotCancel) done();
 	}
 	
 	protected abstract boolean canConfirm();
