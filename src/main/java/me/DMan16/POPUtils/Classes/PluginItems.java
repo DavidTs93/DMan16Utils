@@ -40,9 +40,10 @@ public class PluginItems {
 		return this;
 	}
 	
-	@Nullable
+	@NotNull
 	public ItemStack getItem(@NotNull String name) {
 		ItemStack item = map.get(name.toLowerCase());
-		return item == null ? null : item.clone();
+		if (item == null) throw new IllegalArgumentException("Item \"" + name + "\" not found!");
+		return item.clone();
 	}
 }

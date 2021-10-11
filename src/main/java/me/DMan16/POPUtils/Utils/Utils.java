@@ -44,6 +44,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.*;
@@ -855,7 +856,7 @@ public class Utils {
 		return floor == var ? Double.toString(floor).replace(".0","") : Double.toString(var);
 	}
 	
-	public static Connection getConnection() {
+	public static Connection getConnection() throws SQLException {
 		return POPUpdaterMain.getConnection();
 	}
 	
@@ -976,9 +977,9 @@ public class Utils {
 				val.add(info.skin());
 				values.add(val);
 			}
-			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Items (ID,Material,Model,Skin) VALUES ('" +
-					values.stream().map(list -> "('" + String.join("','") + "')").collect(Collectors.joining(",")) + "');");
-		} catch (Exception e) {}
+			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Items (ID,Material,Model,Skin) VALUES " +
+					values.stream().map(list -> "('" + String.join("','",list) + "')").collect(Collectors.joining(",")) + ";");
+		} catch (Exception e) {e.printStackTrace();}
 	}
 	
 	@NotNull

@@ -34,6 +34,7 @@ public final class POPUtils extends JavaPlugin {
 	public void onEnable() {
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		firstOfAll();
+		Utils.ITEMS.reload();
 		Utils.chatColorsLogPlugin("&aLoaded, running on version: &f" + Utils.getVersion() + "&a, Java version: &f" + Utils.javaVersion());
 		if (WorldGuardManager != null) Utils.chatColorsLogPlugin("&aHooked to &fWorldGuard");
 		if (PAPIManager != null) Utils.chatColorsLogPlugin("&aHooked to &fPlaceholderAPI");
@@ -57,10 +58,6 @@ public final class POPUtils extends JavaPlugin {
 	
 	public static POPUtils getInstance() {
 		return INSTANCE;
-	}
-	
-	public Connection getConnection() {
-		return POPUpdaterMain.getConnection();
 	}
 	
 	public WorldGuardManager getWorldGuardManager() {
