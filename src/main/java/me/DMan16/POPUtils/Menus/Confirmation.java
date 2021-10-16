@@ -13,6 +13,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Function;
 
 public abstract class Confirmation extends ListenerInventory {
@@ -21,23 +22,23 @@ public abstract class Confirmation extends ListenerInventory {
 	protected final Player player;
 	
 	@SuppressWarnings("unchecked")
-	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component menuName, @NotNull String menuID, @Nullable List<Component> noConfirmLore,
+	protected <V extends Confirmation> Confirmation(@NotNull Player player, @Nullable Component name, @Nullable List<Component> noConfirmLore,
 													@NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,Utils.addMenuPrefixSuffix(menuID,menuName)));
+		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,Objects.requireNonNull(name)));
 		this.player = player;
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		this.register(plugin);
-		this.inventory.setItem(slotCancel,itemCancel());
-		this.inventory.setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() :
+		setItem(slotCancel,itemCancel());
+		setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() :
 				Utils.cloneChange(itemOkNo(),false,null,true,noConfirmLore,-1,false)));
 		open(plugin,player);
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onClickEvent(InventoryClickEvent event) {
-		if (!event.getView().getTopInventory().equals(this.inventory)) return;
+		if (!isThisInventory(event.getView().getTopInventory())) return;
 		event.setCancelled(true);
 		int slot = event.getRawSlot();
 		if (slot > 4 || (!event.isRightClick() && !event.isLeftClick())) return;

@@ -19,13 +19,13 @@ import java.util.function.Function;
 public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
 	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
-	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @NotNull Component name, @NotNull String menuID, @NotNull JavaPlugin plugin,
+	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 									  @Nullable Function<P,@NotNull Boolean> doFirstMore) {
-		super(player,player,lines,name,menuID,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
+		super(player,player,lines,name,border,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
 	}
 	
 	protected void setPagePurchases() {
-		purchases.get(currentPage - 1).forEach((slot,info) -> inventory.setItem(slot,info.first().itemPurchase(player,info.second())));
+		purchases.get(currentPage - 1).forEach((slot,info) -> setItem(slot,info.first().itemPurchase(player,info.second())));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -64,7 +64,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	@Override
-	protected void beforeSetPage(int newPage) {
+	protected void beforeSetPageAndReset(int newPage) {
 		alterPurchases(newPage);
 	}
 	

@@ -1,7 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Interfaces.Backable;
-import me.DMan16.POPUtils.POPUtils;
+import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -33,7 +33,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean alwaysSetPrevious = false;
 	private final Boolean border;
 //	protected boolean resetFillInside = false;
-	protected int rightJump = 1;
+	protected int rightClickJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
 	protected @NotNull JavaPlugin plugin;
@@ -42,20 +42,20 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	 * @param lines Number of lines - NOT including the bottom (Close,Next,Previous) - 1-5
 	 */
 	@SuppressWarnings("unchecked")
-	public <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name, @NotNull String menuID,
-				@NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),Utils.addMenuPrefixSuffix(menuID,name)));
+	protected <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name,
+																		 @Nullable Boolean border, @NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
+		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
 		this.plugin = plugin;
 		this.player = player;
+		this.border = border;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		setPage(1);
-		this.border = Utils.getMenuBorder(menuID);
 		if (openOnInitialize) open(plugin,player);
 	}
 	
 	@EventHandler
 	public void onInventoryClick(InventoryClickEvent event) {
-		if (!event.getView().getTopInventory().equals(inventory) || checkCancelled(event)) return;
+		if (!isThisInventory(event.getView().getTopInventory()) || checkCancelled(event)) return;
 		int slot = event.getRawSlot();
 		int inventorySlot = event.getSlot();
 		ClickType click = event.getClick();
@@ -80,7 +80,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				event.getWhoClicked().getInventory().setItemInOffHand(new ItemStack(Material.AIR));
 				event.getWhoClicked().getInventory().setItemInOffHand(null);
 			}
-		}.runTaskLater(POPUtils.getInstance(),1);
+		}.runTaskLater(POPUtilsMain.getInstance(),1);
 	}
 	
 	public int slotBack() {
@@ -110,7 +110,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	private int change(@NotNull ClickType click) {
-		return Math.max(1,click.isRightClick() ? rightJump : 1);
+		return Math.max(1,click.isRightClick() ? rightClickJump : 1);
 	}
 	
 	protected void changePage(int num) {
@@ -118,32 +118,30 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void reset() {
-//		ItemStack inside = resetFillInside ? ITEM_EMPTY_INSIDE : null;
-//		for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? (resetWithBorder ? ITEM_EMPTY_BORDER : inside) : inside);
 		if (border == null) {
-			for (int i = 0; i < size - 9; i++) inventory.setItem(i,null);
-			for (int i = size - 9; i < size; i++) inventory.setItem(i,itemBorder());
-		} else if (border) for (int i = 0; i < size; i++) inventory.setItem(i,isBorder(i) ? itemBorder() : null);
-		else for (int i = 0; i < size; i++) inventory.setItem(i,null);
+			for (int i = 0; i < size - 9; i++) setItem(i,null);
+			for (int i = size - 9; i < size; i++) setItem(i,itemBorder());
+		} else if (border) for (int i = 0; i < size; i++) setItem(i,isBorder(i) ? itemBorder() : null);
+		else for (int i = 0; i < size; i++) setItem(i,null);
 	}
 	
-	public void setPage(int page) {
-		if (page < 1 || (page == 1 && maxPage() == 0) || page > maxPage()) return;
-		beforeSetPage(page);
-		currentPage = page;
+	public void setPage(int newPage) {
+		if (newPage < 1 || (newPage == 1 && maxPage() == 0) || newPage > maxPage()) return;
+		beforeSetPageAndReset(newPage);
+		currentPage = newPage;
 		reset();
 		setPageContents();
-		inventory.setItem(slotClose,itemClose());
-		if (shouldSetNext()) inventory.setItem(slotNext,next());
-		if (shouldSetPrevious()) inventory.setItem(slotPrevious,previous());
-		if (this instanceof Backable) inventory.setItem(slotBack,itemBack());
+		setItem(slotClose,itemClose());
+		if (shouldSetNext()) setItem(slotNext,next());
+		if (shouldSetPrevious()) setItem(slotPrevious,previous());
+		if (this instanceof Backable) setItem(slotBack,itemBack());
 		cancelCloseUnregister = true;
 		openInventory(player);
 		new BukkitRunnable() {
 			public void run() {
 				cancelCloseUnregister = false;
 			}
-		}.runTask(POPUtils.getInstance());
+		}.runTask(POPUtilsMain.getInstance());
 	}
 	
 	protected boolean shouldSetNext() {
@@ -154,7 +152,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return alwaysSetPrevious || currentPage > 1;
 	}
 	
-	protected void beforeSetPage(int newPage) {}
+	protected void beforeSetPageAndReset(int newPage) {}
 	
 	protected boolean isBorder(int slot) {
 		return (slot >= 0 && slot < 9) || (slot >= size - 9 && slot < size) || (slot % 9) == 0 || ((slot + 1) % 9) == 0;

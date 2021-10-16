@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Listeners;
 
 import me.DMan16.POPUtils.Classes.Listener;
 import me.DMan16.POPUtils.Classes.Trio;
-import me.DMan16.POPUtils.POPUtils;
+import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -22,7 +22,7 @@ public class CancelPlayers implements Listener {
 	private MoveListener move = null;
 	
 	public CancelPlayers() {
-		register(POPUtils.getInstance());
+		register(POPUtilsMain.getInstance());
 	}
 	
 	public void addPlayer(@NotNull Player player) {
@@ -146,7 +146,7 @@ public class CancelPlayers implements Listener {
 	
 	private class MoveListener implements Listener {
 		private MoveListener() {
-			register(POPUtils.getInstance());
+			register(POPUtilsMain.getInstance());
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

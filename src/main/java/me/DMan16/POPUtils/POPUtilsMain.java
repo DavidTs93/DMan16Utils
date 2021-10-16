@@ -2,7 +2,6 @@ package me.DMan16.POPUtils;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
@@ -13,10 +12,8 @@ import me.DMan16.POPUtils.Utils.WorldGuardManager;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.sql.Connection;
-
-public final class POPUtils extends JavaPlugin {
-	private static POPUtils INSTANCE = null;
+public final class POPUtilsMain extends JavaPlugin {
+	private static POPUtilsMain INSTANCE = null;
 	public static final String PLUGIN_NAME = "PrisonPOP";
 	public static final String PLUGIN_NAME_COLORS = "&bPrison&d&lPOP";
 	private WorldGuardManager WorldGuardManager = null;
@@ -56,7 +53,7 @@ public final class POPUtils extends JavaPlugin {
 		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) PlayerVersionLogger = new PlayerVersionLogger();
 	}
 	
-	public static POPUtils getInstance() {
+	public static POPUtilsMain getInstance() {
 		return INSTANCE;
 	}
 	

@@ -10,9 +10,12 @@ import org.jetbrains.annotations.NotNull;
  * Extend this class with your listener. Don't forget to register the listener via {@link #register}! 
  */
 public interface Listener extends org.bukkit.event.Listener {
-	
-	default void register(@NotNull JavaPlugin instance) {
-		Bukkit.getServer().getPluginManager().registerEvents(this,instance);
+	default boolean register(@NotNull JavaPlugin instance) {
+		try {
+			Bukkit.getServer().getPluginManager().registerEvents(this,instance);
+			return true;
+		} catch (Exception e) {}
+		return false;
 	}
 	
 	default void unregister() {

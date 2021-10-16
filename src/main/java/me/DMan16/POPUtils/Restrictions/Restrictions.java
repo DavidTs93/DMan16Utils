@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Restrictions;
 
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.Listeners.Listener;
-import me.DMan16.POPUtils.POPUtils;
+import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
@@ -52,8 +52,14 @@ public class Restrictions {
 	@NotNull
 	@Unmodifiable
 	public static List<@NotNull Restriction> getRestrictions(ItemStack item) {
-		if (Utils.isNull(item)) return Arrays.asList();
-		return Restrictions.restrictions.stream().filter(restriction -> restriction.is(item)).toList();
+		return getRestrictions(Utils.isNull(item) ? null : item.getItemMeta());
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<@NotNull Restriction> getRestrictions(ItemMeta meta) {
+		if (meta == null) return Arrays.asList();
+		return Restrictions.restrictions.stream().filter(restriction -> restriction.is(meta)).toList();
 	}
 	
 	@Nullable
@@ -208,7 +214,7 @@ public class Restrictions {
 						event.getWhoClicked().getInventory().setItem(event.getSlot(),add(remove(item)));
 					}
 				}
-			}.runTaskLater(POPUtils.getInstance(),1);
+			}.runTaskLater(POPUtilsMain.getInstance(),1);
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -244,7 +250,7 @@ public class Restrictions {
 					event.getWhoClicked().undiscoverRecipe((event.getRecipe() instanceof ShapedRecipe) ? ((ShapedRecipe) event.getRecipe()).getKey() :
 							((ShapelessRecipe) event.getRecipe()).getKey());
 				}
-			}.runTask(POPUtils.getInstance());
+			}.runTask(POPUtilsMain.getInstance());
 		}
 	}
 
@@ -267,7 +273,7 @@ public class Restrictions {
 		
 		Restriction(@NotNull String name) {
 			this.name = Utils.splitCapitalize(name.toLowerCase().replace("_"," ")).replace(" ","");
-			register(POPUtils.getInstance());
+			register(POPUtilsMain.getInstance());
 		}
 		
 		public String name() {
@@ -275,7 +281,7 @@ public class Restrictions {
 		}
 		
 		private NamespacedKey key() {
-			return new NamespacedKey(POPUtils.getInstance(),name());
+			return new NamespacedKey(POPUtilsMain.getInstance(),name());
 		}
 		
 		@NotNull
@@ -283,42 +289,44 @@ public class Restrictions {
 			return "";
 		}
 		
+		public ItemMeta add(ItemMeta meta) {
+			if (meta != null) meta.getPersistentDataContainer().set(key(),PersistentDataType.STRING,keyValue());
+			return meta;
+		}
+		
 		public ItemStack add(ItemStack item) {
 			if (Utils.isNull(item)) return item;
 			ItemMeta meta = item.getItemMeta();
-			if (meta == null) return item;
-			meta.getPersistentDataContainer().set(key(),PersistentDataType.STRING,keyValue());
-			item.setItemMeta(meta);
+			if (meta != null) item.setItemMeta(add(meta));
 			return item;
+		}
+		
+		public ItemMeta remove(ItemMeta meta) {
+			if (meta != null) meta.getPersistentDataContainer().remove(key());
+			return meta;
 		}
 		
 		public ItemStack remove(ItemStack item) {
 			if (Utils.isNull(item)) return item;
 			ItemMeta meta = item.getItemMeta();
-			if (meta == null) return item;
-			meta.getPersistentDataContainer().remove(key());
-			item.setItemMeta(meta);
+			if (meta != null) item.setItemMeta(remove(meta));
 			return item;
+		}
+		
+		public boolean is(ItemMeta meta) {
+			return meta != null && meta.getPersistentDataContainer().has(key(),PersistentDataType.STRING);
 		}
 		
 		@Contract(value = "null -> false",pure = true)
 		public boolean is(ItemStack item) {
 			if (Utils.isNull(item)) return false;
-			ItemMeta meta = item.getItemMeta();
-			if (meta == null) return false;
-			return meta.getPersistentDataContainer().has(key(),PersistentDataType.STRING);
+			return is(item.getItemMeta());
 		}
 		
 		protected boolean restrictionEvent(Event event, ItemStack item, HumanEntity player, boolean cancelIfPossible) {
-			ItemPreRestrictEvent preRestrictEvent = new ItemPreRestrictEvent(this,player,item);
-			if (!preRestrictEvent.callEvent()) return false;
-			preRestrictEvent.immediateTasks().forEach(Runnable::run);
-			preRestrictEvent.delayedTasks().forEach(Runnable::run);
+			if (!new ItemPreRestrictEvent(this,player,item).callEventAndDoTasksIfNotCancelled()) return false;
 			if (cancelIfPossible && (event instanceof Cancellable)) ((Cancellable) event).setCancelled(true);
-			ItemPostRestrictEvent postRestrictEvent = new ItemPostRestrictEvent(this,player,item);
-			postRestrictEvent.callEvent();
-			postRestrictEvent.immediateTasks().forEach(Runnable::run);
-			postRestrictEvent.delayedTasks().forEach(Runnable::run);
+			new ItemPostRestrictEvent(this,player,item).callEventAndDoTasks();
 			return true;
 		}
 	}

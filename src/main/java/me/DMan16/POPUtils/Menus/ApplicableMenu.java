@@ -32,9 +32,9 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	protected boolean ascending;
 	protected List<V> applicables;
 	
-	public <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin,
+	public <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 														@NotNull List<V> applicables, @Nullable V current, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		super(player,player,5,menuName,menuID,plugin,(ApplicableMenu<V> menu) -> first(menu,applicables,current,doFirstMore));
+		super(player,player,5,name,border,plugin,(ApplicableMenu<V> menu) -> first(menu,applicables,current,doFirstMore));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -92,10 +92,10 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 		int idx;
 		V selected;
 		for (int i = 0; i < size; i++) if (!isBorder(i) && (idx = getIndex(i)) >= 0 && idx < applicables.size())
-			inventory.setItem(i,(selected = applicables.get(idx)).item(true,selected == current));
-		inventory.setItem(slotSort,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
+			setItem(i,(selected = applicables.get(idx)).item(true,selected == current));
+		setItem(slotSort,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
 		ItemStack resetSkinItem = resetItem();
-		if (resetSkinItem != null) inventory.setItem(slotReset,resetSkinItem);
+		if (resetSkinItem != null) setItem(slotReset,resetSkinItem);
 		setPageContentsMore();
 	}
 	

@@ -36,7 +36,8 @@ public class InterfacesUtils {
 		return lores.stream().map(lore -> Utils.setLore(sort.clone(),lore)).toList();
 	}
 	
-	private static Component line(@NotNull String name, boolean selected) {
+	@NotNull
+	public static Component line(@NotNull String name, boolean selected) {
 		if (selected) return Component.text("► ").append(Component.translatable(name)).color(NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false);
 		return Component.translatable(name).color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false);
 	}

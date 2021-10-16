@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Listeners;
 
 import com.viaversion.viaversion.api.Via;
 import me.DMan16.POPUtils.Classes.Listener;
-import me.DMan16.POPUtils.POPUtils;
+import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -63,8 +63,8 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	public PlayerVersionLogger() {
 		try {
 			createTable();
-			register(POPUtils.getInstance());
-			Objects.requireNonNull(POPUtils.getInstance().getCommand("versions")).setExecutor(this);
+			register(POPUtilsMain.getInstance());
+			Objects.requireNonNull(POPUtilsMain.getInstance().getCommand("versions")).setExecutor(this);
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	

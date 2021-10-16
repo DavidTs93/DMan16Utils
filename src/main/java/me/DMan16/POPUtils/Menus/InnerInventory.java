@@ -30,15 +30,15 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	protected boolean first;
 	protected boolean allowEdit;
 	
-	protected InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
+	protected InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
 							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
-		this(viewer,menuName,menuID,plugin,owner,ID,null,originalMenu,null);
+		this(viewer,name,border,plugin,owner,ID,null,originalMenu,null);
 	}
 	
-	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @NotNull Component menuName, @NotNull String menuID, @NotNull JavaPlugin plugin,
+	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 										   boolean owner, @NotNull UUID ID, Boolean allowEdit,
 										   @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		super(viewer,viewer,5,menuName,menuID,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
+		super(viewer,viewer,5,name,border,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
 //				ID,owner,allowEdit,originalMenu,objs);
 	}
 	
@@ -51,7 +51,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		inner.originalMenu = originalMenu;
 		inner.updatingMenu();
 		inner.first = true;
-		inner.rightJump = 10;
+		inner.rightClickJump = 10;
 		inner.fancyButtons = true;
 		if (doFirstMore != null) if (!doFirstMore.apply((T) inner)) throw new IllegalArgumentException();
 		return true;
@@ -73,14 +73,14 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	}
 	
 	@Override
-	protected void beforeSetPage(int newPage) {
+	protected void beforeSetPageAndReset(int newPage) {
 		if (this.allowEdit) savePage();
 	}
 	
 	@Override
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
-		if (!event.getView().getTopInventory().equals(inventory)) return;
+		if (!isThisInventory(event.getView().getTopInventory())) return;
 		if (!this.allowEdit) event.setCancelled(true);
 		else for (int slot : event.getRawSlots()) if (slot < size && slot >= size - 9) {
 			event.setCancelled(true);
@@ -90,7 +90,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onCloseSaveEvent(InventoryCloseEvent event) {
-		if (this.allowEdit && event.getView().getTopInventory().equals(inventory) && event.getPlayer().equals(player) && !cancelCloseUnregister) saveExit();
+		if (this.allowEdit && isThisInventory(event.getView().getTopInventory()) && event.getPlayer().equals(player) && !cancelCloseUnregister) saveExit();
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -105,7 +105,7 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		}
 		List<ItemStack> pageItems = new ArrayList<>();
 		for (int i = 0; i < size - 9; i++) {
-			ItemStack item = inventory.getItem(i);
+			ItemStack item = getItem(i);
 			pageItems.add(Utils.isNull(item) ? null : item);
 		}
 		updateUpdatingMenu(pageItems);

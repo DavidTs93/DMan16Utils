@@ -3,10 +3,6 @@ package me.DMan16.POPUtils.Menus;
 import me.DMan16.POPUtils.Classes.Listener;
 import me.DMan16.POPUtils.Interfaces.Menu;
 import me.DMan16.POPUtils.Utils.Utils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
-import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -17,7 +13,6 @@ import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
-import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -27,41 +22,75 @@ import java.util.HashMap;
 
 public abstract class ListenerInventory implements Listener,Menu {
 	protected static final int LINE_SIZE = 9;
-	private static final HashMap<@NotNull Player,@NotNull ListenerInventory> playerMenus = new HashMap<>();
+	private static final HashMap<@NotNull Player,@NotNull ListenerInventory> PLAYER_MENUS = new HashMap<>();
 	
-	protected final Inventory inventory;
+	private final Inventory inventory;
 	protected final int size;
 	protected boolean cancelCloseUnregister = false;
-	private InventoryView view;
+	private final HashMap<@NotNull Player,@NotNull InventoryView> playerViews;
+	private boolean registered;
 	
 	protected ListenerInventory(@NotNull Inventory inv) {
 		this.inventory = inv;
-		size = inv.getSize();
+		this.size = inv.getSize();
+		this.playerViews = new HashMap<>();
+		this.registered = false;
+	}
+	
+	protected boolean isThisInventory(@NotNull Inventory inv) {
+		return inv.equals(inventory);
+	}
+	
+	protected void setItem(int slot, @Nullable ItemStack item) {
+		inventory.setItem(slot,item);
+	}
+	
+	@Nullable
+	protected ItemStack getItem(int slot) {
+		return inventory.getItem(slot);
 	}
 	
 	@Nullable
 	public static ListenerInventory getOpenInventory(@NotNull Player player) {
-		return playerMenus.get(player);
+		return PLAYER_MENUS.get(player);
 	}
 	
 	@Override
 	public final void unregister() {
 		HandlerList.unregisterAll(this);
-		playerMenus.values().remove(this);
+		PLAYER_MENUS.values().remove(this);
+		afterClose();
 	}
+	
+	protected void afterClose() {}
 	
 	protected final void open(@NotNull JavaPlugin plugin, @NotNull Player player) {
-		register(plugin);
-		view = player.openInventory(inventory);
-		playerMenus.put(player,this);
+		if (!registered) {
+			if (!register(plugin)) return;
+			registered = true;
+		}
+		open(player);
 	}
 	
-	protected final void openInventory(@NotNull Player player) {
-		view = player.openInventory(inventory);
+	protected final void open(@NotNull Player player) {
+		if (!registered) return;
+		if (!openInventory(player)) return;
+		PLAYER_MENUS.put(player,this);
+		afterOpen(player);
 	}
 	
-	protected InventoryView view() {
-		return view;
+	protected void afterOpen(@NotNull Player player) {}
+	
+	protected final boolean openInventory(@NotNull Player player) {
+		InventoryView view = player.openInventory(inventory);
+		if (view == null) return false;
+		playerViews.put(player,view);
+		return true;
+	}
+	
+	@Nullable
+	protected InventoryView view(@NotNull Player player) {
+		return playerViews.get(player);
 	}
 	
 	@EventHandler(ignoreCancelled = true)
@@ -71,8 +100,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	@EventHandler(ignoreCancelled = true)
 	public void unregisterOnLeaveEvent(PlayerQuitEvent event) {
-		if ((inventory.getHolder() instanceof OfflinePlayer) && event.getPlayer().getUniqueId().equals(((OfflinePlayer) inventory.getHolder()).getUniqueId()))
-			unregister();
+		if ((inventory.getHolder() instanceof OfflinePlayer) && event.getPlayer().getUniqueId().equals(((OfflinePlayer) inventory.getHolder()).getUniqueId())) unregister();
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

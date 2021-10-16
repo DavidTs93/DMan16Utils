@@ -10,7 +10,7 @@ import me.DMan16.POPUtils.Classes.PluginItems;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
-import me.DMan16.POPUtils.POPUtils;
+import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -26,6 +26,7 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.potion.PotionData;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -45,10 +46,10 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -558,13 +559,26 @@ public class Utils {
 		return Integer.parseInt(getVersion().split("\\.")[1]);
 	}
 	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static Long round(@Nullable Double num) {
+		return num == null ? null : Math.round(num);
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static Integer round(@Nullable Float num) {
+		return num == null ? null : Math.round(num);
+	}
+	
 	/**
 	 * @param digitsAfterDot >= 0
 	 * @return the number rounded to specified digits after the dot
 	 */
-	public static double roundAfterDot(double num, int digitsAfterDot) {
+	public static Double roundAfterDot(@Nullable Double num, int digitsAfterDot) {
+		if (num == null) return null;
 		if (digitsAfterDot < 0) return num;
-		if (digitsAfterDot == 0) return Math.round(num);
+		if (digitsAfterDot == 0) return (double) Math.round(num);
 		return Double.parseDouble((new DecimalFormat("0." + "0".repeat(digitsAfterDot))).format(num));
 	}
 	
@@ -572,9 +586,10 @@ public class Utils {
 	 * @param digitsAfterDot >= 0
 	 * @return the number rounded to specified digits after the dot
 	 */
-	public static float roundAfterDot(float num, int digitsAfterDot) {
+	public static Float roundAfterDot(@Nullable Float num, int digitsAfterDot) {
+		if (num == null) return null;
 		if (digitsAfterDot < 0) return num;
-		if (digitsAfterDot == 0) return Math.round(num);
+		if (digitsAfterDot == 0) return (float) Math.round(num);
 		return Float.parseFloat((new DecimalFormat("0." + "0".repeat(digitsAfterDot))).format(num));
 	}
 	
@@ -750,6 +765,14 @@ public class Utils {
 	}
 	
 	@NotNull
+	@SafeVarargs
+	public static <V> Set<V> joinSets(Set<? extends V> ... sets) {
+		Set<V> set = new HashSet<>();
+		for (Set<? extends V> l : sets) if (l != null) set.addAll(l);
+		return set;
+	}
+	
+	@NotNull
 	public static Inventory makeInventory(@Nullable InventoryHolder owner, int lines, Component name) {
 		if (name == null) return Bukkit.createInventory(owner,lines * 9);
 		return Bukkit.createInventory(owner,lines * 9,name);
@@ -772,7 +795,7 @@ public class Utils {
 			public void run() {
 				sessionIDs.remove(ID);
 			}
-		}.runTaskLater(POPUtils.getInstance(),10 * 60 * 20);
+		}.runTaskLater(POPUtilsMain.getInstance(),10 * 60 * 20);
 		return id;
 	}
 	
@@ -861,88 +884,49 @@ public class Utils {
 	}
 	
 	public static WorldGuardManager getWorldGuardManager() {
-		return POPUtils.getInstance().getWorldGuardManager();
+		return POPUtilsMain.getInstance().getWorldGuardManager();
 	}
 	
 	public static PlaceholderManager getPAPIManager() {
-		return POPUtils.getInstance().getPAPIManager();
+		return POPUtilsMain.getInstance().getPAPIManager();
 	}
 	
 	public static CitizensManager getCitizensManager() {
-		return POPUtils.getInstance().getCitizensManager();
+		return POPUtilsMain.getInstance().getCitizensManager();
 	}
 	
 	public static ProtocolManager getProtocolManager() {
-		return POPUtils.getInstance().getProtocolManager();
+		return POPUtilsMain.getInstance().getProtocolManager();
 	}
 	
 	public static CancelPlayers getCancelPlayers() {
-		return POPUtils.getInstance().getCancelPlayers();
+		return POPUtilsMain.getInstance().getCancelPlayers();
 	}
 	
 	public static PlayerVersionLogger getPlayerVersionLogger() {
-		return POPUtils.getInstance().getPlayerVersionLogger();
+		return POPUtilsMain.getInstance().getPlayerVersionLogger();
 	}
 	
 	public static boolean containsTabComplete(String arg1, String arg2) {
 		return (arg1 == null || arg1.isEmpty() || arg2.toLowerCase().contains(arg1.toLowerCase()));
 	}
 	
-	public static void initializeMenuPrefixSuffix(@NotNull String ... names) {
-		try (Statement statement = getConnection().createStatement()) {
-			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Menus (ID) VALUES ('" +
-					Arrays.stream(names).filter(name -> name.length() > 0).map(name -> "('" + name + "')").collect(Collectors.joining(",")) + "');");
-		} catch (Exception e) {}
-	}
-	
-	@NotNull
-	public static Pair<@Nullable Component,@Nullable Component> getMenuPrefixSuffix(@NotNull String name) {
-		Component prefix = null;
-		Component suffix = null;
-		if (!name.isEmpty()) try (Statement statement = getConnection().createStatement();
-								  ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Menus WHERE ID='" + name + "'")) {
-			result.next();
-			String text = result.getString("Prefix");
-			if (text != null && !text.isEmpty()) prefix = (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-					Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length())) : Component.text(text)).decoration(TextDecoration.ITALIC,false);
-			text = result.getString("Suffix");
-			if (text != null && !text.isEmpty()) suffix = (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-					Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length())) : Component.text(chatColors(text))).decoration(TextDecoration.ITALIC,false);
-		} catch (Exception e) {}
-		return Pair.of(prefix,suffix);
-	}
-	
 	@Nullable
-	public static Boolean getMenuBorder(@NotNull String name) {
-		Boolean border = null;
-		if (!name.isEmpty()) try (Statement statement = getConnection().createStatement();
-								  ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Menus WHERE ID='" + name + "'")) {
-			border = result.getBoolean("Border");
-		} catch (Exception e) {}
-		return border;
-	}
-	
-	@Nullable
-	@Contract("_,!null -> !null")
-	public static Component addMenuPrefixSuffix(@NotNull String name, @Nullable Component base) {
-		Pair<Component,Component> info = getMenuPrefixSuffix(name);
-		Component menuName = null;
-		if (base == null) {
-			if (info.first() != null) menuName = info.first();
-			if (info.second() != null) menuName = menuName == null ? info.second() : menuName.append(info.second());
-		} else {
-			menuName = info.first() == null ? base : info.first().append(base);
-			if (info.second() != null) menuName = menuName.append(info.second());
-		}
-		return menuName;
+	@Contract("null,null -> null; !null,_ -> !null; _,!null -> !null")
+	public static <V> V thisOrThatOrNull(@Nullable V obj1, @Nullable V obj2) {
+		return obj1 != null ? obj1 : obj2;
 	}
 	
 	@Nullable
 	@Contract("null,null -> null")
-	public static <V> V thisOrThatOrNull(@Nullable V obj1, @Nullable V obj2) {
-		if (obj1 instanceof Material) return !isNull((Material) obj1) ? obj1 : (isNull((Material) obj2) ? null : obj2);
-		if (obj1 instanceof ItemStack) return !isNull((ItemStack) obj1) ? obj1 : (isNull((ItemStack) obj2) ? null : obj2);
-		return obj1 != null ? obj1 : obj2;
+	public static Material thisOrThatOrNull(@Nullable Material material1, @Nullable Material material2) {
+		return !isNull(material1) ? material1 : (isNull(material2) ? null : material2);
+	}
+	
+	@Nullable
+	@Contract("null,null -> null")
+	public static ItemStack thisOrThatOrNull(@Nullable ItemStack item1, @Nullable ItemStack item2) {
+		return !isNull(item1) ? item1 : (isNull(item2) ? null : item2);
 	}
 	
 	@Nullable
@@ -956,73 +940,13 @@ public class Utils {
 	public static Component textToComponent(@Nullable String text, @Nullable TextColor color) {
 		return text == null ? null : (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) :
-				(text.isEmpty() ? Component.empty() : Component.text(Utils.chatColors(text),color)).decoration(TextDecoration.ITALIC,false));
+				(text.isEmpty() ? Component.empty() : Component.text(Utils.chatColors(text),color))).decoration(TextDecoration.ITALIC,false);
 	}
 	
 	@Nullable
 	@Contract("!null -> !null; null -> null")
 	public static String textColorToString(@Nullable TextColor color) {
 		return color == null ? null : (color instanceof NamedTextColor c ? c.toString() : color.asHexString());
-	}
-	
-	public static void initializeItemDatabase(@NotNull List<@NotNull ItemInitializerInfo> infos) {
-		try (Statement statement = getConnection().createStatement()) {
-			List<List<String>> values = new ArrayList<>();
-			List<String> val;
-			for (ItemInitializerInfo info : infos) {
-				val = new ArrayList<>();
-				val.add(info.ID());
-				val.add(isNull(info.material()) ? null : info.material().name());
-				val.add(String.valueOf(Math.max(info.model(),0)));
-				val.add(info.skin());
-				values.add(val);
-			}
-			statement.executeUpdate("INSERT IGNORE INTO PrisonPOP_Items (ID,Material,Model,Skin) VALUES " +
-					values.stream().map(list -> "('" + String.join("','",list) + "')").collect(Collectors.joining(",")) + ";");
-		} catch (Exception e) {e.printStackTrace();}
-	}
-	
-	@NotNull
-	public static HashMap<@NotNull String,@Nullable ItemStack> getItemsDatabase(List<@NotNull ItemInitializerInfo> infos) {
-		HashMap<String,ItemStack> map = new HashMap<>();
-		infos.forEach(info -> map.put(info.ID(),null));
-		ItemStack item;
-		try (Statement statement = getConnection().createStatement()) {
-			for (ItemInitializerInfo info : infos) {
-				item = getItemDatabase(statement,info.ID(),info.name(),info.material());
-				if (info.alterItem() != null && !isNull(item)) item = info.alterItem().apply(item);
-				map.put(info.ID(),item);
-			}
-		} catch (Exception e) {}
-		return map;
-	}
-	
-	@Nullable
-	@Contract("_,_,_,!null -> !null")
-	private static ItemStack getItemDatabase(@NotNull Statement statement, @NotNull String nameID, @Nullable Component name, @Nullable Material defaultMaterial) {
-		try (ResultSet result = statement.executeQuery("SELECT * FROM PrisonPOP_Items WHERE ID='" + nameID + "'")) {
-			result.next();
-			ItemStack item;
-			Material material = Material.getMaterial(result.getString("Material"));
-			int model = result.getInt("Model");
-			String skin = result.getString("Skin");
-			if (skin != null) {
-				item = makeItem(Material.PLAYER_HEAD,name,ItemFlag.values());
-				SkullMeta meta = (SkullMeta) item.getItemMeta();
-				if (Utils.setSkin(meta,skin,null)) {
-					item.setItemMeta(meta);
-					return item;
-				}
-			}
-			item = makeItem(Objects.requireNonNull(thisOrThatOrNull(material,defaultMaterial)),name,ItemFlag.values());
-			if (model > 0) {
-				ItemMeta meta = item.getItemMeta();
-				meta.setCustomModelData(model);
-				item.setItemMeta(meta);
-			}
-			return item;
-		} catch (Exception e) {}
-		return isNull(defaultMaterial) ? null : makeItem(defaultMaterial,name,ItemFlag.values());
 	}
 	
 	@Nullable
@@ -1032,4 +956,105 @@ public class Utils {
 		item.lore(lore);
 		return item;
 	}
+	
+	@SuppressWarnings("unchecked")
+	@NotNull
+	public static <V> V [] listToArray(@NotNull List<V> list) {
+		V[] arr = (V[]) new Object[list.size()];
+		for (int i = 0; i < list.size(); i++) arr[i] = list.get(i);
+		return arr;
+	}
+	
+	@Nullable
+	public static <T> T getKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type) {
+		return getKeyPersistentDataContainer(isNull(item) ? null : item.getItemMeta(),key,type);
+	}
+	
+	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value) {
+		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key,type,value));
+		return item;
+	}
+	
+	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value, boolean force) {
+		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key,type,value,force));
+		return item;
+	}
+	
+	public static <T> boolean setKeyPersistentDataContainerResult(ItemStack item, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value) {
+		if (isNull(item)) return false;
+		ItemMeta meta = item.getItemMeta();
+		boolean result = setKeyPersistentDataContainerResult(meta,key,type,value);
+		item.setItemMeta(meta);
+		return result;
+	}
+	
+	@Nullable
+	public static <T> T getKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type) {
+		return meta == null ? null : meta.getPersistentDataContainer().get(key,type);
+	}
+	
+	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value) {
+		return setKeyPersistentDataContainer(meta,key,type,value,false);
+	}
+	
+	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value, boolean force) {
+		if (meta != null && (force || !meta.getPersistentDataContainer().has(key,type))) meta.getPersistentDataContainer().set(key,type,value);
+		return meta;
+	}
+	
+	public static <T> boolean setKeyPersistentDataContainerResult(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value) {
+		if (meta != null && !meta.getPersistentDataContainer().has(key,type)) {
+			meta.getPersistentDataContainer().set(key,type,value);
+			return true;
+		}
+		return false;
+	}
+	
+	@NotNull
+	public static String fixKey(@NotNull String key) {
+		return key.toLowerCase().replace(" ","_");
+	}
+	
+	@Nullable
+	public static Boolean getBoolean(@NotNull ResultSet result, @NotNull String field) {
+		try {
+			return (Boolean) result.getObject(field);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@NotNull
+	public static String timeSecondsToString(long time, boolean includeZeros, @Nullable String prefix, boolean zeroBelow10, @NotNull String separator,
+											 @NotNull String daysSuffix, @NotNull String hoursSuffix, @NotNull String minutesSuffix, @NotNull String secondsSuffix) {
+		StringBuilder str = new StringBuilder();
+		if (prefix != null) str.append(prefix);
+		if (time == 0) {
+			str.append(time).append(secondsSuffix);
+			return str.toString();
+		}
+		long days,hours,minutes,seconds;
+		days = TimeUnit.SECONDS.toDays(time);
+		time -= TimeUnit.DAYS.toSeconds(days);
+		hours = TimeUnit.SECONDS.toHours(time);
+		time -= TimeUnit.HOURS.toSeconds(hours);
+		minutes = TimeUnit.SECONDS.toMinutes(time);
+		time -= TimeUnit.MINUTES.toSeconds(minutes);
+		seconds = time;
+		appendNumIf(str,includeZeros,zeroBelow10,days,daysSuffix,separator);
+		appendNumIf(str,includeZeros,zeroBelow10,hours,hoursSuffix,separator);
+		appendNumIf(str,includeZeros,zeroBelow10,minutes,minutesSuffix,separator);
+		appendNumIf(str,includeZeros,zeroBelow10,seconds,secondsSuffix,null);
+		return str.toString();
+	}
+	
+	private static void appendNumIf(@NotNull StringBuilder str, boolean includeZeros, boolean zeroBelow10, long num, @NotNull String suffix1, @Nullable String suffix2) {
+		if (num == 0 && includeZeros) return;
+		if (num < 0) str.append("-");
+		num = Math.abs(num);
+		if (num < 10 && zeroBelow10) str.append(0);
+		str.append(num);
+		str.append(suffix1);
+		if (suffix2 != null) str.append(suffix2);
+	}
+	
 }

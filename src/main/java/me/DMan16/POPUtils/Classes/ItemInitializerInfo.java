@@ -3,6 +3,7 @@ package me.DMan16.POPUtils.Classes;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -15,6 +16,8 @@ public record ItemInitializerInfo(@NotNull String ID, @Nullable Material materia
 	}
 	
 	@Override
+	@NotNull
+	@Contract(pure = true)
 	public String ID() {
 		return ID.toLowerCase();
 	}
