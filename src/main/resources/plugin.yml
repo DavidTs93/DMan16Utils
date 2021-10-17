@@ -10,6 +10,10 @@ api-version: 1.17
 commands:
   versions:
     permission: prisonpop.command.versions
+  restrictions:
+    permission: prisonpop.command.restrictions
 permissions:
   prisonpop.command.versions:
+    default: op
+  prisonpop.command.restrictions:
     default: op

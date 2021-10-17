@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Interfaces;
 
+import me.DMan16.POPUtils.Classes.PluginsItems;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -32,7 +33,7 @@ public class InterfacesUtils {
 			lore.add(line("menu.prisonpop.descending",(i % 2) == 1));
 			lores.add(lore);
 		}
-		ItemStack sort = Utils.ITEMS.getItem("sort");
+		ItemStack sort = PluginsItems.getItem("sort");
 		return lores.stream().map(lore -> Utils.setLore(sort.clone(),lore)).toList();
 	}
 	

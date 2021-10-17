@@ -40,8 +40,10 @@ public class Restrictions {
 	public static final Restriction Ungrindable = new Ungrindable();
 	public static final Restriction Unfuelable = new Unfuelable();
 	public static final Restriction Unstackable = new Unstackable();
+	public static final Restriction Untradeable = new Untradeable();
 	
-	private static final List<Restriction> restrictions = Arrays.asList(Unequippable,Unplaceable,Undroppable,Unenchantable,Uncraftable,DropRemove,Unforgeable,Ungrindable,Unfuelable);
+	private static final List<Restriction> restrictions = Arrays.asList(Unequippable,Unplaceable,Undroppable,Unenchantable,Uncraftable,DropRemove,Unforgeable,Ungrindable,
+			Unfuelable,Untradeable);
 	
 	@NotNull
 	@Unmodifiable
@@ -64,8 +66,61 @@ public class Restrictions {
 	
 	@Nullable
 	public static Restriction byName(@NotNull String name) {
-		if (!name.isEmpty()) for (Restriction restriction : restrictions) if (restriction.name().equalsIgnoreCase(name.replace(" ","_"))) return restriction;
+		name = name.replace(" ","_");
+		if (!name.isEmpty()) for (Restriction restriction : restrictions) if (restriction.name().equalsIgnoreCase(name)) return restriction;
 		return null;
+	}
+	
+	public static ItemStack addRestrictions(ItemStack item, @NotNull Restriction ... restrictions) {
+		if (Utils.isNull(item)) return item;
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null) return item;
+		item.setItemMeta(addRestrictions(meta,restrictions));
+		return item;
+	}
+	
+	public static ItemMeta addRestrictions(ItemMeta meta, @NotNull Restriction ... restrictions) {
+		if (meta != null) for (Restriction restriction : restrictions) meta = restriction.add(meta);
+		return meta;
+	}
+	
+	public static ItemStack addRestrictions(ItemStack item, List<@NotNull Restriction> restrictions) {
+		if (Utils.isNull(item)) return item;
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null) return item;
+		item.setItemMeta(addRestrictions(meta,restrictions));
+		return item;
+	}
+	
+	public static ItemMeta addRestrictions(ItemMeta meta, List<@NotNull Restriction> restrictions) {
+		if (meta != null && restrictions != null) for (Restriction restriction : restrictions) meta = restriction.add(meta);
+		return meta;
+	}
+	
+	public static ItemStack removeRestrictions(ItemStack item, @NotNull Restriction ... restrictions) {
+		if (Utils.isNull(item)) return item;
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null) return item;
+		item.setItemMeta(removeRestrictions(meta,restrictions));
+		return item;
+	}
+	
+	public static ItemMeta removeRestrictions(ItemMeta meta, @NotNull Restriction ... restrictions) {
+		if (meta != null) for (Restriction restriction : restrictions) meta = restriction.remove(meta);
+		return meta;
+	}
+	
+	public static ItemStack removeRestrictions(ItemStack item, List<@NotNull Restriction> restrictions) {
+		if (Utils.isNull(item)) return item;
+		ItemMeta meta = item.getItemMeta();
+		if (meta == null) return item;
+		item.setItemMeta(removeRestrictions(meta,restrictions));
+		return item;
+	}
+	
+	public static ItemMeta removeRestrictions(ItemMeta meta, List<@NotNull Restriction> restrictions) {
+		if (meta != null && restrictions != null) for (Restriction restriction : restrictions) meta = restriction.remove(meta);
+		return meta;
 	}
 	
 	private static class Unequippable extends Restriction {
@@ -226,6 +281,12 @@ public class Restrictions {
 		}
 	}
 	
+	private static class Untradeable extends Restriction {
+		public Untradeable() {
+			super("Untradeable");
+		}
+	}
+	
 	private static class DropRemove extends Restriction {
 		public DropRemove() {
 			super("DropRemove");
@@ -271,15 +332,17 @@ public class Restrictions {
 	public static abstract class Restriction extends Listener {
 		private final String name;
 		
-		Restriction(@NotNull String name) {
+		private Restriction(@NotNull String name) {
 			this.name = Utils.splitCapitalize(name.toLowerCase().replace("_"," ")).replace(" ","");
 			register(POPUtilsMain.getInstance());
 		}
 		
+		@NotNull
 		public String name() {
 			return name;
 		}
 		
+		@NotNull
 		private NamespacedKey key() {
 			return new NamespacedKey(POPUtilsMain.getInstance(),name());
 		}

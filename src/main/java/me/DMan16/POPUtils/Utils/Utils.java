@@ -4,9 +4,7 @@ import com.comphenix.protocol.ProtocolManager;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
-import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
 import me.DMan16.POPUtils.Classes.Pair;
-import me.DMan16.POPUtils.Classes.PluginItems;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
@@ -64,23 +62,6 @@ public class Utils {
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
-	public static final PluginItems ITEMS = new PluginItems(
-			new ItemInitializerInfo("sort",Material.PAPER,Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_close",Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_next",Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_previous",Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_done",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_ok",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_ok_no",Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false).decoration(TextDecoration.STRIKETHROUGH,true),0,null),
-			new ItemInitializerInfo("menu_cancel",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_back",Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_up",Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_down",Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_yes",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_no",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED).decoration(TextDecoration.ITALIC,false),0,null),
-			new ItemInitializerInfo("menu_border",Material.GRAY_STAINED_GLASS_PANE,Component.empty(),0,null),
-			new ItemInitializerInfo("menu_inside",Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty(),0,null)
-	);
 	
 	static {
 		createInteractable();
@@ -190,10 +171,29 @@ public class Utils {
 		return Collections.unmodifiableList(newList);
 	}
 	
-	public static void chatColorsActionBar(@NotNull Player player, @NotNull Component ... components) {
-		Component comp = Component.empty();
-		for (Component component : components) comp = comp.append(component);
-		player.sendActionBar(comp);
+	@Nullable
+	public static Component combineComponents(@NotNull List<@Nullable Component> comps) {
+		Component combined = null;
+		for (Component comp : comps) if (comp != null) {
+			if (combined == null) combined = comp;
+			else combined = combined.append(comp);
+		}
+		return combined;
+	}
+	
+	@Nullable
+	public static Component combineComponents(@Nullable Component ... comps) {
+		Component combined = null;
+		for (Component comp : comps) if (comp != null) {
+			if (combined == null) combined = comp;
+			else combined = combined.append(comp);
+		}
+		return combined;
+	}
+	
+	public static void sendActionBar(@NotNull Player player, Component ... components) {
+		Component comp = combineComponents(components);
+		if (comp != null) player.sendActionBar(comp);
 	}
 	
 	@NotNull
@@ -1056,5 +1056,4 @@ public class Utils {
 		str.append(suffix1);
 		if (suffix2 != null) str.append(suffix2);
 	}
-	
 }

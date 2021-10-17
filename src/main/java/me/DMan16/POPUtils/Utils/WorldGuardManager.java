@@ -5,6 +5,7 @@ import com.sk89q.worldedit.math.BlockVector3;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.ApplicableRegionSet;
 import com.sk89q.worldguard.protection.flags.Flag;
+import com.sk89q.worldguard.protection.flags.IntegerFlag;
 import com.sk89q.worldguard.protection.flags.StateFlag;
 import com.sk89q.worldguard.protection.flags.StringFlag;
 import com.sk89q.worldguard.protection.flags.registry.FlagRegistry;
@@ -88,6 +89,19 @@ public class WorldGuardManager {
 		} catch (Exception e) {
 			Flag<?> flag = flagRegistry.get(name);
 			if (flag instanceof StringFlag) return (StringFlag) flag;
+		}
+		return null;
+	}
+	
+	@Nullable
+	public IntegerFlag newIntegerFlag(@NotNull String name) {
+		try {
+			IntegerFlag flag = new IntegerFlag(name);
+			flagRegistry.register(flag);
+			return flag;
+		} catch (Exception e) {
+			Flag<?> flag = flagRegistry.get(name);
+			if (flag instanceof IntegerFlag) return (IntegerFlag) flag;
 		}
 		return null;
 	}

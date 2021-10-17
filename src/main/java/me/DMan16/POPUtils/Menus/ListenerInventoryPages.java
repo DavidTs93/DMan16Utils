@@ -44,7 +44,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	@SuppressWarnings("unchecked")
 	protected <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name,
 																		 @Nullable Boolean border, @NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),name));
+		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),noItalic(name)));
 		this.plugin = plugin;
 		this.player = player;
 		this.border = border;

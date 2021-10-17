@@ -1,8 +1,11 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Classes.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
 import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -15,6 +18,7 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -35,6 +39,13 @@ public abstract class ListenerInventory implements Listener,Menu {
 		this.size = inv.getSize();
 		this.playerViews = new HashMap<>();
 		this.registered = false;
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	protected static Component noItalic(@Nullable Component comp) {
+		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
+		return comp.decoration(TextDecoration.ITALIC,false);
 	}
 	
 	protected boolean isThisInventory(@NotNull Inventory inv) {
@@ -112,38 +123,38 @@ public abstract class ListenerInventory implements Listener,Menu {
 	}
 	
 	protected ItemStack itemClose() {
-		return Utils.ITEMS.getItem("menu_close");
+		return PluginsItems.getItem("menu_close");
 	}
 	
 	protected ItemStack itemNext() {
-		return Utils.ITEMS.getItem("menu_next");
+		return PluginsItems.getItem("menu_next");
 	}
 	
 	protected ItemStack itemPevious() {
-		return Utils.ITEMS.getItem("menu_previous");
+		return PluginsItems.getItem("menu_previous");
 	}
 	
 	protected ItemStack itemOk() {
-		return Utils.ITEMS.getItem("menu_ok");
+		return PluginsItems.getItem("menu_ok");
 	}
 	
 	protected ItemStack itemOkNo() {
-		return Utils.ITEMS.getItem("menu_ok_no");
+		return PluginsItems.getItem("menu_ok_no");
 	}
 	
 	protected ItemStack itemCancel() {
-		return Utils.ITEMS.getItem("menu_cancel");
+		return PluginsItems.getItem("menu_cancel");
 	}
 	
 	protected ItemStack itemBack() {
-		return Utils.ITEMS.getItem("menu_back");
+		return PluginsItems.getItem("menu_back");
 	}
 	
 	protected ItemStack itemBorder() {
-		return Utils.ITEMS.getItem("menu_border");
+		return PluginsItems.getItem("menu_border");
 	}
 	
 	protected ItemStack itemInside() {
-		return Utils.ITEMS.getItem("menu_inside");
+		return PluginsItems.getItem("menu_inside");
 	}
 }
