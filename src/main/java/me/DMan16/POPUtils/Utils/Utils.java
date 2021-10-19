@@ -44,6 +44,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
@@ -765,8 +766,22 @@ public class Utils {
 	}
 	
 	@NotNull
+	public static <V> List<V> joinLists(Collection<? extends List<? extends V>> lists) {
+		List<V> list = new ArrayList<>();
+		for (List<? extends V> l : lists) if (l != null) list.addAll(l);
+		return list;
+	}
+	
+	@NotNull
 	@SafeVarargs
 	public static <V> Set<V> joinSets(Set<? extends V> ... sets) {
+		Set<V> set = new HashSet<>();
+		for (Set<? extends V> l : sets) if (l != null) set.addAll(l);
+		return set;
+	}
+	
+	@NotNull
+	public static <V> Set<V> joinSets(Collection<? extends Set<? extends V>> sets) {
 		Set<V> set = new HashSet<>();
 		for (Set<? extends V> l : sets) if (l != null) set.addAll(l);
 		return set;
@@ -837,12 +852,18 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static ItemStack setSkin(@NotNull ItemStack item, @NotNull String skin, @Nullable String name) {
-		if (item.getType() != Material.PLAYER_HEAD && item.getType() != Material.PLAYER_WALL_HEAD) return item;
-		SkullMeta meta = (SkullMeta) item.getItemMeta();
-		setSkin(meta,skin,name);
-		item.setItemMeta(meta);
-		return item;
+	public static List<@NotNull UUID> getAllPlayersByUUID() {
+		return POPUpdaterMain.getAllPlayersByUUID();
+	}
+	
+	@NotNull
+	public static List<@NotNull String> getAllPlayersByName() {
+		return POPUpdaterMain.getAllPlayersByName();
+	}
+	
+	@NotNull
+	public static HashMap<@NotNull UUID,@NotNull String> getAllPlayers() {
+		return POPUpdaterMain.getAllPlayers();
 	}
 	
 	public static boolean setSkin(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
@@ -858,6 +879,48 @@ public class Utils {
 		return false;
 	}
 	
+	@NotNull
+	public static SkullMeta setSkinGetMeta(@NotNull SkullMeta meta, @NotNull String skin, @Nullable String name) {
+		setSkin(meta,skin,name);
+		return meta;
+	}
+	
+	public static void setSkin(@NotNull SkullMeta meta, @NotNull Player player) {
+		meta.setOwningPlayer(player);
+	}
+	
+	@NotNull
+	public static SkullMeta setSkinGetMeta(@NotNull SkullMeta meta, @NotNull Player player) {
+		setSkin(meta,player);
+		return meta;
+	}
+	
+	public static boolean setSkin(@NotNull ItemStack item, @NotNull Player player) {
+		if (item.getType() != Material.PLAYER_HEAD && item.getType() != Material.PLAYER_WALL_HEAD) return false;
+		item.setItemMeta(setSkinGetMeta((SkullMeta) item.getItemMeta(),player));
+		return true;
+	}
+	
+	@NotNull
+	public static ItemStack setSkinGetItem(@NotNull ItemStack item, @NotNull Player player) {
+		setSkin(item,player);
+		return item;
+	}
+	
+	public static boolean setSkin(@NotNull ItemStack item, @NotNull String skin, @Nullable String name) {
+		if (item.getType() != Material.PLAYER_HEAD && item.getType() != Material.PLAYER_WALL_HEAD) return false;
+		SkullMeta meta = (SkullMeta) item.getItemMeta();
+		if (!setSkin(meta,skin,name)) return false;
+		item.setItemMeta(meta);
+		return true;
+	}
+	
+	@NotNull
+	public static ItemStack setSkinGetItem(@NotNull ItemStack item, @NotNull String skin, @Nullable String name) {
+		setSkin(item,skin,name);
+		return item;
+	}
+	
 	@Nullable
 	public static GameProfile getProfile(@NotNull SkullMeta meta) {
 		try {
@@ -869,9 +932,28 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static GameProfile getProfile(@NotNull Player player) throws InvocationTargetException, IllegalAccessException, NoSuchMethodException {
-		Method getProfile = player.getClass().getDeclaredMethod("getProfile");
-		return (GameProfile) getProfile.invoke(player);
+	public static GameProfile getProfile(@NotNull Player player) throws InvocationTargetException,IllegalAccessException,NoSuchMethodException {
+		return (GameProfile) player.getClass().getDeclaredMethod("getProfile").invoke(player);
+	}
+	
+	@NotNull
+	public static Pair<@Nullable String,@Nullable String> getSkin(@NotNull GameProfile profile) {
+		Property property = profile.getProperties().get("textures").stream().findFirst().orElse(null);
+		if (property == null) return Pair.of(null,null);
+		return Pair.of(property.getSignature(),property.getValue());
+	}
+	
+	@NotNull
+	public static Pair<@Nullable String,@Nullable String> getSkin(@NotNull UUID ID) {
+		try (Statement statement = getConnection().createStatement();
+			 ResultSet result = statement.executeQuery("SELECT SkinData,SkinSignature FROM PrisonPOP_Players WHERE UUID='" + ID + "';")) {
+			result.next();
+			String skin,signature;
+			skin = result.getString("SkinData");
+			signature = result.getString("SkinSignature");
+			return Pair.of(skin,signature);
+		} catch (Exception e) {}
+		return Pair.of(null,null);
 	}
 	
 	public static String toString(double var) {
@@ -879,6 +961,7 @@ public class Utils {
 		return floor == var ? Double.toString(floor).replace(".0","") : Double.toString(var);
 	}
 	
+	@NotNull
 	public static Connection getConnection() throws SQLException {
 		return POPUpdaterMain.getConnection();
 	}
@@ -1055,5 +1138,20 @@ public class Utils {
 		str.append(num);
 		str.append(suffix1);
 		if (suffix2 != null) str.append(suffix2);
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static Component noItalic(@Nullable Component comp) {
+		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
+		return comp.decoration(TextDecoration.ITALIC,false);
+	}
+	
+	@Nullable
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static ItemStack addEnchantment(@Nullable ItemStack item, @NotNull Enchantment enchantment, int level) {
+		if (Utils.isNull(item)) return item;
+		item.addUnsafeEnchantment(enchantment,level);
+		return item;
 	}
 }

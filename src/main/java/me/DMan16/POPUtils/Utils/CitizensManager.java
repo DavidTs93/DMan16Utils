@@ -66,7 +66,7 @@ public class CitizensManager {
 		if (name != null && signature != null && data != null && (npc.getEntity() instanceof Player)) try {
 			npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(name,signature,data);
 			return true;
-		} catch (Exception e) {}
+		} catch (Exception e) {e.printStackTrace();}
 		return false;
 	}
 	
@@ -81,8 +81,17 @@ public class CitizensManager {
 			e1.printStackTrace();
 			try {
 				npc.getOrAddTrait(SkinTrait.class).setSkinName(player.getName());
+				return true;
 			} catch (Exception e2) {}
 		}
+		return false;
+	}
+	
+	public boolean applySkin(@NotNull NPC npc, String name) {
+		if (name != null) try {
+			npc.getOrAddTrait(SkinTrait.class).setSkinName(name);
+			return true;
+		} catch (Exception e2) {}
 		return false;
 	}
 }

@@ -3,9 +3,6 @@ package me.DMan16.POPUtils.Menus;
 import me.DMan16.POPUtils.Classes.Listener;
 import me.DMan16.POPUtils.Classes.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
-import me.DMan16.POPUtils.Utils.Utils;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -18,7 +15,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -39,13 +35,6 @@ public abstract class ListenerInventory implements Listener,Menu {
 		this.size = inv.getSize();
 		this.playerViews = new HashMap<>();
 		this.registered = false;
-	}
-	
-	@Nullable
-	@Contract("null -> null; !null -> !null")
-	protected static Component noItalic(@Nullable Component comp) {
-		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
-		return comp.decoration(TextDecoration.ITALIC,false);
 	}
 	
 	protected boolean isThisInventory(@NotNull Inventory inv) {
