@@ -21,21 +21,24 @@ public abstract class PlaceHolder extends PlaceholderExpansion {
 		return true;
 	}
 	
+	@NotNull
 	public String getAuthor() {
 		return plugin.getDescription().getAuthors().toString();
 	}
 	
+	@NotNull
 	public String getIdentifier() {
 		return plugin.getName();
 	}
 	
+	@NotNull
 	public String getVersion() {
 		return plugin.getDescription().getVersion();
 	}
 	
-	public String onPlaceholderRequest(Player player, String identifier) {
+	public String onPlaceholderRequest(Player player, @NotNull String identifier) {
 		return onRequest(player,identifier);
 	}
 	
-	public abstract String onRequest(OfflinePlayer player, String identifier);
+	public abstract String onRequest(OfflinePlayer player, @NotNull String identifier);
 }

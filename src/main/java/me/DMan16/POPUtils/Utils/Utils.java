@@ -1,6 +1,8 @@
 package me.DMan16.POPUtils.Utils;
 
 import com.comphenix.protocol.ProtocolManager;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
@@ -49,6 +51,7 @@ import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -1153,5 +1156,315 @@ public class Utils {
 		if (Utils.isNull(item)) return item;
 		item.addUnsafeEnchantment(enchantment,level);
 		return item;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Byte getByte(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			return (byte) obj;
+		} catch (Exception e) {}
+		try {
+			return Byte.parseByte(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Short getShort(@Nullable Object obj) {
+		if (obj == null || (obj instanceof Character)) return null;
+		try {
+			return (short) obj;
+		} catch (Exception e) {}
+		try {
+			return Short.parseShort(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Integer getInteger(@Nullable Object obj) {
+		if (obj == null || (obj instanceof Character)) return null;
+		try {
+			return (int) obj;
+		} catch (Exception e) {}
+		try {
+			return Integer.parseInt(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Long getLong(@Nullable Object obj) {
+		if (obj == null || (obj instanceof Character)) return null;
+		try {
+			return (long) obj;
+		} catch (Exception e) {}
+		try {
+			return Long.parseLong(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Float getFloat(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			return (float) obj;
+		} catch (Exception e) {}
+		try {
+			return Float.parseFloat(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Double getDouble(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			return (double) obj;
+		} catch (Exception e) {}
+		try {
+			return Double.parseDouble(getString(obj));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Boolean getBoolean(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			return (boolean) obj;
+		} catch (Exception e) {}
+		try {
+			String str = getString(obj);
+			if (str.equalsIgnoreCase("true")) return true;
+			return str.equalsIgnoreCase("false") ? false : null;
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Character getCharacter(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			return (char) obj;
+		} catch (Exception e) {}
+		try {
+			String str = getString(obj);
+			if (str.length() == 1) return str.charAt(0);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static String getString(@Nullable Object obj) {
+		if (obj instanceof String) return (String) obj;
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Map<@NotNull String,Object> getMap(@Nullable Object obj) {
+		if (obj == null) return null;
+		try {
+			Map<?,?> initial = (Map<?,?>) obj;
+			Map<@NotNull String,Object> map = new HashMap<>();
+			String key;
+			for (Map.Entry<?,?> entry : initial.entrySet()) {
+				key = getString(entry.getKey());
+				if (key != null) map.put(key,entry.getValue());
+			}
+			return map;
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null")
+	@SuppressWarnings("unchecked")
+	public static <V> List<V> getListFromArray(@Nullable Object obj, @NotNull Class<@NotNull V> clazz) {
+		if (obj != null && obj.getClass().isArray()) try {
+			List<Object> asList = (List<Object>) Arrays.class.getDeclaredMethod("asList",Object[].class).invoke(null,obj);
+			V val;
+			Function<Object,?> function;
+			List<V> list = new ArrayList<>();
+			for (Object o : asList) {
+				if (o == null) list.add(null);
+				else {
+					if (clazz == byte.class || clazz == Byte.class) function = Utils::getByte;
+					else if (clazz == short.class || clazz == Short.class) function = Utils::getShort;
+					else if (clazz == int.class || clazz == Integer.class) function = Utils::getInteger;
+					else if (clazz == long.class || clazz == Long.class) function = Utils::getLong;
+					else if (clazz == float.class || clazz == Float.class) function = Utils::getFloat;
+					else if (clazz == double.class || clazz == Double.class) function = Utils::getDouble;
+					else if (clazz == boolean.class || clazz == Boolean.class) function = Utils::getBoolean;
+					else if (clazz == char.class || clazz == Character.class) function = Utils::getCharacter;
+					else if (clazz == String.class) function = Utils::getString;
+					else function = null;
+					if (function == null) val = clazz.cast(o);
+					else val = (V) function.apply(o);
+					if (val != null) list.add(val);
+				}
+			}
+			return list;
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	@Contract("null -> null")
+	public static byte[] toPrimitiveArray(Byte[] arr) {
+		if (arr == null) return null;
+		List<Byte> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		byte[] primitiveArr = new byte[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static short[] toPrimitiveArray(Short[] arr) {
+		if (arr == null) return null;
+		List<Short> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		short[] primitiveArr = new short[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static int[] toPrimitiveArray(Integer[] arr) {
+		if (arr == null) return null;
+		List<Integer> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		int[] primitiveArr = new int[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static long[] toPrimitiveArray(Long[] arr) {
+		if (arr == null) return null;
+		List<Long> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		long[] primitiveArr = new long[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static float[] toPrimitiveArray(Float[] arr) {
+		if (arr == null) return null;
+		List<Float> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		float[] primitiveArr = new float[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static double[] toPrimitiveArray(Double[] arr) {
+		if (arr == null) return null;
+		List<Double> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		double[] primitiveArr = new double[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static boolean[] toPrimitiveArray(Boolean[] arr) {
+		if (arr == null) return null;
+		List<Boolean> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		boolean[] primitiveArr = new boolean[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static char[] toPrimitiveArray(Character[] arr) {
+		if (arr == null) return null;
+		List<Character> list = Arrays.stream(arr).filter(Objects::nonNull).toList();
+		char[] primitiveArr = new char[list.size()];
+		for (int i = 0; i < list.size(); i++) primitiveArr[i] = list.get(i);
+		return primitiveArr;
+	}
+	
+	@Contract("null -> null")
+	public static Byte[] toObjectArray(byte[] arr) {
+		if (arr == null) return null;
+		Byte[] objectArr = new Byte[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Short[] toObjectArray(short[] arr) {
+		if (arr == null) return null;
+		Short[] objectArr = new Short[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Integer[] toObjectArray(int[] arr) {
+		if (arr == null) return null;
+		Integer[] objectArr = new Integer[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Long[] toObjectArray(long[] arr) {
+		if (arr == null) return null;
+		Long[] objectArr = new Long[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Float[] toObjectArray(float[] arr) {
+		if (arr == null) return null;
+		Float[] objectArr = new Float[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Double[] toObjectArray(double[] arr) {
+		if (arr == null) return null;
+		Double[] objectArr = new Double[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Boolean[] toObjectArray(boolean[] arr) {
+		if (arr == null) return null;
+		Boolean[] objectArr = new Boolean[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Contract("null -> null")
+	public static Character[] toObjectArray(char[] arr) {
+		if (arr == null) return null;
+		Character[] objectArr = new Character[arr.length];
+		for (int i = 0; i < arr.length; i++) objectArr[i] = arr[i];
+		return objectArr;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static HashMap<@NotNull String,Object> getMapFromJSON(String str) {
+		if (str != null) try {
+			HashMap<String,Object> map = new Gson().fromJson(str, new TypeToken<HashMap<String,Object>>() {}.getType());
+			map.remove(null);
+			return map;
+		} catch (Exception e) {}
+		return null;
 	}
 }
