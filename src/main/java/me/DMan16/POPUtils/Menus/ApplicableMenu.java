@@ -1,7 +1,6 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Applicable;
-import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.Interfaces.Sortable;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -32,7 +31,7 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	protected boolean ascending;
 	protected List<V> applicables;
 	
-	public <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
+	protected  <T extends ApplicableMenu<V>> ApplicableMenu(@NotNull Player player, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 														@NotNull List<V> applicables, @Nullable V current, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		super(player,player,5,name,border,plugin,(ApplicableMenu<V> menu) -> first(menu,applicables,current,doFirstMore));
 	}
@@ -52,16 +51,15 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	
 	@Override
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
-		if ((this instanceof Backable) && slot == slotBack()) ((Backable) this).goBack();
-		else if (slot == slotSort) {
+		if (slot == slotSort) {
 			if (event.isRightClick()) ascending = !ascending;
 			else currentSort = (currentSort + 1) % 3;
 			sort();
 		} else if (!otherSlots(event,slot,slotItem)) {
 			V selected;
-			int idx;
+			Integer idx;
 			if (slot == slotReset) selected = null;
-			else if ((idx = getIndex(slot)) >= 0 && idx < applicables.size()) selected = applicables.get(idx);
+			else if ((idx = getInnerIndexOverall(slot)) != null && idx < applicables.size()) selected = applicables.get(idx);
 			else return;
 			if (selected != current && setApplicable(selected)) {
 				current = selected;
@@ -74,7 +72,7 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 		if (currentSort == 0) applicables = Applicable.sortModel(applicables,ascending);
 		else if (currentSort == 1) applicables = Applicable.sortRarity(applicables,ascending);
 		else applicables = Applicable.sortName(applicables,ascending);
-		setPage(currentPage);
+		reloadPage();
 	}
 	
 	@Override
@@ -89,9 +87,9 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	
 	@Override
 	protected void setPageContents() {
-		int idx;
+		Integer idx;
 		V selected;
-		for (int i = 0; i < size; i++) if (!isBorder(i) && (idx = getIndex(i)) >= 0 && idx < applicables.size())
+		for (int i = 0; i < size; i++) if ((idx = getInnerIndexOverall(i)) != null && idx < applicables.size())
 			setItem(i,(selected = applicables.get(idx)).item(true,selected == current));
 		setItem(slotSort,SORTS.get((currentSort * 2) + (ascending ? 0 : 1)));
 		ItemStack resetSkinItem = resetItem();
@@ -102,10 +100,6 @@ public abstract class ApplicableMenu<V extends Applicable<?,?>> extends Listener
 	@Nullable
 	protected ItemStack resetItem() {
 		return null;
-	}
-	
-	protected int getIndex(int slot) {
-		return (currentPage - 1) * 7 * 4 + ((slot / 9) - 1) * 7 + (slot % 9) - 1;
 	}
 	
 	protected boolean otherSlots(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem) {

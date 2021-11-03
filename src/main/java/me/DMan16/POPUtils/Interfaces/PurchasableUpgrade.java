@@ -16,6 +16,7 @@ public interface PurchasableUpgrade<V,T> extends Purchasable<V,T> {
 		return false;
 	}
 	
+	@Override
 	@NotNull
 	default ItemStack itemCantPurchase(@NotNull Player player, T val) {
 		ItemStack item = itemCanPurchaseAndAfford(player,val);

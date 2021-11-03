@@ -4,6 +4,7 @@ import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -69,7 +70,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 					if (isEmpty(slotItem)) empty(event,slot,click,Utils.isNull(slotItem));
 					else if (slot == slotNext && shouldSetNext()) next(click);
 					else if (slot == slotPrevious && shouldSetPrevious()) previous(click);
-					else if (slot == slotBack && (this instanceof Backable)) ((Backable) this).goBack();
+					else if ((this instanceof Backable backable) && slot == slotBack()) backable.goBack(click);
 					else if (slot == slotClose) event.getView().close();
 					else otherSlot(event,slot,slotItem,click);
 				}
@@ -81,6 +82,24 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				event.getWhoClicked().getInventory().setItemInOffHand(null);
 			}
 		}.runTaskLater(POPUtilsMain.getInstance(),1);
+	}
+	
+	/**
+	 * If an inner slot: 0-(28 * {@link #maxPage()} - 1)
+	 * Else: null
+	 */
+	@Nullable
+	protected Integer getInnerIndexOverall(int slot) {
+		return slot < 0 || slot >= size || isBorder(slot) ? null : (currentPage - 1) * 7 * 4 + ((slot / 9) - 1) * 7 + (slot % 9) - 1;
+	}
+	
+	/**
+	 * If an inner slot: 0-27
+	 * Else: null
+	 */
+	@Nullable
+	protected Integer getInnerIndex(int slot) {
+		return slot < 0 || slot >= size || isBorder(slot) ? null : ((slot / 9) - 1) * 7 + (slot % 9) - 1;
 	}
 	
 	public int slotBack() {
@@ -144,6 +163,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		}.runTask(POPUtilsMain.getInstance());
 	}
 	
+	public void reloadPage() {
+		setPage(currentPage);
+	}
+	
 	protected boolean shouldSetNext() {
 		return alwaysSetNext || currentPage < maxPage();
 	}
@@ -197,4 +220,14 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected abstract void setPageContents();
 	public abstract int maxPage();
 	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click);
+	
+	@NotNull
+	public static Component defaultMenuName(@NotNull String name, boolean bold) {
+		return bold ? Component.translatable(name,NamedTextColor.DARK_GREEN).decoration(TextDecoration.BOLD,true) : Component.translatable(name,NamedTextColor.DARK_GREEN);
+	}
+	
+	@NotNull
+	public static Component defaultMenuName(@NotNull String name) {
+		return defaultMenuName(name,true);
+	}
 }

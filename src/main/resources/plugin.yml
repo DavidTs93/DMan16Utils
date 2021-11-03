@@ -12,8 +12,12 @@ commands:
     permission: prisonpop.command.versions
   restrictions:
     permission: prisonpop.command.restrictions
+  item:
+    permission: prisonpop.command.item
 permissions:
   prisonpop.command.versions:
     default: op
   prisonpop.command.restrictions:
+    default: op
+  prisonpop.command.item:
     default: op

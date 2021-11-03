@@ -3,15 +3,12 @@ package me.DMan16.POPUtils;
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
-import me.DMan16.POPUtils.Classes.PluginsItems;
+import me.DMan16.POPUtils.Items.*;
 import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.Restrictions.RestrictionsCommandListener;
-import me.DMan16.POPUtils.Utils.CitizensManager;
-import me.DMan16.POPUtils.Utils.PlaceholderManager;
-import me.DMan16.POPUtils.Utils.Utils;
-import me.DMan16.POPUtils.Utils.WorldGuardManager;
+import me.DMan16.POPUtils.Utils.*;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -37,6 +34,17 @@ public final class POPUtilsMain extends JavaPlugin {
 	
 	public void onEnable() {
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
+		try {
+			if (!ItemUtils.registerItemable("item",ItemableStack.class,ItemableStack::of)) throw new Exception("Failed to register \"item\" Itemable!");
+			if (!ItemUtils.registerItemable("command",ItemableCommand.class,ItemableCommand::of)) throw new Exception("Failed to register \"command\" Itemable!");
+			POPItems.start();
+		} catch (Exception e) {
+			Utils.chatColorsLogPlugin("&fPOPUtils&c problem! Error:");
+			e.printStackTrace();
+			Bukkit.getPluginManager().disablePlugin(this);
+			Bukkit.shutdown();
+			return;
+		}
 		firstOfAll();
 		Utils.chatColorsLogPlugin("&aLoaded, running on version: &f" + Utils.getVersion() + "&a, Java version: &f" + Utils.javaVersion());
 		if (WorldGuardManager != null) Utils.chatColorsLogPlugin("&aHooked to &fWorldGuard");
@@ -54,6 +62,7 @@ public final class POPUtilsMain extends JavaPlugin {
 		initiateMenuItems();
 		new EventCallers();
 		new RestrictionsCommandListener();
+		new ItemCommandListener();
 		CancelPlayers = new CancelPlayers();
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) PAPIManager = new PlaceholderManager();
 		if (getServer().getPluginManager().getPlugin("Citizens") != null) CitizensManager = new CitizensManager();

@@ -29,8 +29,9 @@ public interface Purchasable<V,T> {
 	@Nullable
 	ItemStack itemCantAfford(@NotNull Player player, T val);
 	
-	@Nullable
-	ItemStack itemCantPurchase(@NotNull Player player, T val);
+	default @Nullable ItemStack itemCantPurchase(@NotNull Player player, T val) {
+		return null;
+	}
 	
 	@NotNull
 	ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val);

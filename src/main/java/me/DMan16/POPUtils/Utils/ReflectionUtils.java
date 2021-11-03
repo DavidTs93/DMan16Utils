@@ -6,6 +6,7 @@ import net.minecraft.world.effect.MobEffect;
 import net.minecraft.world.effect.MobEffectList;
 import net.minecraft.world.entity.EntityLiving;
 import net.minecraft.world.entity.player.EntityHuman;
+import net.minecraft.world.level.border.WorldBorder;
 import org.bukkit.World;
 import org.bukkit.entity.*;
 import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
@@ -111,11 +112,15 @@ public class ReflectionUtils {
 		return CraftUtils.toCraft(entity).getHandle();
 	}
 	
+	public static WorldBorder getWorldBorder(@NotNull World world) {
+		return ReflectionUtils.getHandle(world).getWorldBorder();
+	}
+	
 	public static MobEffectList MobEffectFromID(int ID) {
 		return MobEffectList.fromId(ID);
 	}
 	
-	public static boolean[] AddEffects(@NotNull Player player, @NotNull Cause cause, @NotNull List<PotionEffect> effects) {
+	public static boolean[] addEffects(@NotNull Player player, @NotNull Cause cause, @NotNull List<PotionEffect> effects) {
 		if (effects.isEmpty()) return null;
 		boolean[] result = new boolean[effects.size()];
 		Arrays.fill(result,false);
@@ -129,8 +134,8 @@ public class ReflectionUtils {
 		return result;
 	}
 	
-	public static boolean[] AddEffects(@NotNull Player player, @NotNull Cause cause, @NotNull PotionEffect ... effects) {
-		return AddEffects(player,cause,Arrays.asList(effects));
+	public static boolean[] addEffects(@NotNull Player player, @NotNull Cause cause, @NotNull PotionEffect ... effects) {
+		return addEffects(player,cause,Arrays.asList(effects));
 	}
 	
 	public static boolean[] RemoveEffects(@NotNull Player player, @NotNull Cause cause, @NotNull List<PotionEffectType> effects) {

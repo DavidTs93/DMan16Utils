@@ -41,7 +41,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
 				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
-		this.displayItem = displayItem(defaultName);
+		this.displayItem = displayItem(this.defaultName);
 		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
@@ -53,8 +53,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	
 	@SuppressWarnings("unchecked")
 	protected <P extends Applicable<V,T>> Applicable(int ID, int rarity, @NotNull String name, @NotNull String displayName, @Nullable String color, @Nullable BigInteger shopPrice,
-													 @Nullable Function<P,@NotNull Boolean> doFirst)
-			throws IllegalArgumentException {
+													 @Nullable Function<P,@NotNull Boolean> doFirst) throws IllegalArgumentException {
 		if (ID <= 0) throw new IllegalArgumentException();
 		this.ID = ID;
 		this.rarity = Rarity.get(rarity);
@@ -79,12 +78,6 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		return this.ShopPrice != null;
 	}
 	
-	@Override
-	@Nullable
-	public ItemStack itemCantPurchase(@NotNull Player player, T val) {
-		return null;
-	}
-	
 	@NotNull
 	public ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val) {
 		return item(null,false,false);
@@ -105,9 +98,10 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	
 	@NotNull
 	protected ItemStack displayItem(@NotNull Component display) {
-		return item(null,false,false);
+		return item(display,false,false);
 	}
 	
+	@NotNull
 	protected static List<Component> lore(boolean chosen, @NotNull Rarity rarity) {
 		return chosen ? Arrays.asList(Component.empty(),rarity.displayName(),Component.empty(),InterfacesUtils.CHOSEN) :
 				Arrays.asList(Component.empty(),rarity.displayName());

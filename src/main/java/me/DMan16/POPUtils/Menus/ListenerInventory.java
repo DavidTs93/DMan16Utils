@@ -1,7 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Listener;
-import me.DMan16.POPUtils.Classes.PluginsItems;
+import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;

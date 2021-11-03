@@ -14,11 +14,14 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EnumItemSlot;
 import net.minecraft.world.entity.decoration.EntityArmorStand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.border.WorldBorder;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Field;
 import java.util.*;
@@ -27,7 +30,13 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class PacketUtils {
 	public static final Vector3f Vector3f0 = Vector3f(0,0,0);
 	
-	public static void sendPacket(@NotNull Player player, Packet<?> ... packets) {
+	public static void sendPackets(@NotNull Player player, Packet<?> ... packets) {
+		EntityPlayer handle = ReflectionUtils.getHandle(player);
+		for (Packet<?> packet : packets) if (packet != null) handle.b.sendPacket(packet);
+	}
+	
+	public static void sendPackets(@NotNull Player player, List<Packet<?>> packets) {
+		if (packets == null) return;
 		EntityPlayer handle = ReflectionUtils.getHandle(player);
 		for (Packet<?> packet : packets) if (packet != null) handle.b.sendPacket(packet);
 	}
@@ -188,5 +197,40 @@ public class PacketUtils {
 	@NotNull
 	public static PacketPlayOutEntityDestroy packetDestroyEntity(int ... IDs) {
 		return new PacketPlayOutEntityDestroy(IDs);
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<Packet<?>> packetWorldBorder(@NotNull WorldBorder border) {
+		return List.of(new ClientboundInitializeBorderPacket(border), new ClientboundSetBorderSizePacket(border));
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.POPUtils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size, double damageAmount,
+													double damageBuffer, int warningDistance, int warningTime) {
+		WorldBorder border = new WorldBorder();
+		border.world = ReflectionUtils.getHandle(world);
+		border.setCenter(center.first(),center.second());
+		border.setSize(size);
+		border.setDamageAmount(damageAmount);
+		border.setDamageBuffer(damageBuffer);
+		border.setWarningDistance(warningDistance);
+		border.setWarningTime(warningTime);
+		return packetWorldBorder(border);
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.POPUtils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size, int warningDistance) {
+		WorldBorder border = ReflectionUtils.getWorldBorder(world);
+		return packetWorldBorder(world,center,size,border.getDamageAmount(),border.getDamageBuffer(),warningDistance,border.getWarningTime());
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.POPUtils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size) {
+		WorldBorder border = ReflectionUtils.getWorldBorder(world);
+		return packetWorldBorder(world,center,size,border.getDamageAmount(),border.getDamageBuffer(),border.getWarningDistance(),border.getWarningTime());
 	}
 }

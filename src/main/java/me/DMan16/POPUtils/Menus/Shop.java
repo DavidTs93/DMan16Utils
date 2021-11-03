@@ -19,7 +19,7 @@ import java.util.function.Function;
 public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
 	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
-	public <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
+	protected  <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 									  @Nullable Function<P,@NotNull Boolean> doFirstMore) {
 		super(player,player,lines,name,border,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
 	}

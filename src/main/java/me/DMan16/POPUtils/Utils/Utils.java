@@ -1,7 +1,7 @@
 package me.DMan16.POPUtils.Utils;
 
 import com.comphenix.protocol.ProtocolManager;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
@@ -13,6 +13,9 @@ import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.ScopedComponent;
+import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -43,6 +46,9 @@ import java.io.ByteArrayOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.math.RoundingMode;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,6 +72,8 @@ public class Utils {
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
+	private static final Gson GSON = new GsonBuilder().registerTypeAdapter(Double.class,
+			(JsonSerializer<Double>) (src,typeOfSrc,context) -> src == src.longValue() ? new JsonPrimitive(src.longValue()) : new JsonPrimitive(src)).create();
 	
 	static {
 		createInteractable();
@@ -200,52 +208,55 @@ public class Utils {
 		if (comp != null) player.sendActionBar(comp);
 	}
 	
-	@NotNull
-	public static String splitCapitalize(String str) {
-		return splitCapitalize(str,null,"&");
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static String splitCapitalize(@Nullable String str) {
+		return splitCapitalize(str,null,'&');
 	}
 	
-	@NotNull
-	public static String splitCapitalize(String str, String splitReg) {
-		return splitCapitalize(str,splitReg,"&");
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static String splitCapitalize(@Nullable String str, String splitReg) {
+		return splitCapitalize(str,splitReg,'&');
 	}
 	
-	@NotNull
-	public static String splitCapitalize(@Nullable String str, @Nullable String splitReg, @NotNull String colorCode) {
-		if (str == null || str.trim().isEmpty()) return "";
+	@Nullable
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static String splitCapitalize(@Nullable String str, @Nullable String splitReg, @Nullable Character colorCode) {
+		if (str == null) return null;
 		String[] splitName;
 		if (splitReg == null || splitReg.trim().isEmpty()) splitName = new String[]{str};
 		else splitName = str.split(splitReg);
 		StringBuilder newStr = new StringBuilder();
+		char[] arr;
+		char c,d;
 		for (String sub : splitName) {
-			boolean found = false;
-			int i = 0;
-			for (; i < sub.length() - 1; i++) {
-				try {
-					if (sub.substring(i - 1,i).equalsIgnoreCase(colorCode)) continue;
-				} catch (Exception e) {}
-				if (sub.substring(i,i + 1).matches("[a-zA-Z]+")) {
-					found = true;
-					break;
-				}
+			arr = sub.toCharArray();
+			for (int i = 0; i < arr.length; i++) {
+				c = arr[i];
+				if (colorCode != null && colorCode == c) {
+					newStr.append(colorCode);
+					if (i < arr.length - 1) {
+						d = arr[i + 1];
+						if (ChatColor.translateAlternateColorCodes(colorCode,colorCode.toString() + d).charAt(0) != colorCode) {
+							newStr.append(d);
+							i++;
+						}
+					}
+				} else if (Character.isLetter(c)){
+					newStr.append(Character.toUpperCase(c));
+					while (++i < arr.length) {
+						c = arr[i];
+						if (Character.isLetter(c)) newStr.append(Character.toLowerCase(c));
+						else {
+							newStr.append(c);
+							break;
+						}
+					}
+				} else newStr.append(c);
 			}
-			if (found) newStr.append(sub,0,i).append(sub.substring(i,i + 1).toUpperCase()).append(sub.substring(i + 1).toLowerCase()).append(" ");
 		}
-		Pattern pattern = Pattern.compile(" " + colorCode + "[a-zA-Z0-9]Of ");
-		Matcher match = pattern.matcher(newStr.toString());
-		while (match.find()) {
-			String code = newStr.substring(match.start(),match.end());
-			newStr = new StringBuilder(newStr.toString().replace(code,code.replace("Of ","of ")));
-			match = pattern.matcher(newStr.toString());
-		}
-		pattern = Pattern.compile(" " + colorCode + "[a-zA-Z0-9]The ");
-		match = pattern.matcher(newStr.toString());
-		while (match.find()) {
-			String code = newStr.substring(match.start(),match.end());
-			newStr = new StringBuilder(newStr.toString().replace(code,code.replace("The ","the ")));
-			match = pattern.matcher(newStr.toString());
-		}
-		return newStr.toString().replace(" Of "," of ").replace(" The "," the ").trim();
+		return newStr.toString();
 	}
 	
 	@NotNull
@@ -796,6 +807,7 @@ public class Utils {
 		return Bukkit.createInventory(owner,lines * 9,name);
 	}
 	
+	@NotNull
 	public static Inventory makeInventory(@Nullable InventoryHolder owner, @NotNull InventoryType type, Component name) {
 		if (name == null) return Bukkit.createInventory(owner,type);
 		return Bukkit.createInventory(owner,type,name);
@@ -943,7 +955,14 @@ public class Utils {
 	public static Pair<@Nullable String,@Nullable String> getSkin(@NotNull GameProfile profile) {
 		Property property = profile.getProperties().get("textures").stream().findFirst().orElse(null);
 		if (property == null) return Pair.of(null,null);
-		return Pair.of(property.getSignature(),property.getValue());
+		String data = property.getValue();
+		if (data != null) try {
+			HashMap<String,Object> map = getMapFromJSON(data);
+			assert map != null;
+			map.remove("signatureRequired");
+			data = getJSONString(map);
+		} catch (Exception e) {}
+		return Pair.of(data,property.getSignature());
 	}
 	
 	@NotNull
@@ -1024,9 +1043,8 @@ public class Utils {
 	@Nullable
 	@Contract("!null,_ -> !null; null,_ -> null")
 	public static Component textToComponent(@Nullable String text, @Nullable TextColor color) {
-		return text == null ? null : (text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) :
-				(text.isEmpty() ? Component.empty() : Component.text(Utils.chatColors(text),color))).decoration(TextDecoration.ITALIC,false);
+		return text == null ? null : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
 	}
 	
 	@Nullable
@@ -1036,10 +1054,24 @@ public class Utils {
 	}
 	
 	@Nullable
-	@Contract("null,_ -> null")
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemStack setDisplayName(@Nullable ItemStack item, @Nullable Component name) {
+		if (!isNull(item)) {
+			ItemMeta meta = item.getItemMeta();
+			meta.displayName(name);
+			item.setItemMeta(meta);
+		}
+		return item;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
 	public static ItemStack setLore(@Nullable ItemStack item, @Nullable List<Component> lore) {
-		if (isNull(item)) return null;
-		item.lore(lore);
+		if (!isNull(item)) {
+			ItemMeta meta = item.getItemMeta();
+			meta.lore(lore);
+			item.setItemMeta(meta);
+		}
 		return item;
 	}
 	
@@ -1076,7 +1108,7 @@ public class Utils {
 	
 	@Nullable
 	public static <T> T getKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type) {
-		return meta == null ? null : meta.getPersistentDataContainer().get(key,type);
+		return meta == null ? null : (meta.getPersistentDataContainer().has(key,type) ? meta.getPersistentDataContainer().get(key,type) : null);
 	}
 	
 	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value) {
@@ -1102,9 +1134,10 @@ public class Utils {
 	}
 	
 	@Nullable
-	public static Boolean getBoolean(@NotNull ResultSet result, @NotNull String field) {
+	public static Boolean getBoolean(@NotNull ResultSet result, @NotNull String name) {
 		try {
-			return (Boolean) result.getObject(field);
+			boolean val = result.getBoolean(name);
+			if (!result.wasNull()) return val;
 		} catch (Exception e) {}
 		return null;
 	}
@@ -1146,6 +1179,13 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null; !null -> !null")
 	public static Component noItalic(@Nullable Component comp) {
+		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
+		return comp.decoration(TextDecoration.ITALIC,false);
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static <V extends ScopedComponent<V>> V noItalic(@Nullable V comp) {
 		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
 		return comp.decoration(TextDecoration.ITALIC,false);
 	}
@@ -1461,10 +1501,165 @@ public class Utils {
 	@Contract("null -> null")
 	public static HashMap<@NotNull String,Object> getMapFromJSON(String str) {
 		if (str != null) try {
-			HashMap<String,Object> map = new Gson().fromJson(str, new TypeToken<HashMap<String,Object>>() {}.getType());
+			HashMap<String,Object> map = GSON.fromJson(str, new TypeToken<HashMap<String,Object>>() {}.getType());
 			map.remove(null);
 			return map;
 		} catch (Exception e) {}
 		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static List<@NotNull Object> getListFromJSON(String str) {
+		if (str != null) try {
+			List<Object> map = GSON.fromJson(str, new TypeToken<ArrayList<Object>>() {}.getType());
+			map.remove(null);
+			return map;
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static String getJSONString(Object obj) {
+		return obj == null ? null : GSON.toJson(obj);
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static BigInteger toBigInteger(@Nullable BigDecimal num, boolean round) {
+		if (num == null) return null;
+		return round ? num.setScale(0,RoundingMode.HALF_UP).toBigInteger() : num.toBigInteger();
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static BigInteger toBigInteger(@Nullable BigDecimal num) {
+		return toBigInteger(num,true);
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static List<HashMap<@NotNull String,?>> mapComponent(Component component) {
+		if (component == null) return null;
+		HashMap<String,Object> map = new HashMap<>();
+		if (component instanceof TextComponent text) map.put("text",text.content());
+		else if (component instanceof TranslatableComponent translate) map.put("text",translate.key());
+		else return null;
+		TextColor color = component.color();
+		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
+		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
+		if (component.children().isEmpty()) return new ArrayList<>(Arrays.asList(map));
+		return Utils.joinLists(Arrays.asList(map),Utils.joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	@SuppressWarnings("unchecked")
+	public static Component mapToComponent(Object obj) {
+		if (obj == null) return null;
+		try {
+			return listToComponent((List<?>) obj);
+		} catch (Exception e) {}
+		Map<String,?> map;
+		try {
+			map = (Map<String,?>) obj;
+		} catch (Exception e1) {
+			try {
+				return textToComponent(Objects.requireNonNull(Utils.getString(obj)),(TextColor) null);
+			} catch (Exception e2) {
+				return null;
+			}
+		}
+		Component comp;
+		String str = Utils.getString(map.get("text"));
+		if (str != null) comp = Component.text(str);
+		else if ((str = Utils.getString(map.get("translate"))) != null) {
+			TranslatableComponent translate = Component.translatable(str);
+			try {
+				translate = translate.args(Objects.requireNonNull(mapToComponent(map.get("args"))));
+			} catch (Exception e) {
+				List<Component> args = mapToListComponent(map.get("args"));
+				if (args != null && !args.isEmpty()) translate = translate.args(args);
+			}
+			comp = translate;
+		} else return null;
+		TextColor color = Utils.getTextColor(Utils.getString(map.get("color")));
+		Boolean bool;
+		for (TextDecoration decoration : TextDecoration.values()) {
+			bool = Utils.getBoolean(map.get(decoration.toString().toLowerCase()));
+			if (decoration == TextDecoration.ITALIC && bool == null) bool = false;
+			if (bool != null) comp = comp.decoration(decoration,bool);
+		}
+		return comp;
+	}
+	
+	@Nullable
+	public static List<Component> mapToListComponent(Object obj) {
+		if (obj != null) try {
+			List<Component> list = new ArrayList<>();
+			for (Object o : (List<?>) obj) try {
+				list.add(listToComponent((List<?>) o));
+			} catch (Exception e1) {
+				try {
+					list.add(Objects.requireNonNull(Utils.mapToComponent(o)));
+				} catch (Exception e) {}
+			}
+			return list.isEmpty() ? null : list;
+		} catch (Exception e1) {
+			try {
+				return Arrays.stream(String.join("\n",Objects.requireNonNull(Utils.getString(obj)).split("\\n")).split("\n")).map(Utils::mapToComponent).toList();
+			} catch (Exception e2) {}
+		}
+		return null;
+	}
+	
+	@Nullable
+	public static Component listToComponent(List<?> list) {
+		if (list == null) return null;
+		return Utils.combineComponents(list.stream().map(Utils::mapToComponent).toList());
+	}
+	
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemMeta addBeforeLore(ItemMeta meta, List<Component> add) {
+		if (meta == null || add == null) return meta;
+		List<Component> lore = new ArrayList<>(add);
+		if (meta.hasLore()) {
+			List<Component> oldLore = meta.lore();
+			if (oldLore != null) lore.addAll(oldLore);
+		}
+		meta.lore(lore);
+		return meta;
+	}
+	
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemMeta addAfterLore(ItemMeta meta, List<Component> add) {
+		if (meta == null || add == null) return meta;
+		List<Component> lore = new ArrayList<>();
+		if (meta.hasLore()) {
+			List<Component> oldLore = meta.lore();
+			if (oldLore != null) lore.addAll(oldLore);
+		}
+		lore.addAll(add);
+		meta.lore(lore);
+		return meta;
+	}
+	
+	@Contract("null,_ -> null")
+	public static ItemStack addBeforeLore(ItemStack item, List<Component> add) {
+		if (!isNull(item)) item.setItemMeta(addBeforeLore(item.getItemMeta(),add));
+		return item;
+	}
+	
+	@Contract("null,_ -> null")
+	public static ItemStack addAfterLore(ItemStack item, List<Component> add) {
+		if (!isNull(item)) item.setItemMeta(addAfterLore(item.getItemMeta(),add));
+		return item;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static <V extends Collection<?>> V nullIfEmpty(@Nullable V collection) {
+		return collection == null || collection.isEmpty() ? null : collection;
 	}
 }

@@ -1,5 +1,6 @@
-package me.DMan16.POPUtils.Classes;
+package me.DMan16.POPUtils.Items;
 
+import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemFlag;
@@ -12,10 +13,6 @@ import java.util.*;
 
 public class PluginsItems {
 	private static final HashMap<@NotNull String,@Nullable ItemStack> map = new HashMap<>();
-	
-	public PluginsItems(@NotNull TreeMap<String,String> map) {
-	
-	}
 	
 	public static void add(@NotNull String key, ItemStack item) {
 		if (!Utils.isNull(item)) if (map.putIfAbsent(key,item) != null) throw new IllegalArgumentException("Failed to create \"" + key + "\" PluginItem!");
