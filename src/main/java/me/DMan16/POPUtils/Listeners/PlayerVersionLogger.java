@@ -2,6 +2,7 @@ package me.DMan16.POPUtils.Listeners;
 
 import com.viaversion.viaversion.api.Via;
 import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Events.SuccessfulJoinEvent;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -11,10 +12,7 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
-import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
-import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
@@ -80,14 +78,16 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 		}
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
-	public void onJoin(PlayerJoinEvent event) {
-		if (event.getPlayer().isOnline()) try (Statement statement = Utils.getConnection().createStatement()) {
-			UUID ID = event.getPlayer().getUniqueId();
+	@EventHandler(ignoreCancelled = true)
+	public void onJoin(SuccessfulJoinEvent event) {
+		try (Statement statement = Utils.getConnection().createStatement()) {
+			UUID ID = event.event.getPlayer().getUniqueId();
 			String version = Objects.requireNonNull(VERSIONS.get(Via.getAPI().getPlayerVersion(ID)));
 			statement.executeUpdate("INSERT IGNORE INTO " + VERSIONS_PLAYERS_TABLE_NAME + " (UUID) VALUES ('" + ID + "');");
 			statement.executeUpdate("UPDATE " + VERSIONS_PLAYERS_TABLE_NAME + " SET " + "v" + version.replace("_","v") + "=1 WHERE UUID='" + ID + "';");
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {
+			event.disallow(e);
+		}
 	}
 	
 	@NotNull
@@ -113,10 +113,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).collect(Collectors.joining(";"));
 			String url = "https://DavidTs93.github.io/pie_chart.html?v=" + Base64Coder.encodeString(str);
 			ClickEvent click = ClickEvent.openUrl(url);
-			Component msg;
-			if (sender instanceof Player) msg = Component.text("Versions graph",NamedTextColor.GREEN).clickEvent(click);
-			else msg = Component.text("Versions graph: ",NamedTextColor.GREEN).append(Component.text(url,NamedTextColor.BLUE).decoration(TextDecoration.UNDERLINED,true).clickEvent(click));
-			sender.sendMessage(msg.decoration(TextDecoration.ITALIC,false));
+			sender.sendMessage(Utils.noItalic(Component.text("Versions graph: ",NamedTextColor.GREEN,TextDecoration.UNDERLINED).append(Component.text(url,NamedTextColor.BLUE).clickEvent(click))));
 		}
 		return true;
 	}

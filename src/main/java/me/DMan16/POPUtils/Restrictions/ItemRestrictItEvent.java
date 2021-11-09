@@ -1,26 +1,21 @@
 package me.DMan16.POPUtils.Restrictions;
 
-import me.DMan16.POPUtils.Events.Event;
+import me.DMan16.POPUtils.Events.HumanEvent;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.inventory.ItemStack;
 
-public abstract class ItemRestrictItEvent extends Event {
+public abstract class ItemRestrictItEvent extends HumanEvent {
 	private final Restrictions.Restriction restriction;
-	private final HumanEntity player;
 	private final ItemStack item;
 	
-	protected ItemRestrictItEvent(Restrictions.Restriction restriction, HumanEntity player, ItemStack item) {
+	protected ItemRestrictItEvent(HumanEntity human, Restrictions.Restriction restriction, ItemStack item) {
+		super(human);
 		this.restriction = restriction;
-		this.player = player;
 		this.item = item;
 	}
 	
 	public final Restrictions.Restriction getRestriction() {
 		return restriction;
-	}
-	
-	public final HumanEntity getPlayer() {
-		return player;
 	}
 	
 	public final ItemStack getItem() {

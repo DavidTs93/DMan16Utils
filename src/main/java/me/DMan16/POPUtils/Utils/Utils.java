@@ -7,7 +7,10 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
+import me.DMan16.POPUtils.Events.PlayerRequestSaveEvent;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
+import me.DMan16.POPUtils.Interfaces.Itemable;
+import me.DMan16.POPUtils.Items.ItemUtils;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.POPUtilsMain;
@@ -56,6 +59,7 @@ import java.sql.Statement;
 import java.text.DecimalFormat;
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -72,8 +76,7 @@ public class Utils {
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
-	private static final Gson GSON = new GsonBuilder().registerTypeAdapter(Double.class,
-			(JsonSerializer<Double>) (src,typeOfSrc,context) -> src == src.longValue() ? new JsonPrimitive(src.longValue()) : new JsonPrimitive(src)).create();
+	private static final Gson GSON = new GsonBuilder().create();
 	
 	static {
 		createInteractable();
@@ -612,6 +615,7 @@ public class Utils {
 	 * @return serialized version
 	 */
 	@Nullable
+	@Contract("null -> null")
 	public static String ObjectToBase64(@Nullable Object obj) {
 		if (obj != null) try {
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -628,6 +632,7 @@ public class Utils {
 	 * @return deserialized version
 	 */
 	@Nullable
+	@Contract("null -> null")
 	public static Object ObjectFromBase64(@Nullable String data) {
 		if (data != null) try {
 			ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
@@ -640,6 +645,30 @@ public class Utils {
 		return null;
     }
 	
+	@Nullable
+	@Contract("null -> null")
+	public static ItemStack toItem(@Nullable String str) {
+		Itemable<?> item = ItemUtils.of(str);
+		if (item != null) return item.asItem();
+		try {
+			return (ItemStack) ObjectFromBase64(str);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static String toString(@Nullable ItemStack item) {
+		if (item == null) return null;
+		Itemable<?> itemable = ItemUtils.of(item);
+		if (itemable != null) return itemable.ItemableString();
+		if (!isNull(item)) try {
+			return ObjectToBase64(item);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Contract(pure = true)
 	public static Object Null() {
 		return null;
 	}
@@ -853,7 +882,7 @@ public class Utils {
 	public static void savePlayer(@NotNull Player player) {
 		if (isPlayerNPC(player)) return;
 		player.saveData();
-//		if (Bukkit.getPluginManager().getPlugin("AxInventories") != null) me.DMan16.AxInventories.AxInventories.save(player);
+		new PlayerRequestSaveEvent(player).callEventAndDoTasks();
 	}
 	
 	@Nullable
@@ -1200,10 +1229,38 @@ public class Utils {
 	
 	@Nullable
 	@Contract("null -> null")
+	public static String getString(@Nullable Object obj) {
+		if (obj instanceof String) return (String) obj;
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
 	public static Byte getByte(@Nullable Object obj) {
 		if (obj == null) return null;
 		try {
 			return (byte) obj;
+		} catch (Exception e) {}
+		byte val;
+		try {
+			val = ((Short) obj).byteValue();
+			return val == ((Short) obj) ? val : null;
+		} catch (Exception e) {e.printStackTrace();}
+		try {
+			val = ((Integer) obj).byteValue();
+			return val == ((Integer) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Long) obj).byteValue();
+			return val == ((Long) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Float) obj).byteValue();
+			return val == ((Float) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Double) obj).byteValue();
+			return val == ((Double) obj) ? val : null;
 		} catch (Exception e) {}
 		try {
 			return Byte.parseByte(getString(obj));
@@ -1219,6 +1276,26 @@ public class Utils {
 			return (short) obj;
 		} catch (Exception e) {}
 		try {
+			return ((Byte) obj).shortValue();
+		} catch (Exception e) {e.printStackTrace();}
+		short val;
+		try {
+			val = ((Integer) obj).shortValue();
+			return val == ((Integer) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Long) obj).shortValue();
+			return val == ((Long) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Float) obj).shortValue();
+			return val == ((Float) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Double) obj).shortValue();
+			return val == ((Double) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
 			return Short.parseShort(getString(obj));
 		} catch (Exception e) {}
 		return null;
@@ -1230,6 +1307,25 @@ public class Utils {
 		if (obj == null || (obj instanceof Character)) return null;
 		try {
 			return (int) obj;
+		} catch (Exception e) {}
+		try {
+			return ((Byte) obj).intValue();
+		} catch (Exception e) {}
+		try {
+			return ((Short) obj).intValue();
+		} catch (Exception e) {}
+		int val;
+		try {
+			val = ((Long) obj).intValue();
+			return val == ((Long) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Float) obj).intValue();
+			return val == ((Float) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Double) obj).intValue();
+			return val == ((Double) obj) ? val : null;
 		} catch (Exception e) {}
 		try {
 			return Integer.parseInt(getString(obj));
@@ -1245,6 +1341,24 @@ public class Utils {
 			return (long) obj;
 		} catch (Exception e) {}
 		try {
+			return ((Byte) obj).longValue();
+		} catch (Exception e) {}
+		try {
+			return ((Short) obj).longValue();
+		} catch (Exception e) {}
+		try {
+			return ((Integer) obj).longValue();
+		} catch (Exception e) {}
+		long val;
+		try {
+			val = ((Float) obj).longValue();
+			return val == ((Float) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
+			val = ((Double) obj).longValue();
+			return val == ((Double) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
 			return Long.parseLong(getString(obj));
 		} catch (Exception e) {}
 		return null;
@@ -1258,6 +1372,23 @@ public class Utils {
 			return (float) obj;
 		} catch (Exception e) {}
 		try {
+			return ((Byte) obj).floatValue();
+		} catch (Exception e) {}
+		try {
+			return ((Short) obj).floatValue();
+		} catch (Exception e) {}
+		try {
+			return ((Integer) obj).floatValue();
+		} catch (Exception e) {}
+		try {
+			return ((Long) obj).floatValue();
+		} catch (Exception e) {}
+		float val;
+		try {
+			val = ((Double) obj).floatValue();
+			return val == ((Double) obj) ? val : null;
+		} catch (Exception e) {}
+		try {
 			return Float.parseFloat(getString(obj));
 		} catch (Exception e) {}
 		return null;
@@ -1269,6 +1400,21 @@ public class Utils {
 		if (obj == null) return null;
 		try {
 			return (double) obj;
+		} catch (Exception e) {}
+		try {
+			return ((Byte) obj).doubleValue();
+		} catch (Exception e) {}
+		try {
+			return ((Short) obj).doubleValue();
+		} catch (Exception e) {}
+		try {
+			return ((Integer) obj).doubleValue();
+		} catch (Exception e) {}
+		try {
+			return ((Long) obj).doubleValue();
+		} catch (Exception e) {}
+		try {
+			return ((Float) obj).doubleValue();
 		} catch (Exception e) {}
 		try {
 			return Double.parseDouble(getString(obj));
@@ -1302,13 +1448,6 @@ public class Utils {
 			String str = getString(obj);
 			if (str.length() == 1) return str.charAt(0);
 		} catch (Exception e) {}
-		return null;
-	}
-	
-	@Nullable
-	@Contract("null -> null")
-	public static String getString(@Nullable Object obj) {
-		if (obj instanceof String) return (String) obj;
 		return null;
 	}
 	
@@ -1661,5 +1800,9 @@ public class Utils {
 	@Contract("null -> null")
 	public static <V extends Collection<?>> V nullIfEmpty(@Nullable V collection) {
 		return collection == null || collection.isEmpty() ? null : collection;
+	}
+	
+	public static <V> V random(@NotNull List<V> list) {
+		return list.size() == 1 ? list.get(0) : list.get(ThreadLocalRandom.current().nextInt(list.size()));
 	}
 }

@@ -6,12 +6,17 @@ import org.jetbrains.annotations.NotNull;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Event extends org.bukkit.event.Event  {
+public abstract class Event extends org.bukkit.event.Event {
 	private static final HandlerList handlers = new HandlerList();
 	private final List<Runnable> immediateTasks;
 	private final List<Runnable> delayedTasks;
 	
 	protected Event() {
+		this(false);
+	}
+	
+	protected Event(boolean isAsync) {
+		super(isAsync);
 		this.immediateTasks = new ArrayList<>();
 		this.delayedTasks = new ArrayList<>();
 	}
@@ -55,7 +60,6 @@ public class Event extends org.bukkit.event.Event  {
 		return handlers;
 	}
 	
-	@Override
 	@NotNull
 	public final HandlerList getHandlers() {
 		return handlers;

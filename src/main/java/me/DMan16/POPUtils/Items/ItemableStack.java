@@ -37,8 +37,9 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	@Nullable
 	@Contract("null -> null")
 	public static ItemableStack of(ItemStack item) {
-		if (Utils.isNull(item)) return null;
-		return item.getType().isItem() ? new ItemableStack(item) : null;
+		if (Utils.isNull(item) || !item.getType().isItem()) return null;
+		ItemableStack stack = new ItemableStack(item);
+		return Utils.sameItem(item,stack.item) ? stack : null;
 	}
 	
 	@NotNull
@@ -69,7 +70,7 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	}
 	
 	@NotNull
-	private static ItemFlag @NotNull [] getFlags(short num) {
+	private static ItemFlag @NotNull [] getFlags(int num) {
 		List<@NotNull Boolean> bits = new ArrayList<>();
 		for (int i = 0; i <= 7; i++) bits.add(((num >> i) & 1) == 1);
 		ItemFlag[] itemFlags = ItemFlag.values();
@@ -96,10 +97,10 @@ public class ItemableStack implements Itemable<ItemableStack> {
 		meta.setCustomModelData(Utils.getInteger(arguments.get("Model")));
 		String skin = Utils.getString(arguments.get("Skin"));
 		if (skin != null && material == Material.PLAYER_HEAD) Utils.setSkin((SkullMeta) meta,skin,null);
-		meta.addItemFlags(getFlags(Utils.thisOrThatOrNull(Utils.getShort(arguments.get("HideFlags")),(short) 0)));
+		meta.addItemFlags(getFlags(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("HideFlags")),0)));
 		if (Tags.LEATHER.contains(material)) ((LeatherArmorMeta) meta).setColor(Utils.getColor(Utils.getString(arguments.get("Color"))));
 		item.setItemMeta(meta);
-		item.setAmount(Utils.thisOrThatOrNull(Utils.getShort(arguments.get("Amount")),(short) 0));
+		item.setAmount(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("Amount")),1));
 		item.addUnsafeEnchantments(getEnchantments(arguments.get("Enchantments")));
 		try {
 			Restrictions.addRestrictions(item,
@@ -145,6 +146,11 @@ public class ItemableStack implements Itemable<ItemableStack> {
 		List<String> restrictions = Restrictions.getRestrictions(meta).stream().map(Restrictions.Restriction::name).toList();
 		if (!restrictions.isEmpty()) map.put("Restrictions",restrictions);
 		return map;
+	}
+	
+	@NotNull
+	public String ItemableKey() {
+		return "item";
 	}
 	
 	@NotNull

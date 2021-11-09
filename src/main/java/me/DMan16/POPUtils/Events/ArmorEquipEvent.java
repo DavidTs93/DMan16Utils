@@ -8,9 +8,8 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public final class ArmorEquipEvent extends Event implements Cancellable {
+public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	private boolean cancel = false;
-	private final Player player;
 	private final EquipMethod method;
 	private final EquipmentSlot slot;
 	private final ItemStack oldArmor;
@@ -28,7 +27,7 @@ public final class ArmorEquipEvent extends Event implements Cancellable {
 	 * @param newArmor new armor after the change
 	 */
 	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull EquipmentSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor, int hotbar) {
-		this.player = player;
+		super(player);
 		this.method = method;
 		this.slot = slot;
 		this.oldArmor = oldArmor;
@@ -46,11 +45,6 @@ public final class ArmorEquipEvent extends Event implements Cancellable {
 	
 	public boolean isCancellable() {
 		return method != EquipMethod.DEATH && method != EquipMethod.BROKE;
-	}
-	
-	@NotNull
-	public final Player getPlayer() {
-		return player;
 	}
 	
 	@NotNull

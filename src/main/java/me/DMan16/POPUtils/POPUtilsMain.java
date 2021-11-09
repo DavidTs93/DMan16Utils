@@ -6,6 +6,7 @@ import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
 import me.DMan16.POPUtils.Items.*;
 import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
+import me.DMan16.POPUtils.Listeners.MiscListeners;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.Restrictions.RestrictionsCommandListener;
 import me.DMan16.POPUtils.Utils.*;
@@ -35,8 +36,10 @@ public final class POPUtilsMain extends JavaPlugin {
 	public void onEnable() {
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		try {
-			if (!ItemUtils.registerItemable("item",ItemableStack.class,ItemableStack::of)) throw new Exception("Failed to register \"item\" Itemable!");
-			if (!ItemUtils.registerItemable("command",ItemableCommand.class,ItemableCommand::of)) throw new Exception("Failed to register \"command\" Itemable!");
+			if (!ItemUtils.registerItemable("item", new ItemableInfo<>(ItemableStack.class,ItemableStack::of,ItemableStack::of)))
+				throw new Exception("Failed to register \"item\" Itemable!");
+			if (!ItemUtils.registerItemable("command", new ItemableInfo<>(ItemableCommand.class,ItemableCommand::of,null)))
+				throw new Exception("Failed to register \"command\" Itemable!");
 			POPItems.start();
 		} catch (Exception e) {
 			Utils.chatColorsLogPlugin("&fPOPUtils&c problem! Error:");
@@ -63,6 +66,7 @@ public final class POPUtilsMain extends JavaPlugin {
 		new EventCallers();
 		new RestrictionsCommandListener();
 		new ItemCommandListener();
+		MiscListeners.start();
 		CancelPlayers = new CancelPlayers();
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) PAPIManager = new PlaceholderManager();
 		if (getServer().getPluginManager().getPlugin("Citizens") != null) CitizensManager = new CitizensManager();

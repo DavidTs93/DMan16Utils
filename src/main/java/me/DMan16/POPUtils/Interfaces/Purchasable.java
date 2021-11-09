@@ -15,11 +15,11 @@ public interface Purchasable<V,T> {
 	V getCurrencyType();
 	
 	@Nullable
-	BigInteger getPrice(@NotNull Player player, @Nullable T val);
+	BigInteger getPrice(@NotNull Player player, T val);
 	
 	boolean isPurchasable();
 	
-	boolean canAfford(@NotNull Player player, T val);
+	boolean canAfford(@NotNull Player player, @NotNull BigInteger price, T val);
 	
 	boolean isOwned(@NotNull Player player, T val);
 	
@@ -29,7 +29,8 @@ public interface Purchasable<V,T> {
 	@Nullable
 	ItemStack itemCantAfford(@NotNull Player player, T val);
 	
-	default @Nullable ItemStack itemCantPurchase(@NotNull Player player, T val) {
+	@Nullable
+	default ItemStack itemCantPurchase(@NotNull Player player, T val) {
 		return null;
 	}
 	
@@ -39,8 +40,9 @@ public interface Purchasable<V,T> {
 	@Nullable
 	default ItemStack itemPurchase(@NotNull Player player, T val) {
 		if (isOwned(player,val)) return itemOwned(player,val);
-		else if (!isPurchasable()) return itemCantPurchase(player,val);
-		else if (!canAfford(player,val)) return itemCantAfford(player,val);
+		BigInteger price = getPrice(player,val);
+		if (!isPurchasable() || price == null || price.compareTo(BigInteger.ZERO) < 0) return itemCantPurchase(player,val);
+		else if (!canAfford(player,price,val)) return itemCantAfford(player,val);
 		else return itemCanPurchaseAndAfford(player,val);
 	}
 	

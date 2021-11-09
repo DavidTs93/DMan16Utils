@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -42,6 +43,10 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 		return other.key().equalsIgnoreCase(key());
 	}
 	
+	public int hashCode() {
+		return key.hashCode();
+	}
+	
 	@NotNull
 	public static <V> Consumer<@NotNull PlayerInteractEvent> createOpenMenuConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> of,
 																					@NotNull BiConsumer<@NotNull Player,@NotNull V> openMenu) {
@@ -65,18 +70,44 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	}
 	
 	@NotNull
-	public static <V extends Addable> Consumer<@NotNull PlayerInteractEvent> createAddableConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> get, boolean owned) {
-		if (owned) return (@NotNull PlayerInteractEvent event) -> {
-			try {
-				V thing = get.apply(event.getItem());
-				if (thing != null && !thing.add(event.getPlayer()))
-					event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.prisonpop.skin_owned", NamedTextColor.GREEN)));
-			} catch (Exception e) {}
-		};
+	public static <V> Consumer<@NotNull PlayerInteractEvent> createAddConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,
+																			   @NotNull BiFunction<@NotNull Player,@NotNull V,@NotNull Boolean> add, boolean ownedMessageOnFailedAdd) {
 		return (@NotNull PlayerInteractEvent event) -> {
 			try {
+				ItemStack item = event.getItem();
+				if (item == null) return;
 				V thing = get.apply(event.getItem());
-				if (thing != null) thing.add(event.getPlayer());
+				if (thing == null) return;
+				event.setCancelled(true);
+				if (!add.apply(event.getPlayer(),thing)) {
+					if (ownedMessageOnFailedAdd) event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.prisonpop.owned",NamedTextColor.GREEN)));
+					return;
+				}
+				if (item.getAmount() == 1) item = null;
+				else item.subtract();
+				Utils.setItemSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.savePlayer(event.getPlayer());
+			} catch (Exception e) {}
+		};
+	}
+	
+	@NotNull
+	public static <V extends Addable> Consumer<@NotNull PlayerInteractEvent> createAddableConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get, boolean ownedMessageOnFailedAdd) {
+		return (@NotNull PlayerInteractEvent event) -> {
+			try {
+				ItemStack item = event.getItem();
+				if (item == null) return;
+				V thing = get.apply(event.getItem());
+				if (thing == null) return;
+				event.setCancelled(true);
+				if (!thing.add(event.getPlayer())) {
+					if (ownedMessageOnFailedAdd) event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.prisonpop.owned",NamedTextColor.GREEN)));
+					return;
+				}
+				if (item.getAmount() == 1) item = null;
+				else item.subtract();
+				Utils.setItemSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.savePlayer(event.getPlayer());
 			} catch (Exception e) {}
 		};
 	}

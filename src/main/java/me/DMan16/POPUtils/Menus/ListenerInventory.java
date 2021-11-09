@@ -42,7 +42,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	}
 	
 	protected void setItem(int slot, @Nullable ItemStack item) {
-		inventory.setItem(slot,item);
+		if (slot >= 0 && slot < size) inventory.setItem(slot,item);
 	}
 	
 	@Nullable
@@ -60,6 +60,20 @@ public abstract class ListenerInventory implements Listener,Menu {
 		HandlerList.unregisterAll(this);
 		PLAYER_MENUS.values().remove(this);
 		afterClose();
+	}
+	
+	protected void close(boolean unregister, boolean cancelCloseUnregister) {
+		if (unregister) unregister();
+		else if (cancelCloseUnregister) this.cancelCloseUnregister = true;
+		inventory.close();
+	}
+	
+	public void close(boolean cancelCloseUnregister) {
+		close(false,cancelCloseUnregister);
+	}
+	
+	public void close() {
+		close(true,false);
 	}
 	
 	protected void afterClose() {}

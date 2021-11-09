@@ -7,8 +7,8 @@ import org.bukkit.inventory.ItemStack;
 public final class ItemPreRestrictEvent extends ItemRestrictItEvent implements Cancellable {
 	private boolean cancel;
 	
-	public ItemPreRestrictEvent(Restrictions.Restriction restriction, HumanEntity player, ItemStack item) {
-		super(restriction,player,item);
+	public ItemPreRestrictEvent(HumanEntity human, Restrictions.Restriction restriction, ItemStack item) {
+		super(human,restriction,item);
 	}
 	
 	public void setCancelled(final boolean cancel) {

@@ -73,6 +73,11 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	}
 	
 	@NotNull
+	public String ItemableKey() {
+		return "command";
+	}
+	
+	@NotNull
 	public ItemableCommand copy() {
 		return this;
 	}

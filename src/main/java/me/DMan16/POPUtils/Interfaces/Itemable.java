@@ -15,4 +15,11 @@ public interface Itemable<V extends Itemable<V>> extends Copyable<V> {
 	}
 	
 	@NotNull Map<@NotNull String,?> toMap();
+	
+	@NotNull String ItemableKey();
+	
+	@NotNull
+	default String ItemableString() {
+		return ItemableKey() + ":" + Utils.getJSONString(toMap());
+	}
 }

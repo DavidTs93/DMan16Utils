@@ -386,10 +386,10 @@ public class Restrictions {
 			return is(item.getItemMeta());
 		}
 		
-		protected boolean restrictionEvent(Event event, ItemStack item, HumanEntity player, boolean cancelIfPossible) {
-			if (!new ItemPreRestrictEvent(this,player,item).callEventAndDoTasksIfNotCancelled()) return false;
+		protected boolean restrictionEvent(Event event, ItemStack item, HumanEntity human, boolean cancelIfPossible) {
+			if (!new ItemPreRestrictEvent(human,this,item).callEventAndDoTasksIfNotCancelled()) return false;
 			if (cancelIfPossible && (event instanceof Cancellable)) ((Cancellable) event).setCancelled(true);
-			new ItemPostRestrictEvent(this,player,item).callEventAndDoTasks();
+			new ItemPostRestrictEvent(human,this,item).callEventAndDoTasks();
 			return true;
 		}
 	}
