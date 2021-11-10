@@ -70,9 +70,10 @@ import java.util.stream.Stream;
 public class Utils {
 	private static final Pattern COLOR_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
 	private static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
-	public static final Component KICK_MESSAGE = Component.text("An error occurred, please try to reconnect",NamedTextColor.RED);
-	public static final Component NOT_FINISHED_LOADING_MESSAGE = Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED);
-	public static final Component PLAYER_NOT_FOUND = Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED);
+	public static final Component KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
+	public static final Component NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED));
+	public static final Component PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
+	public static final Component COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
@@ -1208,8 +1209,7 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null; !null -> !null")
 	public static Component noItalic(@Nullable Component comp) {
-		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
-		return comp.decoration(TextDecoration.ITALIC,false);
+		return comp == null || comp.equals(Component.empty()) || comp.hasDecoration(TextDecoration.ITALIC) ? comp : comp.decoration(TextDecoration.ITALIC,false);
 	}
 	
 	@Nullable
@@ -1682,14 +1682,21 @@ public class Utils {
 	public static List<HashMap<@NotNull String,?>> mapComponent(Component component) {
 		if (component == null) return null;
 		HashMap<String,Object> map = new HashMap<>();
-		if (component instanceof TextComponent text) map.put("text",text.content());
-		else if (component instanceof TranslatableComponent translate) map.put("text",translate.key());
+		String textContent = null;
+		if (component instanceof TextComponent text) {
+			textContent = text.content();
+			map.put("text",textContent);
+		} else if (component instanceof TranslatableComponent translate) {
+			map.put("translate",translate.key());
+			if (!translate.args().isEmpty()) map.put("args",Utils.joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
+		}
 		else return null;
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
 		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
 		if (component.children().isEmpty()) return new ArrayList<>(Arrays.asList(map));
-		return Utils.joinLists(Arrays.asList(map),Utils.joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
+		List<HashMap<String,?>> children = Utils.joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
+		return textContent != null && textContent.isEmpty() ? children : Utils.joinLists(Arrays.asList(map),children);
 	}
 	
 	@Nullable

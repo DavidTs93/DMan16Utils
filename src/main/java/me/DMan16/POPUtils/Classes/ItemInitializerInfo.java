@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Classes;
 
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
@@ -23,7 +24,7 @@ public class ItemInitializerInfo {
 							   @Nullable Function<ItemStack,ItemStack> alterItem) {
 		this.key = key.toLowerCase();
 		this.material = material;
-		this.name = name == null || name.equals(Component.empty()) || name.hasDecoration(TextDecoration.ITALIC) ? name : name.decoration(TextDecoration.ITALIC,false);
+		this.name = Utils.noItalic(name);
 		this.model = model;
 		this.skin = skin;
 		this.alterItem = alterItem;

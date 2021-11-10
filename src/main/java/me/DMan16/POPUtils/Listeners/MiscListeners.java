@@ -31,11 +31,12 @@ public class MiscListeners implements Listener {
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onJoin(PlayerJoinEvent event) {
 		Player player = event.getPlayer();
+		if (Utils.isPlayerNPC(player)) return;
 		SuccessfulJoinEvent joinEvent = new SuccessfulJoinEvent(event);
 		try (Statement statement = Utils.getConnection().createStatement()) {
 			Pair<String,String> skin = Utils.getSkin(Utils.getProfile(player));
-			statement.executeUpdate("UPDATE PrisonPOP_Players SET SkinData='" + Objects.requireNonNull(skin.first()) + "', SkinSignature='" + skin.second() + "' WHERE UUID='" +
-					player.getUniqueId() + "';");
+			Objects.requireNonNull(skin.first());
+			statement.executeUpdate("UPDATE PrisonPOP_Players SET SkinData='" + skin.first() + "', SkinSignature='" + skin.second() + "' WHERE UUID='" + player.getUniqueId() + "';");
 		} catch (Exception e) {
 			joinEvent.disallow(e);
 		}

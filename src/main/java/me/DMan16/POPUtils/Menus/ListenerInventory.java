@@ -109,17 +109,27 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	@EventHandler(ignoreCancelled = true)
 	public void unregisterOnClose(InventoryCloseEvent event) {
-		if (event.getView().getTopInventory().equals(inventory) && !cancelCloseUnregister) unregister();
+		if (isThisInventory(event.getView().getTopInventory()) && !cancelCloseUnregister) {
+			unregister();
+			afterCloseUnregister(event);
+		}
 	}
+	
+	protected void afterCloseUnregister(InventoryCloseEvent event) {}
 	
 	@EventHandler(ignoreCancelled = true)
 	public void unregisterOnLeaveEvent(PlayerQuitEvent event) {
-		if ((inventory.getHolder() instanceof OfflinePlayer) && event.getPlayer().getUniqueId().equals(((OfflinePlayer) inventory.getHolder()).getUniqueId())) unregister();
+		if ((inventory.getHolder() instanceof OfflinePlayer) && event.getPlayer().getUniqueId().equals(((OfflinePlayer) inventory.getHolder()).getUniqueId())) {
+			unregister();
+			afterLeaveUnregister(event);
+		}
 	}
+	
+	protected void afterLeaveUnregister(PlayerQuitEvent event) {}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
-		if (event.getView().getTopInventory().equals(inventory)) for (int slot : event.getRawSlots()) if (slot < inventory.getSize()) {
+		if (isThisInventory(event.getView().getTopInventory())) for (int slot : event.getRawSlots()) if (slot < inventory.getSize()) {
 			event.setCancelled(true);
 			return;
 		}
