@@ -1,4 +1,4 @@
-package me.DMan16.POPUtils.Classes;
+package me.DMan16.POPUtils.Enums;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

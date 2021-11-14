@@ -71,7 +71,9 @@ public final class POPUtilsMain extends JavaPlugin {
 		if (getServer().getPluginManager().getPlugin("PlaceholderAPI") != null) PAPIManager = new PlaceholderManager();
 		if (getServer().getPluginManager().getPlugin("Citizens") != null) CitizensManager = new CitizensManager();
 		if (getServer().getPluginManager().getPlugin("ProtocolLib") != null) ProtocolManager = ProtocolLibrary.getProtocolManager();
-		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) PlayerVersionLogger = new PlayerVersionLogger();
+		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) try {
+			PlayerVersionLogger = new PlayerVersionLogger();
+		} catch (Exception e) {e.printStackTrace();}
 	}
 	
 	private void initiateMenuItems() {

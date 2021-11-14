@@ -1,4 +1,4 @@
-package me.DMan16.POPUtils.Classes;
+package me.DMan16.POPUtils.Interfaces;
 
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;

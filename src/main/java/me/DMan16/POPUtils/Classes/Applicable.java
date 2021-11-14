@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Classes;
 
+import me.DMan16.POPUtils.Enums.Rarity;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Interfaces.Purchasable;
 import me.DMan16.POPUtils.Utils.Utils;

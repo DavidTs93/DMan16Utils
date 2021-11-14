@@ -70,10 +70,14 @@ import java.util.stream.Stream;
 public class Utils {
 	private static final Pattern COLOR_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
 	private static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
-	public static final Component KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
-	public static final Component NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED));
-	public static final Component PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
-	public static final Component COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
+	public static final @NotNull Component KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
+	public static final @NotNull Component NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED));
+	public static final @NotNull Component PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
+	public static final @NotNull Component COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
+	public static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
+	public static final BigInteger THOUSAND_INT = BigInteger.valueOf(1000);
+	public static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+	public static final BigInteger HUNDRED_INT = BigInteger.valueOf(100);
 	private static final Set<Long> sessionIDs = new HashSet<>();
 	private static List<Material> interactable = null;
 	@Unmodifiable private static final List<Integer> playerInventorySlots;
@@ -1235,191 +1239,55 @@ public class Utils {
 	}
 	
 	@Nullable
-	@Contract("null -> null")
-	public static Byte getByte(@Nullable Object obj) {
-		if (obj == null) return null;
+	private static <V extends Number> V getNumber(@Nullable Object obj, @NotNull Function<@NotNull Number,@NotNull V> getValue,
+												  @NotNull Function<String,@NotNull V> parse) {
+		if (obj == null || (obj instanceof Character)) return null;
+		if (obj instanceof BigInteger) return getValue.apply((BigInteger) obj);
+		if (obj instanceof BigDecimal) return getValue.apply((BigDecimal) obj);
 		try {
-			return (byte) obj;
-		} catch (Exception e) {}
-		byte val;
-		try {
-			val = ((Short) obj).byteValue();
-			return val == ((Short) obj) ? val : null;
+			V num = getValue.apply((Number) obj);
+			if (num.doubleValue() == ((Number) obj).doubleValue()) return num;
 		} catch (Exception e) {e.printStackTrace();}
 		try {
-			val = ((Integer) obj).byteValue();
-			return val == ((Integer) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Long) obj).byteValue();
-			return val == ((Long) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Float) obj).byteValue();
-			return val == ((Float) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Double) obj).byteValue();
-			return val == ((Double) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			return Byte.parseByte(getString(obj));
-		} catch (Exception e) {}
+			return parse.apply(getString(obj));
+		} catch (Exception e) {e.printStackTrace();}
 		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Byte getByte(@Nullable Object obj) {
+		return getNumber(obj,Number::byteValue,Byte::parseByte);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Short getShort(@Nullable Object obj) {
-		if (obj == null || (obj instanceof Character)) return null;
-		try {
-			return (short) obj;
-		} catch (Exception e) {}
-		try {
-			return ((Byte) obj).shortValue();
-		} catch (Exception e) {e.printStackTrace();}
-		short val;
-		try {
-			val = ((Integer) obj).shortValue();
-			return val == ((Integer) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Long) obj).shortValue();
-			return val == ((Long) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Float) obj).shortValue();
-			return val == ((Float) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Double) obj).shortValue();
-			return val == ((Double) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			return Short.parseShort(getString(obj));
-		} catch (Exception e) {}
-		return null;
+		return getNumber(obj,Number::shortValue,Short::parseShort);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Integer getInteger(@Nullable Object obj) {
-		if (obj == null || (obj instanceof Character)) return null;
-		try {
-			return (int) obj;
-		} catch (Exception e) {}
-		try {
-			return ((Byte) obj).intValue();
-		} catch (Exception e) {}
-		try {
-			return ((Short) obj).intValue();
-		} catch (Exception e) {}
-		int val;
-		try {
-			val = ((Long) obj).intValue();
-			return val == ((Long) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Float) obj).intValue();
-			return val == ((Float) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Double) obj).intValue();
-			return val == ((Double) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			return Integer.parseInt(getString(obj));
-		} catch (Exception e) {}
-		return null;
+		return getNumber(obj,Number::intValue,Integer::parseInt);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Long getLong(@Nullable Object obj) {
-		if (obj == null || (obj instanceof Character)) return null;
-		try {
-			return (long) obj;
-		} catch (Exception e) {}
-		try {
-			return ((Byte) obj).longValue();
-		} catch (Exception e) {}
-		try {
-			return ((Short) obj).longValue();
-		} catch (Exception e) {}
-		try {
-			return ((Integer) obj).longValue();
-		} catch (Exception e) {}
-		long val;
-		try {
-			val = ((Float) obj).longValue();
-			return val == ((Float) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			val = ((Double) obj).longValue();
-			return val == ((Double) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			return Long.parseLong(getString(obj));
-		} catch (Exception e) {}
-		return null;
+		return getNumber(obj,Number::longValue,Long::parseLong);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Float getFloat(@Nullable Object obj) {
-		if (obj == null) return null;
-		try {
-			return (float) obj;
-		} catch (Exception e) {}
-		try {
-			return ((Byte) obj).floatValue();
-		} catch (Exception e) {}
-		try {
-			return ((Short) obj).floatValue();
-		} catch (Exception e) {}
-		try {
-			return ((Integer) obj).floatValue();
-		} catch (Exception e) {}
-		try {
-			return ((Long) obj).floatValue();
-		} catch (Exception e) {}
-		float val;
-		try {
-			val = ((Double) obj).floatValue();
-			return val == ((Double) obj) ? val : null;
-		} catch (Exception e) {}
-		try {
-			return Float.parseFloat(getString(obj));
-		} catch (Exception e) {}
-		return null;
+		return getNumber(obj,Number::floatValue,Float::parseFloat);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Double getDouble(@Nullable Object obj) {
-		if (obj == null) return null;
-		try {
-			return (double) obj;
-		} catch (Exception e) {}
-		try {
-			return ((Byte) obj).doubleValue();
-		} catch (Exception e) {}
-		try {
-			return ((Short) obj).doubleValue();
-		} catch (Exception e) {}
-		try {
-			return ((Integer) obj).doubleValue();
-		} catch (Exception e) {}
-		try {
-			return ((Long) obj).doubleValue();
-		} catch (Exception e) {}
-		try {
-			return ((Float) obj).doubleValue();
-		} catch (Exception e) {}
-		try {
-			return Double.parseDouble(getString(obj));
-		} catch (Exception e) {}
-		return null;
+		return getNumber(obj,Number::doubleValue,Double::parseDouble);
 	}
 	
 	@Nullable

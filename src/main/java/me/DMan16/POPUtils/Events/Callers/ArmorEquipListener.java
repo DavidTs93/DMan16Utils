@@ -1,6 +1,6 @@
 package me.DMan16.POPUtils.Events.Callers;
 
-import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Enums.EquipMethod;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.POPUtilsMain;

@@ -17,9 +17,66 @@ public interface Purchasable<V,T> {
 	@Nullable
 	BigInteger getPrice(@NotNull Player player, T val);
 	
+	@Nullable
+	default V getDefaultCurrencyType2() {
+		return null;
+	}
+	
+	@Nullable
+	default V getCurrencyType2() {
+		return null;
+	}
+	
+	@Nullable
+	default BigInteger getPrice2(@NotNull Player player, T val) {
+		return null;
+	}
+	
+	@Nullable
+	default V getDefaultCurrencyType3() {
+		return null;
+	}
+	
+	@Nullable
+	default V getCurrencyType3() {
+		return null;
+	}
+	
+	@Nullable
+	default BigInteger getPrice3(@NotNull Player player, T val) {
+		return null;
+	}
+	
+	@Nullable
+	default V getDefaultCurrencyType4() {
+		return null;
+	}
+	
+	@Nullable
+	default V getCurrencyType4() {
+		return null;
+	}
+	
+	@Nullable
+	default BigInteger getPrice4(@NotNull Player player, T val) {
+		return null;
+	}
+	
 	boolean isPurchasable();
 	
 	boolean canAfford(@NotNull Player player, @NotNull BigInteger price, T val);
+	
+	default boolean canAfford2(@NotNull Player player, @NotNull BigInteger price, T val) {
+		return true;
+	}
+	
+	default boolean canAfford3(@NotNull Player player, @NotNull BigInteger price, T val) {
+		return true;
+	}
+	
+	default boolean canAfford4(@NotNull Player player, @NotNull BigInteger price, T val) {
+		return true;
+	}
 	
 	boolean isOwned(@NotNull Player player, T val);
 	

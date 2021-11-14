@@ -1,6 +1,6 @@
 package me.DMan16.POPUtils.Listeners;
 
-import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Events.SuccessfulJoinEvent;
 import me.DMan16.POPUtils.Events.SuccessfulLoginEvent;

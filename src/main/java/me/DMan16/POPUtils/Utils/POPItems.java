@@ -1,6 +1,6 @@
 package me.DMan16.POPUtils.Utils;
 
-import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.InteractableItem;
 import me.DMan16.POPUtils.POPUtilsMain;
 import org.bukkit.NamespacedKey;

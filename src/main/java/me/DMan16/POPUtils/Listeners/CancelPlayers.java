@@ -1,6 +1,6 @@
 package me.DMan16.POPUtils.Listeners;
 
-import me.DMan16.POPUtils.Classes.Listener;
+import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;

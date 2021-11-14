@@ -25,7 +25,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	protected void setPagePurchases() {
-		purchases.get(currentPage - 1).forEach((slot,info) -> setItem(slot,info.first().itemPurchase(player,info.second())));
+		if (!purchases.isEmpty()) purchases.get(currentPage - 1).forEach((slot,info) -> setItem(slot,info.first().itemPurchase(player,info.second())));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -60,7 +60,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	
 	protected void handleAfterPurchase(boolean purchaseSuccessful, @NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,
 			@NotNull Pair<@NotNull V,@Nullable T>> page, @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
-		setPage(currentPage);
+		if (purchaseSuccessful) setPage(currentPage);
 	}
 	
 	@Override
