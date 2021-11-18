@@ -14,10 +14,14 @@ commands:
     permission: prisonpop.command.restrictions
   item:
     permission: prisonpop.command.item
+  test_effect:
+    permission: prisonpop.command.test_effect
 permissions:
   prisonpop.command.versions:
     default: op
   prisonpop.command.restrictions:
     default: op
   prisonpop.command.item:
+    default: op
+  prisonpop.command.test_effect:
     default: op

@@ -8,13 +8,13 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
 
 public class ItemUtils {
-	private static final HashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new HashMap<>();
-	private static final HashMap<@NotNull Class<?>,@NotNull String> CLASS_MAP = new HashMap<>();
+	private static final LinkedHashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new LinkedHashMap<>();
+	private static final LinkedHashMap<@NotNull Class<?>,@NotNull String> CLASS_MAP = new LinkedHashMap<>();
 	
 	public static <V extends Itemable<?>> boolean registerItemable(@NotNull String key, @NotNull ItemableInfo<V> info) {
 		key = key.toLowerCase();

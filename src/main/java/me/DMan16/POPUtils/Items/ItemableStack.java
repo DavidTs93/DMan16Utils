@@ -7,6 +7,7 @@ import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Color;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -39,7 +40,8 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	public static ItemableStack of(ItemStack item) {
 		if (Utils.isNull(item) || !item.getType().isItem()) return null;
 		ItemableStack stack = new ItemableStack(item);
-		return Utils.sameItem(item,stack.item) ? stack : null;
+		ItemableStack fromMap = of(stack.toMap());
+		return fromMap == null || !Utils.sameItem(item,fromMap.item) ? null : stack;
 	}
 	
 	@NotNull
@@ -60,10 +62,12 @@ public class ItemableStack implements Itemable<ItemableStack> {
 			} catch (Exception e1) {}
 		} catch (Exception e) {
 			Map<?,?> enchantments = (Map<?,?>) obj;
+			String name;
 			for (Map.Entry<?,?> entry : enchantments.entrySet()) try {
-				enchant = Enchantment.getByName(Utils.getString(entry.getKey()));
+				name = Objects.requireNonNull(Utils.getString(entry.getKey()));
 				level = Utils.getInteger(entry.getValue());
-				if (enchant != null && level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
+				enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
+				if (level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
 			} catch (Exception e2) {}
 		}
 		return enchants;
@@ -91,8 +95,10 @@ public class ItemableStack implements Itemable<ItemableStack> {
 			if (damage >= material.getMaxDurability()) return new ItemableStack(item);
 			else if (damage >= 0) ((Damageable) meta).setDamage(damage);
 		}
-		meta.displayName(Utils.mapToComponent(arguments.get("Name")));
-		meta.lore(Utils.mapToListComponent(arguments.get("Lore")));
+		Component name = Utils.mapToComponent(arguments.get("Name"));
+		if (name != null) meta.displayName(name);
+		List<Component> lore = Utils.mapToListComponent(arguments.get("Lore"));
+		if (lore != null) meta.lore(lore);
 		meta.setUnbreakable(Utils.thisOrThatOrNull(Utils.getBoolean(arguments.get("Unbreakable")),false));
 		meta.setCustomModelData(Utils.getInteger(arguments.get("Model")));
 		String skin = Utils.getString(arguments.get("Skin"));
@@ -126,7 +132,7 @@ public class ItemableStack implements Itemable<ItemableStack> {
 		List<HashMap<String,?>> name = Utils.mapComponent(meta.displayName());
 		if (name != null) map.put("Name",name);
 		List<List<HashMap<@NotNull String,?>>> lore = Utils.thisOrThatOrNull(meta.lore(), new ArrayList<Component>()).stream().map(Utils::mapComponent).toList();
-		if (!lore.isEmpty()) map.put("Name",lore);
+		if (!lore.isEmpty()) map.put("Lore",lore);
 		if (item.getType() == Material.PLAYER_HEAD) try {
 			map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first());
 		} catch (Exception e) {}
@@ -141,7 +147,7 @@ public class ItemableStack implements Itemable<ItemableStack> {
 		if (flags > 0) map.put("HideFlags",(short) flags);
 		if (((Damageable) meta).getDamage() > 0) map.put("Damage",((Damageable) meta).getDamage());
 		Map<String,Integer> enchantments = new HashMap<>();
-		for (Map.Entry<Enchantment,Integer> entry : meta.getEnchants().entrySet()) if (entry.getValue() > 0) enchantments.put(entry.getKey().getKey().getKey(),entry.getValue());
+		for (Map.Entry<Enchantment,Integer> entry : item.getEnchantments().entrySet()) if (entry.getValue() > 0) enchantments.put(entry.getKey().getKey().getKey(),entry.getValue());
 		if (!enchantments.isEmpty()) map.put("Enchantments",enchantments);
 		List<String> restrictions = Restrictions.getRestrictions(meta).stream().map(Restrictions.Restriction::name).toList();
 		if (!restrictions.isEmpty()) map.put("Restrictions",restrictions);

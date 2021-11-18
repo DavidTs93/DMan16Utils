@@ -13,6 +13,7 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -20,14 +21,14 @@ import java.util.function.Function;
 
 public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull PlayerInteractEvent> rightClick, @Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
 	public InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull PlayerInteractEvent> rightClick, @Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
-		this.key = Utils.fixKey(key);
+		this.key = Objects.requireNonNull(Utils.fixKey(key));
 		this.rightClick = rightClick;
 		this.leftClick = leftClick;
 	}
 	
 	@NotNull
 	public InteractableItem rightClick(@NotNull PlayerInteractEvent event) {
-		if (rightClick != null && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) rightClick.accept(event);
+		if (rightClick != null && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && !Utils.isInteract(event)) rightClick.accept(event);
 		return this;
 	}
 	

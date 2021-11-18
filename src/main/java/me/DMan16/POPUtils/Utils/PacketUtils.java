@@ -20,7 +20,6 @@ import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.lang.reflect.Field;
@@ -60,13 +59,10 @@ public class PacketUtils {
 		return new PacketPlayOutGameStateChange(PacketPlayOutGameStateChange.d,newGameMode.getValue());
 	}
 	
-	@Nullable
-	public static PacketPlayOutSpawnEntityLiving packetCreateArmorStand(int ID, @NotNull Location loc) {
-		try {
-			EntityArmorStand armorStand = new EntityArmorStand(ReflectionUtils.getHandle(loc.getWorld()),loc.getX(),loc.getY(),loc.getZ());
-			armorStand.e(ID);
-			armorStand.a_(UUID.randomUUID());
-			return new PacketPlayOutSpawnEntityLiving(armorStand);
+	@NotNull
+	public static PacketPlayOutSpawnEntityLiving packetCreateArmorStand(@NotNull Location loc) {
+		return new PacketPlayOutSpawnEntityLiving(new EntityArmorStand(ReflectionUtils.getHandle(loc.getWorld()),loc.getX(),loc.getY(),loc.getZ()));
+//		try {
 //			Player player = Bukkit.getOnlinePlayers().iterator().next();
 //			PacketPlayOutSpawnEntityLiving packet = new PacketPlayOutSpawnEntityLiving(ReflectionUtils.getHandle(player));
 //			Class<?> PacketPlayOutSpawnEntityLiving = PacketPlayOutSpawnEntityLiving.class;
@@ -111,8 +107,8 @@ public class PacketUtils {
 //			entityPitch.set(packet,(byte) Math.round(pitch * 256 / 360));
 //			entityL.set(packet,(byte) 0);
 //			return packet;
-		} catch (Exception e) {e.printStackTrace();}
-		return null;
+//		} catch (Exception e) {e.printStackTrace();}
+//		return null;
 	}
 	
 	@NotNull

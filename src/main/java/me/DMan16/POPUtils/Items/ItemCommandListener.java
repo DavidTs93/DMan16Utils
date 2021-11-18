@@ -23,7 +23,10 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 	
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
 		int idx;
-		if (args.length == 0 || (idx = BASE.indexOf(args[0].toLowerCase())) < 0 || idx == 0) return true;
+		if (args.length == 0) {
+			return true;
+		}
+		if ((idx = BASE.indexOf(args[0].toLowerCase())) < 0 || idx == 0) return true;
 		Player player = (Player) sender;
 		return true;
 	}

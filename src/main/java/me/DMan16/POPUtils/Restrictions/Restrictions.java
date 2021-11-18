@@ -7,12 +7,14 @@ import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.GameMode;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Item;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.inventory.*;
@@ -152,9 +154,9 @@ public class Restrictions {
 			super("Undroppable");
 		}
 		
-		@EventHandler(priority = EventPriority.LOWEST)
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onDropItemMainMenu(PlayerDropItemEvent event) {
-			if (event.isCancelled() || !is(event.getItemDrop().getItemStack())) return;
+			if (!is(event.getItemDrop().getItemStack())) return;
 			restrictionEvent(event,event.getItemDrop().getItemStack(),event.getPlayer(),true);
 		}
 	}
@@ -164,9 +166,9 @@ public class Restrictions {
 			super("Unenchantable");
 		}
 		
-		@EventHandler(priority = EventPriority.LOWEST)
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onEnchantItem(EnchantItemEvent event) {
-			if (event.isCancelled() || !is(event.getItem())) return;
+			if (!is(event.getItem())) return;
 			restrictionEvent(event,event.getItem(),event.getEnchanter(),true);
 		}
 	}
@@ -191,9 +193,9 @@ public class Restrictions {
 			super("Unforgeable");
 		}
 		
-		@EventHandler(priority = EventPriority.LOWEST)
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onForgeItem(InventoryClickEvent event) {
-			if (event.isCancelled() || event.getInventory().getType() != InventoryType.ANVIL) return;
+			if (event.getInventory().getType() != InventoryType.ANVIL) return;
 			int slot = event.getRawSlot();
 			if (slot == 0 || slot == 1) {
 				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
@@ -210,9 +212,9 @@ public class Restrictions {
 			super("Ungrindable");
 		}
 		
-		@EventHandler(priority = EventPriority.LOWEST)
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onGrindItem(InventoryClickEvent event) {
-			if (event.isCancelled() || event.getInventory().getType() != InventoryType.GRINDSTONE) return;
+			if (event.getInventory().getType() != InventoryType.GRINDSTONE) return;
 			int slot = event.getRawSlot();
 			if (slot == 0 || slot == 1) {
 				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
@@ -229,9 +231,9 @@ public class Restrictions {
 			super("Unfuelable");
 		}
 		
-		@EventHandler(priority = EventPriority.LOWEST)
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onFurnaceItem(InventoryClickEvent event) {
-			if (event.isCancelled() || (event.getInventory().getType() != InventoryType.FURNACE && event.getInventory().getType() != InventoryType.BLAST_FURNACE &&
+			if ((event.getInventory().getType() != InventoryType.FURNACE && event.getInventory().getType() != InventoryType.BLAST_FURNACE &&
 					event.getInventory().getType() != InventoryType.SMOKER)) return;
 			int slot = event.getRawSlot();
 			if (slot == 1) {
@@ -292,9 +294,14 @@ public class Restrictions {
 			super("DropRemove");
 		}
 		
-		@EventHandler(priority = EventPriority.MONITOR)
-		public void onDropItemMainMenu(PlayerDropItemEvent event) {
-			if (!event.isCancelled() && is(event.getItemDrop().getItemStack())) event.getItemDrop().remove();
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+		public void onDrop(PlayerDropItemEvent event) {
+			if (is(event.getItemDrop().getItemStack())) if (restrictionEvent(event,event.getItemDrop().getItemStack(),event.getPlayer(),true)) event.getItemDrop().remove();
+		}
+		
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
+		public void onSpawn(EntitySpawnEvent event) {
+			if ((event.getEntity() instanceof Item item) && is(item.getItemStack())) if (restrictionEvent(event,item.getItemStack(),null,true)) item.remove();
 		}
 	}
 	

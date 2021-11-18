@@ -11,7 +11,7 @@ public interface Itemable<V extends Itemable<V>> extends Copyable<V> {
 	@NotNull ItemStack asItem();
 	
 	default boolean give(@NotNull Player player) {
-		return Utils.addItems(player,asItem()).isEmpty();
+		return Utils.addFully(player,asItem());
 	}
 	
 	@NotNull Map<@NotNull String,?> toMap();

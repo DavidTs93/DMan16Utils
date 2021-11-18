@@ -27,8 +27,10 @@ import org.bukkit.*;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.*;
 import org.bukkit.inventory.meta.Damageable;
@@ -347,6 +349,7 @@ public class Utils {
 	}
 	
 	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
 	public static ItemStack setDamage(@Nullable ItemStack item, int damage) {
 		if (isNull(item)) return item;
 		int maxDMG = item.getType().getMaxDurability();
@@ -363,10 +366,17 @@ public class Utils {
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
-		else if (item1.isSimilar(item2)) return true;
-		else if (Restrictions.Unstackable.is(item1) || Restrictions.Unstackable.is(item2))
-			return Restrictions.Unstackable.remove(item1.clone()).isSimilar(Restrictions.Unstackable.remove(item2.clone()));
-		return false;
+		item1 = Restrictions.Unstackable.remove(item1.clone());
+		item2 = Restrictions.Unstackable.remove(item2.clone());
+		if (Objects.equals(mapComponent(item1.getItemMeta().displayName()),mapComponent(item2.getItemMeta().displayName()))) {
+			ItemMeta meta1 = item1.getItemMeta();
+			ItemMeta meta2 = item2.getItemMeta();
+			meta1.displayName(null);
+			meta2.displayName(null);
+			item1.setItemMeta(meta1);
+			item2.setItemMeta(meta2);
+		}
+		return item1.isSimilar(item2);
 	}
 	
 	/**
@@ -374,23 +384,23 @@ public class Utils {
 	 */
 	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability, boolean ignoreFlags) {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
-		ItemStack cmp1 = item1.clone();
-		ItemStack cmp2 = item2.clone();
-		if (Restrictions.Unstackable.is(cmp1)) cmp1 = Restrictions.Unstackable.remove(cmp1);
-		if (Restrictions.Unstackable.is(cmp2)) cmp2 = Restrictions.Unstackable.remove(cmp2);
-		if (cmp1.isSimilar(cmp2)) return true;
-		if (ignoreDurability) return similarItem(setDamage(cmp1,0),setDamage(cmp2,0),false);
-		ItemMeta meta1 = cmp1.getItemMeta();
-		ItemMeta meta2 = cmp2.getItemMeta();
+		item1 = Restrictions.Unstackable.remove(item1.clone());
+		item2 = Restrictions.Unstackable.remove(item2.clone());
+		if (ignoreDurability) {
+			item1 = setDamage(item1,0);
+			item2 = setDamage(item2,0);
+		}
+		ItemMeta meta1 = item1.getItemMeta();
+		ItemMeta meta2 = item2.getItemMeta();
 		meta1.displayName(null);
 		meta2.displayName(null);
 		if (ignoreFlags) {
 			meta1.removeItemFlags(ItemFlag.values());
 			meta2.removeItemFlags(ItemFlag.values());
 		}
-		cmp1.setItemMeta(meta1);
-		cmp2.setItemMeta(meta2);
-		return cmp1.isSimilar(cmp2);
+		item1.setItemMeta(meta1);
+		item2.setItemMeta(meta2);
+		return item1.isSimilar(item2);
 	}
 	
 	/**
@@ -664,7 +674,7 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null")
 	public static String toString(@Nullable ItemStack item) {
-		if (item == null) return null;
+		if (isNull(item)) return null;
 		Itemable<?> itemable = ItemUtils.of(item);
 		if (itemable != null) return itemable.ItemableString();
 		if (!isNull(item)) try {
@@ -775,6 +785,10 @@ public class Utils {
 	public static boolean isInteract(@NotNull Material material, @NotNull Player player) {
 		if (isInteractable(material)) return !player.isSneaking();
 		return false;
+	}
+	
+	public static boolean isInteract(@NotNull PlayerInteractEvent event) {
+		return event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null && isInteract(event.getClickedBlock().getType(),event.getPlayer());
 	}
 	
 	private static void createInteractable() {
@@ -1127,8 +1141,18 @@ public class Utils {
 		return item;
 	}
 	
+	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key) {
+		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key));
+		return item;
+	}
+	
 	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value, boolean force) {
 		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key,type,value,force));
+		return item;
+	}
+	
+	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, boolean force) {
+		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key,force));
 		return item;
 	}
 	
@@ -1149,8 +1173,17 @@ public class Utils {
 		return setKeyPersistentDataContainer(meta,key,type,value,false);
 	}
 	
+	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key) {
+		return setKeyPersistentDataContainer(meta,key,false);
+	}
+	
 	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, @NotNull PersistentDataType<T,T> type, T value, boolean force) {
 		if (meta != null && (force || !meta.getPersistentDataContainer().has(key,type))) meta.getPersistentDataContainer().set(key,type,value);
+		return meta;
+	}
+	
+	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, boolean force) {
+		if (meta != null && (force || !meta.getPersistentDataContainer().has(key,PersistentDataType.STRING))) meta.getPersistentDataContainer().set(key,PersistentDataType.STRING,"");
 		return meta;
 	}
 	
@@ -1162,9 +1195,12 @@ public class Utils {
 		return false;
 	}
 	
-	@NotNull
-	public static String fixKey(@NotNull String key) {
-		return key.toLowerCase().replace(" ","_");
+	@Nullable
+	@Contract("null -> null")
+	public static String fixKey(@Nullable String key) {
+		if (key == null) return null;
+		key = key.trim().toLowerCase().replace(" ","_");
+		return key.isEmpty() ? null : key;
 	}
 	
 	@Nullable
@@ -1247,10 +1283,10 @@ public class Utils {
 		try {
 			V num = getValue.apply((Number) obj);
 			if (num.doubleValue() == ((Number) obj).doubleValue()) return num;
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {}
 		try {
 			return parse.apply(getString(obj));
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {}
 		return null;
 	}
 	
@@ -1557,8 +1593,7 @@ public class Utils {
 		} else if (component instanceof TranslatableComponent translate) {
 			map.put("translate",translate.key());
 			if (!translate.args().isEmpty()) map.put("args",Utils.joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
-		}
-		else return null;
+		} else return null;
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
 		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
@@ -1599,6 +1634,7 @@ public class Utils {
 			comp = translate;
 		} else return null;
 		TextColor color = Utils.getTextColor(Utils.getString(map.get("color")));
+		if (color != null) comp = comp.color(color);
 		Boolean bool;
 		for (TextDecoration decoration : TextDecoration.values()) {
 			bool = Utils.getBoolean(map.get(decoration.toString().toLowerCase()));
@@ -1679,5 +1715,89 @@ public class Utils {
 	
 	public static <V> V random(@NotNull List<V> list) {
 		return list.size() == 1 ? list.get(0) : list.get(ThreadLocalRandom.current().nextInt(list.size()));
+	}
+	
+	public static int getPlayerEXP(@NotNull Player player) {
+		int level = player.getLevel();
+		int amount = Math.round(level == 0 ? 0 : (level <= 16 ? level * (level + 6) : (level < 32 ? (2.5f * level * level - 40.5f * level + 360) :
+				(4.5f * level * level - 162.5f * level + 2220))));
+		amount += Math.round(player.getExp() * player.getExpToLevel());
+		return amount;
+	}
+	
+	public static void setPlayerEXP(@NotNull Player player, int amount) {
+		if (!player.isOnline() || amount < 0) return;
+		player.giveExp(-getPlayerEXP(player));
+		if (amount > 0) player.giveExp(amount);
+	}
+	
+	public static boolean addFully(@NotNull Player player, ItemStack item) {
+		if (isNull(item)) return false;
+		ItemStack[] inventory = player.getInventory().getStorageContents();
+		int amount = item.getAmount();
+		for (ItemStack itemStack : inventory)
+			if ((isNull(itemStack) && (amount -= item.getMaxStackSize()) <= 0) || (itemStack.isSimilar(item) && (amount -= Math.max(0,item.getMaxStackSize() - itemStack.getAmount())) <= 0)) {
+				player.getInventory().addItem(item);
+				return true;
+			}
+		return false;
+	}
+	
+	public static int getWeightedRandomIndexDouble(@NotNull List<@Nullable Double> chances) {
+		if (chances.isEmpty()) return -1;
+		int last = -1;
+		Double sum = 0d, chance;
+		for (int i = 0; i < chances.size(); i++) {
+			chance = chances.get(i);
+			if (chance == null) continue;
+			last = i;
+			if (chance < 0) return -1;
+			else sum += chance;
+		}
+		if (last < 0) return -1;
+		double random = sum * ThreadLocalRandom.current().nextDouble();
+		sum = 0d;
+		for (int i = 0; i < chances.size(); i++) {
+			chance = chances.get(i);
+			if (chance == null) continue;
+			sum += chance;
+			if (sum.compareTo(random) >= 0) return i;
+		}
+		return last;
+	}
+	
+	public static int getWeightedRandomIndexDecimal(@NotNull List<@Nullable BigDecimal> chances) {
+		if (chances.isEmpty()) return -1;
+		int last = -1;
+		BigDecimal sum = BigDecimal.ZERO, chance;
+		for (int i = 0; i < chances.size(); i++) {
+			chance = chances.get(i);
+			if (chance == null) continue;
+			last = i;
+			if (chance.compareTo(BigDecimal.ZERO) < 0) return -1;
+			else sum = sum.add(chance);
+		}
+		if (last < 0) return -1;
+		BigDecimal random = sum.multiply(BigDecimal.valueOf(ThreadLocalRandom.current().nextDouble()));
+		sum = BigDecimal.ZERO;
+		for (int i = 0; i < chances.size(); i++) {
+			chance = chances.get(i);
+			if (chance == null) continue;
+			sum = sum.add(chance);
+			if (sum.compareTo(random) >= 0) return i;
+		}
+		return last;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null")
+	public static ItemStack add(ItemStack item, int amount) {
+		return isNull(item) ? null : item.add(amount);
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null")
+	public static ItemStack subtract(ItemStack item, int amount) {
+		return isNull(item) ? null : (item.getAmount() <= amount ? null : item.subtract(amount));
 	}
 }
