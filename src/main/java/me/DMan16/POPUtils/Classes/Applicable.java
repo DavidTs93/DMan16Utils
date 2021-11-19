@@ -62,9 +62,10 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		if (this.name.isEmpty()) throw new IllegalArgumentException("Empty name!");
 		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
 		TextColor textColor = Utils.getTextColor(color);
-		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),textColor) :
-				Component.text(Utils.chatColors(displayName),textColor)).decoration(TextDecoration.ITALIC,false);
+		this.defaultName = Utils.stringToComponent(displayName,textColor);
+//		this.defaultName = Utils.thisOrThatOrNull(Utils.mapToComponent(Utils.getMapFromJSON(displayName)),Utils.noItalic(displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+//				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),textColor) :
+//				Component.text(Utils.chatColors(displayName),textColor)));
 		this.displayItem = displayItem(defaultName);
 		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();

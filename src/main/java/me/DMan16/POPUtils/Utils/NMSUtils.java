@@ -32,12 +32,12 @@ public class NMSUtils {
 		ChatHexColor color = null;
 		if (textColor != null) color = (textColor instanceof NamedTextColor named) ? ChatHexColor.a(EnumChatFormat.b(named.toString())) : ChatHexColor.a(textColor.value());
 		ChatModifier modifier = ChatModifier.a;
-		if (color != null) modifier.setColor(color);
-		if (component.hasDecoration(TextDecoration.BOLD)) modifier.setBold(true);
-		if (component.hasDecoration(TextDecoration.ITALIC)) modifier.setItalic(true);
-		if (component.hasDecoration(TextDecoration.OBFUSCATED)) modifier.setRandom(true);
-		if (component.hasDecoration(TextDecoration.UNDERLINED)) modifier.setUnderline(true);
-		if (component.hasDecoration(TextDecoration.STRIKETHROUGH)) modifier.setStrikethrough(true);
+		if (color != null) modifier = modifier.setColor(color);
+		if (component.hasDecoration(TextDecoration.BOLD)) modifier = modifier.setBold(true);
+		if (component.hasDecoration(TextDecoration.ITALIC)) modifier = modifier.setItalic(true);
+		if (component.hasDecoration(TextDecoration.OBFUSCATED)) modifier = modifier.setRandom(true);
+		if (component.hasDecoration(TextDecoration.UNDERLINED)) modifier = modifier.setUnderline(true);
+		if (component.hasDecoration(TextDecoration.STRIKETHROUGH)) modifier = modifier.setStrikethrough(true);
 		comp.setChatModifier(modifier);
 		if (component.children().isEmpty()) return comp;
 		List<ChatBaseComponent> children = component.children().stream().map(NMSUtils::componentToIChatBaseComponent).filter(Objects::nonNull).collect(Collectors.toList());

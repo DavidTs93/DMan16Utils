@@ -72,10 +72,10 @@ import java.util.stream.Stream;
 public class Utils {
 	private static final Pattern COLOR_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
 	private static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
-	public static final @NotNull Component KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
-	public static final @NotNull Component NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.text("Server hasn't loaded yet, please try again soon",NamedTextColor.RED));
-	public static final @NotNull Component PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
-	public static final @NotNull Component COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
+	public static final @NotNull TextComponent KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
+	public static final @NotNull TranslatableComponent NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.translatable("multiplayer.disconnect.server_shutdown",NamedTextColor.RED));
+	public static final @NotNull TranslatableComponent PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
+	public static final @NotNull TranslatableComponent COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
 	public static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
 	public static final BigInteger THOUSAND_INT = BigInteger.valueOf(1000);
 	public static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
@@ -1096,6 +1096,16 @@ public class Utils {
 	}
 	
 	@Nullable
+	@Contract("!null,_ -> !null; null,_ -> null")
+	public static Component stringToComponent(@Nullable String text, @Nullable TextColor color) {
+		if (text == null) return null;
+		Component comp = mapToComponent(getMapFromJSON(text));
+		if (comp == null) comp = mapToComponent(getListFromJSON(text));
+		return comp != null ? comp.color(color) : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
+	}
+	
+	@Nullable
 	@Contract("!null -> !null; null -> null")
 	public static String textColorToString(@Nullable TextColor color) {
 		return color == null ? null : (color instanceof NamedTextColor c ? c.toString() : color.asHexString());
@@ -1400,7 +1410,7 @@ public class Utils {
 				}
 			}
 			return list;
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {}
 		return null;
 	}
 	
@@ -1558,7 +1568,7 @@ public class Utils {
 			List<Object> map = GSON.fromJson(str, new TypeToken<ArrayList<Object>>() {}.getType());
 			map.remove(null);
 			return map;
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {}
 		return null;
 	}
 	
@@ -1622,8 +1632,10 @@ public class Utils {
 		}
 		Component comp;
 		String str = Utils.getString(map.get("text"));
-		if (str != null) comp = Component.text(str);
-		else if ((str = Utils.getString(map.get("translate"))) != null) {
+		if (str != null) {
+			if (str.equals("\n")) return Component.newline();
+			comp = Component.text(str);
+		} else if ((str = Utils.getString(map.get("translate"))) != null) {
 			TranslatableComponent translate = Component.translatable(str);
 			try {
 				translate = translate.args(Objects.requireNonNull(mapToComponent(map.get("args"))));
@@ -1799,5 +1811,23 @@ public class Utils {
 	@Contract("null,_ -> null")
 	public static ItemStack subtract(ItemStack item, int amount) {
 		return isNull(item) ? null : (item.getAmount() <= amount ? null : item.subtract(amount));
+	}
+	
+	@Nullable
+	public static <V,T> T applyIfNotNull(@Nullable V obj, @NotNull Function<@NotNull V,T> apply) {
+		return obj == null ? null : apply.apply(obj);
+	}
+	
+	@NotNull
+	public static List<ItemStack> asAmount(ItemStack item, int amount) {
+		List<ItemStack> items = new ArrayList<>();
+		if (isNull(item) || amount <= 0) return items;
+		ItemStack clone;
+		while (amount > 0) {
+			clone = item.asQuantity(0).add(amount);
+			items.add(clone);
+			amount -= clone.getAmount();
+		}
+		return items;
 	}
 }

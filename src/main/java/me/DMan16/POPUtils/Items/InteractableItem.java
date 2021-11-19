@@ -5,6 +5,7 @@ import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.util.TriConsumer;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -28,7 +29,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	
 	@NotNull
 	public InteractableItem rightClick(@NotNull PlayerInteractEvent event) {
-		if (rightClick != null && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && !Utils.isInteract(event)) rightClick.accept(event);
+		if (rightClick != null && !Utils.isInteract(event) && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) rightClick.accept(event);
 		return this;
 	}
 	
