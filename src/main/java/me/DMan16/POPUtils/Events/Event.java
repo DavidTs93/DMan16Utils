@@ -11,14 +11,14 @@ public abstract class Event extends org.bukkit.event.Event {
 	private final List<Runnable> immediateTasks;
 	private final List<Runnable> delayedTasks;
 	
-	protected Event() {
-		this(false);
-	}
-	
 	protected Event(boolean isAsync) {
 		super(isAsync);
 		this.immediateTasks = new ArrayList<>();
 		this.delayedTasks = new ArrayList<>();
+	}
+	
+	protected Event() {
+		this(false);
 	}
 	
 	@NotNull

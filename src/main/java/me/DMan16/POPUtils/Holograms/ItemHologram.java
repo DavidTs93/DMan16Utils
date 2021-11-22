@@ -1,10 +1,10 @@
 package me.DMan16.POPUtils.Holograms;
 
-import me.DMan16.POPUtils.Utils.NMSUtils;
+import me.DMan16.POPUtils.Classes.Equipment;
 import me.DMan16.POPUtils.Utils.PacketUtils;
-import net.kyori.adventure.text.Component;
-import net.minecraft.network.chat.ChatBaseComponent;
+import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntityLiving;
 import net.minecraft.world.entity.decoration.EntityArmorStand;
@@ -12,43 +12,39 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-public class TextHologram implements Hologram<TextHologram> {
-	public static final double LINE_HEIGHT = 0.5;
-	
+public class ItemHologram implements Hologram<ItemHologram> {
 	protected int ID;
-	protected final ChatBaseComponent line;
+	protected ItemStack item;
 	protected Location location;
 	protected World world;
-	protected PacketPlayOutSpawnEntityLiving create;
+	protected Packet<?> create;
 	protected PacketPlayOutEntityMetadata edit;
+	protected PacketPlayOutEntityEquipment armor;
 	protected PacketPlayOutEntityDestroy destroy;
 	
-	public TextHologram(@NotNull ChatBaseComponent line) {
+	public ItemHologram(@NotNull ItemStack item) {
 		this.ID = 0;
-		this.line = line;
+		this.item = item.clone();
 		this.location = null;
 		this.world = null;
 		this.create = null;
 		this.destroy = null;
 	}
 	
-	@Nullable
-	public static TextHologram of(@NotNull Component component) {
-		ChatBaseComponent line = NMSUtils.componentToIChatBaseComponent(component);
-		return line == null ? null : new TextHologram(line);
-	}
-	
-	public boolean spawn(@NotNull Location location) {
-		if (isSpawned() || location.getWorld() == null || (this.location != null && this.location.equals(location = location.clone().subtract(0,1,0)))) return false;
-		this.location = location;
-		this.world = location.getWorld();
-		EntityArmorStand stand = PacketUtils.createArmorStand(location,line,true,true,false,false,true);
+	public boolean spawn(@NotNull Location loc) {
+		if (isSpawned() || loc.getWorld() == null || (this.location != null && this.location.equals(loc = loc.clone().subtract(0,1,0)))) return false;
+		this.location = loc;
+		this.world = loc.getWorld();
+		EntityArmorStand stand = PacketUtils.createArmorStand(loc.clone().add(0,-1,0.25),null,true,true,true,false,
+				true, new Equipment(item,item,item,null,null,null));
 		ID = stand.getId();
 		create = new PacketPlayOutSpawnEntityLiving(stand);
 		edit = new PacketPlayOutEntityMetadata(ID,stand.getDataWatcher(),true);
+		armor = PacketUtils.packetArmorNotNulls(ID, new Equipment(item, item, item, null, null, null));
 		destroy = PacketUtils.packetDestroyEntity(ID);
 		HologramsManager.register(this);
 		Bukkit.getOnlinePlayers().forEach(this::spawn);
@@ -56,7 +52,7 @@ public class TextHologram implements Hologram<TextHologram> {
 	}
 	
 	public void spawn(@NotNull Player player) {
-		if (isSpawned()) PacketUtils.sendPackets(player,destroy,create,edit);
+		if (isSpawned()) PacketUtils.sendPackets(player,destroy,create,edit,armor);
 	}
 	
 	public void despawn() {
@@ -90,19 +86,20 @@ public class TextHologram implements Hologram<TextHologram> {
 	}
 	
 	public double maxSize() {
-		return LINE_HEIGHT;
+		return 0.5;
 	}
 	
 	@NotNull
-	public TextHologram copy() {
-		return new TextHologram(line);
+	public ItemHologram copy() {
+		return new ItemHologram(item);
 	}
 	
 	@Override
-	public TextHologram clone() {
+	public ItemHologram clone() {
 		try {
-			TextHologram clone = (TextHologram) super.clone();
+			ItemHologram clone = (ItemHologram) super.clone();
 			clone.ID = 0;
+			clone.item = item.clone();
 			clone.location = null;
 			clone.world = null;
 			clone.create = null;

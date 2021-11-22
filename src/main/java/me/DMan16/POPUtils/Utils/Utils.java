@@ -80,18 +80,20 @@ public class Utils {
 	public static final BigInteger THOUSAND_INT = BigInteger.valueOf(1000);
 	public static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 	public static final BigInteger HUNDRED_INT = BigInteger.valueOf(100);
-	private static final Set<Long> sessionIDs = new HashSet<>();
-	private static List<Material> interactable = null;
-	@Unmodifiable private static final List<Integer> playerInventorySlots;
+	private static final Set<Long> SESSION_IDS = new HashSet<>();
+	private static final @Unmodifiable List<Integer> PLAYER_STORAGE_SLOTS;
+	private static final @Unmodifiable List<Integer> PLAYER_INVENTORY_SLOTS;
 	private static final Gson GSON = new GsonBuilder().create();
+	private static List<Material> interactable = null;
 	
 	static {
 		createInteractable();
 		List<Integer> slots = new ArrayList<>();
 		slots.add(-106);
 		for (int i = 0; i < 4 * 9; i++) slots.add(i);
+		PLAYER_STORAGE_SLOTS = Collections.unmodifiableList(slots);
 		for (int i = 100; i <= 103; i++) slots.add(i);
-		playerInventorySlots = Collections.unmodifiableList(slots);
+		PLAYER_INVENTORY_SLOTS = Collections.unmodifiableList(slots);
 	}
 	
 	@NotNull
@@ -305,8 +307,24 @@ public class Utils {
 	
 	@NotNull
 	@Unmodifiable
-	public static List<Integer> getPlayerInventorySlots() {
-		return playerInventorySlots;
+	public static List<@NotNull Integer> getPlayerInventorySlots() {
+		return PLAYER_INVENTORY_SLOTS;
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<@NotNull Integer> getPlayerStorageSlots() {
+		return PLAYER_STORAGE_SLOTS;
+	}
+	
+	public static int getSlot(@NotNull Player player, EquipmentSlot slot) {
+		if (slot == null) return -1;
+		else if (slot == EquipmentSlot.HEAD) return 103;
+		else if (slot == EquipmentSlot.CHEST) return 102;
+		else if (slot == EquipmentSlot.LEGS) return 101;
+		else if (slot == EquipmentSlot.FEET) return 100;
+		else if (slot == EquipmentSlot.OFF_HAND) return -106;
+		return player.getInventory().getHeldItemSlot();
 	}
 	
 	@Nullable
@@ -323,23 +341,32 @@ public class Utils {
 		return item;
 	}
 	
-	public static int getSlot(@NotNull Player player, @Nullable EquipmentSlot slot) {
-		if (slot == null) return -1;
-		else if (slot == EquipmentSlot.HEAD) return 103;
-		else if (slot == EquipmentSlot.CHEST) return 102;
-		else if (slot == EquipmentSlot.LEGS) return 101;
-		else if (slot == EquipmentSlot.FEET) return 100;
-		else if (slot == EquipmentSlot.OFF_HAND) return -106;
-		return player.getInventory().getHeldItemSlot();
+	@Nullable
+	public static ItemStack getFromSlot(@NotNull Player player, @NotNull EquipmentSlot slot) {
+		if (slot == EquipmentSlot.HEAD) return player.getInventory().getHelmet();
+		else if (slot == EquipmentSlot.CHEST) return player.getInventory().getChestplate();
+		else if (slot == EquipmentSlot.LEGS) return player.getInventory().getLeggings();
+		else if (slot == EquipmentSlot.FEET) return player.getInventory().getBoots();
+		else if (slot == EquipmentSlot.OFF_HAND) return player.getInventory().getItemInOffHand();
+		return player.getInventory().getItemInMainHand();
 	}
 	
-	public static void setItemSlot(@NotNull Player player, @Nullable ItemStack item, int slot) {
+	public static void setSlot(@NotNull Player player, @Nullable ItemStack item, int slot) {
 		if (slot == -106) player.getInventory().setItemInOffHand(item);
 		else if (slot == 100) player.getInventory().setBoots(item);
 		else if (slot == 101) player.getInventory().setLeggings(item);
 		else if (slot == 102) player.getInventory().setChestplate(item);
 		else if (slot == 103) player.getInventory().setHelmet(item);
 		else if (slot >= 0) player.getInventory().setItem(slot,item);
+	}
+	
+	public static void setSlot(@NotNull Player player, @Nullable ItemStack item, EquipmentSlot slot) {
+		if (slot == EquipmentSlot.HEAD) player.getInventory().setHelmet(item);
+		else if (slot == EquipmentSlot.CHEST) player.getInventory().setChestplate(item);
+		else if (slot == EquipmentSlot.LEGS) player.getInventory().setLeggings(item);
+		else if (slot == EquipmentSlot.FEET) player.getInventory().setBoots(item);
+		else if (slot == EquipmentSlot.OFF_HAND) player.getInventory().setItemInOffHand(item);
+		else if (slot == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(item);
 	}
 	
 	@Nullable
@@ -432,7 +459,7 @@ public class Utils {
 				event.setCancelled(true);
 				return;
 			}
-			setItemSlot(player,result,event.getHotbarButton());
+			setSlot(player,result,event.getHotbarButton());
 		} else player.setItemOnCursor(result);
 		inv.setItem(0,null);
 		if (item1.getAmount() > reduce) item1.setAmount(item1.getAmount() - reduce);
@@ -866,12 +893,12 @@ public class Utils {
 	 */
 	public static long newSessionID() {
 		long id = System.currentTimeMillis();
-		while (sessionIDs.contains(id)) id = System.currentTimeMillis();
+		while (SESSION_IDS.contains(id)) id = System.currentTimeMillis();
 		long ID = id;
-		sessionIDs.add(ID);
+		SESSION_IDS.add(ID);
 		new BukkitRunnable() {
 			public void run() {
-				sessionIDs.remove(ID);
+				SESSION_IDS.remove(ID);
 			}
 		}.runTaskLater(POPUtilsMain.getInstance(),10 * 60 * 20);
 		return id;

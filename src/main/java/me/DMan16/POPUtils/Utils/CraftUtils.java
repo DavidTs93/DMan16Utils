@@ -1,5 +1,7 @@
 package me.DMan16.POPUtils.Utils;
 
+import net.minecraft.world.level.block.Block;
+import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
@@ -7,6 +9,7 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
@@ -48,5 +51,9 @@ public class CraftUtils {
 	@NotNull
 	public static CraftWorld toCraft(@NotNull World world) {
 		return (CraftWorld) world;
+	}
+	
+	public static Block getBlockCraftMagicNumbers(@NotNull Material material) {
+		return CraftMagicNumbers.getBlock(material);
 	}
 }

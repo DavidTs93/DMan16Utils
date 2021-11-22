@@ -10,8 +10,8 @@ import java.util.Map.Entry;
 import java.util.function.Function;
 
 public class Pair<F,S> implements Copyable<Pair<F,S>> {
-	private final F first;
-	private final S second;
+	public final F first;
+	public final S second;
 	
 	protected Pair(F first, S second) {
 		this.first = first;
@@ -26,17 +26,16 @@ public class Pair<F,S> implements Copyable<Pair<F,S>> {
 		return this.second;
 	}
 	
+	@NotNull
+	@Contract(value = " -> new", pure = true)
 	public Pair<S,F> swapped() {
 		return of(this.second,this.first);
 	}
 	
+	@NotNull
+	@Contract(pure = true)
 	public String toString() {
 		return "(" + this.first + ", " + this.second + ")";
-	}
-	
-	@NotNull
-	public Pair<F,S> copy() {
-		return Pair.of(first,second);
 	}
 	
 	@Override
@@ -45,12 +44,25 @@ public class Pair<F,S> implements Copyable<Pair<F,S>> {
 		return other == this || (Objects.equals(this.first,other.first) && Objects.equals(this.second,other.second));
 	}
 	
+	public int hashCode() {
+		return com.google.common.base.Objects.hashCode(this.first,this.second);
+	}
+	
+	@NotNull
+	@Contract("_ -> new")
 	public <F2> Pair<F2,S> mapFirst(@NotNull Function<? super F,? extends F2> function) {
 		return of(function.apply(this.first),this.second);
 	}
 	
+	@NotNull
+	@Contract("_ -> new")
 	public <S2> Pair<F,S2> mapSecond(@NotNull Function<? super S,? extends S2> function) {
 		return of(this.first,function.apply(this.second));
+	}
+	
+	@NotNull
+	public Pair<F,S> copy() {
+		return Pair.of(first,second);
 	}
 	
 	@Contract(value = "_,_ -> new", pure = true)
@@ -73,9 +85,5 @@ public class Pair<F,S> implements Copyable<Pair<F,S>> {
 		List<Pair<F,S>> list = new ArrayList<>();
 		for (Entry<F,S> entry : map.entrySet()) list.add(of(entry.getKey(),entry.getValue()));
 		return list;
-	}
-	
-	public int hashCode() {
-		return com.google.common.base.Objects.hashCode(this.first,this.second);
 	}
 }

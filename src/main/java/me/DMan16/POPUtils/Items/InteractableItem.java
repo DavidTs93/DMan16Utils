@@ -5,7 +5,6 @@ import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.apache.logging.log4j.util.TriConsumer;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
@@ -87,7 +86,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 				}
 				if (item.getAmount() == 1) item = null;
 				else item.subtract();
-				Utils.setItemSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.setSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
 				Utils.savePlayer(event.getPlayer());
 			} catch (Exception e) {}
 		};
@@ -108,7 +107,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 				}
 				if (item.getAmount() == 1) item = null;
 				else item.subtract();
-				Utils.setItemSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.setSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
 				Utils.savePlayer(event.getPlayer());
 			} catch (Exception e) {}
 		};

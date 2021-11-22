@@ -14,7 +14,6 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -184,21 +183,15 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	@NotNull
 	protected ItemStack next() {
 		if (!fancyButtons) return super.itemNext();
-		ItemStack newNext = super.itemNext();
-		ItemMeta meta = newNext.getItemMeta();
-		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage + 1) + ")").decoration(TextDecoration.ITALIC,false)));
-		newNext.setItemMeta(meta);
-		return newNext;
+		ItemStack next = super.itemNext();
+		return Utils.setDisplayName(next,next.getItemMeta().displayName().append(Component.text(" (" + (currentPage + 1) + ")").decoration(TextDecoration.ITALIC,false)));
 	}
 	
 	@NotNull
 	protected ItemStack previous() {
 		if (!fancyButtons) return super.itemPevious();
-		ItemStack newPrevious = super.itemPevious();
-		ItemMeta meta = newPrevious.getItemMeta();
-		meta.displayName(meta.displayName().append(Component.text(" (" + (currentPage - 1) + ")").decoration(TextDecoration.ITALIC,false)));
-		newPrevious.setItemMeta(meta);
-		return newPrevious;
+		ItemStack previous = super.itemPevious();
+		return Utils.setDisplayName(previous,previous.getItemMeta().displayName().append(Component.text(" (" + (currentPage - 1) + ")").decoration(TextDecoration.ITALIC,false)));
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {

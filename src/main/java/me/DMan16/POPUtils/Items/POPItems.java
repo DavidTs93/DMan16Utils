@@ -1,8 +1,8 @@
-package me.DMan16.POPUtils.Utils;
+package me.DMan16.POPUtils.Items;
 
 import me.DMan16.POPUtils.Interfaces.Listener;
-import me.DMan16.POPUtils.Items.InteractableItem;
 import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;

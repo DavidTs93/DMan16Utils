@@ -5,9 +5,10 @@ import me.DMan16.POPUtils.Utils.PacketUtils;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.minecraft.network.chat.ChatBaseComponent;
-import net.minecraft.network.protocol.Packet;
 import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
+import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
 import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntityLiving;
+import net.minecraft.world.entity.decoration.EntityArmorStand;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -18,15 +19,17 @@ import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 public class MultiLineHologram implements Hologram<MultiLineHologram> {
 	public static final double LINE_DIFFERENCE = 0.3;
-	private @Unmodifiable List<@NotNull Integer> IDs;
-	private final @Unmodifiable List<@NotNull ChatBaseComponent> lines;
-	private Location location;
-	private World world;
-	private @Unmodifiable List<@NotNull List<? extends Packet<?>>> packets;
-	private @Unmodifiable List<PacketPlayOutEntityDestroy> destroys;
+	protected @Unmodifiable List<@NotNull Integer> IDs;
+	protected final @Unmodifiable List<@NotNull ChatBaseComponent> lines;
+	protected Location location;
+	protected World world;
+	protected @Unmodifiable List<@NotNull PacketPlayOutSpawnEntityLiving> creates;
+	protected @Unmodifiable List<@NotNull PacketPlayOutEntityMetadata> edits;
+	protected @Unmodifiable List<PacketPlayOutEntityDestroy> destroys;
 	
 	public MultiLineHologram(@NotNull List<@NotNull ChatBaseComponent> lines) {
 		if (lines.isEmpty()) throw new IllegalArgumentException("Must have at least one line!");
@@ -34,7 +37,7 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 		this.lines = Collections.unmodifiableList(lines);
 		this.location = null;
 		this.world = null;
-		this.packets = null;
+		this.creates = null;
 		this.destroys = null;
 	}
 	
@@ -58,16 +61,11 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 		this.location = location;
 		this.world = location.getWorld();
 		final Location loc = location.clone().add(0,LINE_DIFFERENCE,0);
-		List<PacketPlayOutSpawnEntityLiving> creates = lines.stream().map(line -> PacketUtils.packetCreateArmorStand(loc.subtract(0,LINE_DIFFERENCE,0))).collect(Collectors.toList());
-		IDs = creates.stream().map(PacketPlayOutSpawnEntityLiving::b).toList();
-		List<List<? extends Packet<?>>> packets = new ArrayList<>();
-		packets.add(creates);
-		packets.add(IDs.stream().map(ID -> PacketUtils.packetUpdateArmorStand(ID,PacketUtils.createDataWatcherArmorStandOptions(true,true,false,true,true))).
-				collect(Collectors.toList()));
-		List<Packet<?>> names = new ArrayList<>();
-		for (int i = 0; i < IDs.size(); i++) names.add(PacketUtils.packetUpdateArmorStand(IDs.get(i),PacketUtils.createDataWatcherArmorStandName(lines.get(i))));
-		packets.add(names);
-		this.packets = Collections.unmodifiableList(packets);
+		List<@NotNull EntityArmorStand> stands =
+				lines.stream().map(line -> PacketUtils.createArmorStand(loc.subtract(0,LINE_DIFFERENCE,0),line,true,true,false,false,true)).toList();
+		IDs = stands.stream().map(EntityArmorStand::getId).toList();
+		creates = stands.stream().map(PacketPlayOutSpawnEntityLiving::new).toList();
+		edits = IntStream.range(0,IDs.size()).mapToObj(i -> new PacketPlayOutEntityMetadata(IDs.get(i),stands.get(i).getDataWatcher(),true)).toList();
 		destroys = IDs.stream().map(PacketUtils::packetDestroyEntity).toList();
 		HologramsManager.register(this);
 		Bukkit.getOnlinePlayers().forEach(this::spawn);
@@ -76,15 +74,16 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 	
 	public void spawn(@NotNull Player player) {
 		if (!isSpawned()) return;
-		PacketUtils.sendPackets(player,Utils.joinLists(packets));
+		PacketUtils.sendPackets(player,Utils.joinLists(destroys,creates,edits));
 	}
 	
 	public void despawn() {
 		if (!isSpawned()) return;
 		HologramsManager.unregister(this);
 		location = null;
-		packets = null;
+		creates = null;
 		Bukkit.getOnlinePlayers().forEach(player -> PacketUtils.sendPackets(player,Utils.joinLists(destroys)));
+		destroys = null;
 	}
 	
 	public boolean spawnOrMove(@NotNull Location location) {
@@ -124,7 +123,7 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 			clone.IDs = new ArrayList<>();
 			clone.location = null;
 			clone.world = null;
-			clone.packets = null;
+			clone.creates = null;
 			clone.destroys = null;
 			return clone;
 		} catch (Exception e) {}
