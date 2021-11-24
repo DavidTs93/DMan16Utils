@@ -1,68 +1,71 @@
 package me.DMan16.POPUtils.Listeners;
 
+import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
-import org.bukkit.event.entity.EntityAirChangeEvent;
-import org.bukkit.event.entity.EntityDamageEvent;
-import org.bukkit.event.entity.EntityPotionEffectEvent;
-import org.bukkit.event.entity.EntityTargetEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 
 public class CancelPlayers implements Listener {
-	private final HashMap<Player,Trio<Boolean,Boolean,Integer>> players = new HashMap<>();
+	private final HashMap<@NotNull Player,@NotNull Pair<@NotNull List<@NotNull Boolean>,@NotNull List<@NotNull Boolean>>> players = new HashMap<>();
 	private MoveListener move = null;
 	
 	public CancelPlayers() {
 		register(POPUtilsMain.getInstance());
 	}
 	
+	public void addPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
+		if (Utils.isPlayerNPC(player)) return;
+		int count = 1;
+		Pair<List<Boolean>,List<Boolean>> info = players.get(player);
+		if (info == null) players.put(player,Pair.of(new ArrayList<>(Arrays.asList(allowRotation)), new ArrayList<>(Arrays.asList(disableDamage))));
+		else {
+			info.first().add(allowRotation);
+			info.second().add(disableDamage);
+		}
+		check();
+	}
+	
 	public void addPlayer(@NotNull Player player) {
 		addPlayer(player,false,false);
 	}
 	
-	public void addPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		if (Utils.isPlayerNPC(player)) return;
-		int count = 1;
-		if (players.containsKey(player)) {
-			Trio<Boolean,Boolean,Integer> info = players.get(player);
-			allowRotation = allowRotation && info.first();
-			disableDamage = disableDamage || info.second();
-			count += info.third();
-		}
-		players.put(player,Trio.of(allowRotation,disableDamage,count));
+	public void removePlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
+		Pair<List<Boolean>,List<Boolean>> info = players.get(player);
+		if (info == null || !info.first.contains(allowRotation) || !info.second.contains(disableDamage)) return;
+		info.first.remove(allowRotation);
+		info.second.remove(disableDamage);
+		if (info.first.isEmpty()) players.remove(player);
 		check();
+	}
+	
+	public void removePlayer(@NotNull Player player) {
+		removePlayer(player,false,false);
 	}
 	
 	/**
 	 * @return First - allow rotation, Second - disable damage, Third - counter
 	 */
-	public Trio<Boolean,Boolean,Integer> getPlayer(@NotNull Player player) {
+	@Nullable
+	public Trio<@NotNull Boolean,@NotNull Boolean,@NotNull Integer> getPlayer(@NotNull Player player) {
 		if (Utils.isPlayerNPC(player)) return null;
-		return players.get(player);
-	}
-	
-	public void removePlayer(@NotNull Player player) {
-		removePlayer(player,false);
-	}
-	
-	public void removePlayer(@NotNull Player player, boolean force) {
-		if (!players.containsKey(player)) return;
-		if (force) players.remove(player);
-		else {
-			Trio<Boolean,Boolean,Integer> info = players.get(player);
-			if (info.third() - 1 <= 0) players.remove(player);
-			else players.put(player,Trio.of(info.first(),info.second(),info.third() - 1));
-		}
-		check();
+		Pair<List<Boolean>,List<Boolean>> info = players.get(player);
+		if (info == null) return null;
+		return Trio.of(!info.first.contains(false),info.second.contains(true),info.first.size());
 	}
 	
 	public boolean isPlayerCancelled(@NotNull Player player) {
@@ -79,8 +82,13 @@ public class CancelPlayers implements Listener {
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
+	public void cancelDeath(PlayerDeathEvent event) {
+		event.setCancelled(true);
+	}
+	
+	@EventHandler(priority = EventPriority.LOWEST)
 	public void unregisterOnLeaveEvent(PlayerQuitEvent event) {
-		removePlayer(event.getPlayer(),true);
+		players.remove(event.getPlayer());
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -88,60 +96,81 @@ public class CancelPlayers implements Listener {
 		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onSwap(PlayerSwapHandItemsEvent event) {
 		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onDrop(PlayerDropItemEvent event) {
 		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	public void onPickup(EntityPickupItemEvent event) {
+		if ((event.getEntity() instanceof Player player) && players.containsKey(player)) event.setCancelled(true);
+	}
+	
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onClick(InventoryClickEvent event) {
 		try {
 			if (players.containsKey((Player) event.getWhoClicked())) event.setCancelled(true);
 		} catch (Exception e) {}
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onCommand(PlayerCommandPreprocessEvent event) {
 		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onHotbar(PlayerItemHeldEvent event) {
 		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	private boolean allowRotation(@NotNull Player player) {
+		Trio<Boolean,Boolean,Integer> info = getPlayer(player);
+		return info != null && info.first;
+	}
+	
+	private boolean allowRotation(Entity entity) {
+		return (entity instanceof Player player) && allowRotation(player);
+	}
+	
+	private boolean disableDamage(@NotNull Player player) {
+		Trio<Boolean,Boolean,Integer> info = getPlayer(player);
+		return info != null && info.second;
+	}
+	
+	private boolean disableDamage(Entity entity) {
+		return (entity instanceof Player player) && disableDamage(player);
+	}
+	
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onDamage(EntityDamageEvent event) {
-		if ((event.getEntity() instanceof Player) && players.containsKey((Player) event.getEntity()) && players.get((Player) event.getEntity()).second()) {
-			event.setCancelled(true);
-			event.setDamage(0);
-		}
+		if (!disableDamage(event.getEntity())) return;
+		event.setCancelled(true);
+		event.setDamage(0);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onAirChange(EntityAirChangeEvent event) {
-		if ((event.getEntity() instanceof Player) && players.containsKey((Player) event.getEntity()) && players.get((Player) event.getEntity()).second()) event.setCancelled(true);
+		if (disableDamage(event.getEntity())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onTarget(EntityTargetEvent event) {
-		if (event.getTarget() != null && (event.getTarget() instanceof Player) && players.containsKey((Player) event.getTarget()) && players.get((Player) event.getTarget()).second())
-			event.setCancelled(true);
+		if (disableDamage(event.getTarget())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onPotion(EntityPotionEffectEvent event) {
-		if ((event.getEntity() instanceof Player) && players.containsKey((Player) event.getEntity()) && players.get((Player) event.getEntity()).second()) event.setCancelled(true);
+		if (disableDamage(event.getEntity())) event.setCancelled(true);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onItemDamage(PlayerItemDamageEvent event) {
-		if (players.containsKey(event.getPlayer()) && players.get(event.getPlayer()).second()) event.setCancelled(true);
+		if (disableDamage(event.getPlayer())) event.setCancelled(true);
 	}
 	
 	private class MoveListener implements Listener {
@@ -152,8 +181,7 @@ public class CancelPlayers implements Listener {
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 		public void onMove(PlayerMoveEvent event) {
 			if (!players.containsKey(event.getPlayer())) return;
-			if (!event.hasChangedBlock() && event.hasChangedOrientation() && players.containsKey(event.getPlayer()) && players.get(event.getPlayer()).first()) return;
-			event.setCancelled(true);
+			if (event.hasChangedPosition() || (event.hasChangedOrientation() && !allowRotation(event.getPlayer()))) event.setCancelled(true);
 		}
 	}
 }

@@ -21,6 +21,11 @@ public class ItemUtils {
 		if (MAP.containsKey(key) || CLASS_MAP.containsKey(info.getItemableClass())) return false;
 		MAP.put(key,info);
 		CLASS_MAP.put(info.getItemableClass(),key);
+		key = CLASS_MAP.remove(ItemableStack.class);
+		if (key != null) {
+			MAP.put(key,MAP.remove(key));
+			CLASS_MAP.put(ItemableStack.class,key);
+		}
 		return true;
 	}
 	
@@ -74,6 +79,16 @@ public class ItemUtils {
 	}
 	
 	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrHolder(@Nullable String str) {
+		if (str == null) return null;
+		Itemable<?> itemable = of(keyAndMap(str));
+		if (itemable != null) return itemable;
+		ItemStack item = (ItemStack) Utils.ObjectFromBase64(str);
+		return Utils.isNull(item) ? null : new ItemHolder(item);
+	}
+	
+	@Nullable
 	@SuppressWarnings("unchecked")
 	public static <V extends Itemable<?>> V of(@NotNull Class<V> clazz, @Nullable Map<String,?> arguments) {
 		String key = CLASS_MAP.get(clazz);
@@ -101,6 +116,15 @@ public class ItemUtils {
 		Itemable<?> itemable;
 		if (item != null) for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
 		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrHolder(@Nullable ItemStack item) {
+		if (Utils.isNull(item)) return null;
+		Itemable<?> itemable;
+		for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
+		return new ItemHolder(item);
 	}
 	
 	@Nullable

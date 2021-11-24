@@ -5,6 +5,7 @@ import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -162,5 +163,12 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	@NotNull
 	public ItemableStack copy() {
 		return new ItemableStack(item.clone());
+	}
+	
+	@NotNull
+	public Component giveComponent() {
+		Component displayName = item.getItemMeta().displayName();
+		return (displayName == null ? Utils.noItalic(Component.translatable(item.getType().translationKey(),NamedTextColor.WHITE)) : displayName).
+				append(Utils.noItalic(Component.text(" x" + item.getAmount(),NamedTextColor.WHITE)));
 	}
 }

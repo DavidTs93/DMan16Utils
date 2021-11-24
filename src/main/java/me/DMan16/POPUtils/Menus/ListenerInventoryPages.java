@@ -36,7 +36,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected int rightClickJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
-	protected @NotNull JavaPlugin plugin;
+	protected final @NotNull JavaPlugin plugin;
 	
 	/**
 	 * @param lines Number of lines - NOT including the bottom (Close,Next,Previous) - 1-5
@@ -70,7 +70,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 					else if (slot == slotNext && shouldSetNext()) next(click);
 					else if (slot == slotPrevious && shouldSetPrevious()) previous(click);
 					else if ((this instanceof Backable backable) && slot == slotBack()) backable.goBack(click);
-					else if (slot == slotClose) event.getView().close();
+					else if (slot == slotClose && shouldSetClose()) clickClose();
 					else otherSlot(event,slot,slotItem,click);
 				}
 			}
@@ -81,6 +81,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 				event.getWhoClicked().getInventory().setItemInOffHand(null);
 			}
 		}.runTaskLater(POPUtilsMain.getInstance(),1);
+	}
+	
+	protected void clickClose() {
+		close();
 	}
 	
 	/**
@@ -136,11 +140,9 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void reset() {
-		if (border == null) {
-			for (int i = 0; i < size - 9; i++) setItem(i,null);
-			for (int i = size - 9; i < size; i++) setItem(i,itemBorder());
-		} else if (border) for (int i = 0; i < size; i++) setItem(i,isBorder(i) ? itemBorder() : null);
-		else for (int i = 0; i < size; i++) setItem(i,null);
+		clear();
+		if (border == null) for (int i = size - 9; i < size; i++) setItem(i,itemBorder());
+		else if (border) for (int i = 0; i < size; i++) if (isBorder(i)) setItem(i,itemBorder());
 	}
 	
 	public void setPage(int newPage) {
@@ -149,21 +151,32 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		currentPage = newPage;
 		reset();
 		setPageContents();
-		setItem(slotClose,itemClose());
+		if (shouldSetClose()) setItem(slotClose,itemClose());
 		if (shouldSetNext()) setItem(slotNext,next());
 		if (shouldSetPrevious()) setItem(slotPrevious,previous());
 		if (this instanceof Backable) setItem(slotBack,itemBack());
-		cancelCloseUnregister = true;
-		openInventory(player);
-		new BukkitRunnable() {
-			public void run() {
-				cancelCloseUnregister = false;
-			}
-		}.runTask(POPUtilsMain.getInstance());
+		if (reopenInventory()) {
+			boolean old = cancelCloseUnregister;
+			cancelCloseUnregister = true;
+			openInventory(player);
+			if (!old) new BukkitRunnable() {
+				public void run() {
+					cancelCloseUnregister = false;
+				}
+			}.runTask(POPUtilsMain.getInstance());
+		}
+	}
+	
+	protected boolean reopenInventory() {
+		return true;
 	}
 	
 	public void reloadPage() {
 		setPage(currentPage);
+	}
+	
+	protected boolean shouldSetClose() {
+		return true;
 	}
 	
 	protected boolean shouldSetNext() {
@@ -216,7 +229,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	@NotNull
 	public static Component defaultMenuName(@NotNull String name, boolean bold) {
-		return bold ? Component.translatable(name,NamedTextColor.DARK_GREEN).decoration(TextDecoration.BOLD,true) : Component.translatable(name,NamedTextColor.DARK_GREEN);
+		return Utils.noItalic(bold ? Component.translatable(name,NamedTextColor.DARK_GREEN,TextDecoration.BOLD) : Component.translatable(name,NamedTextColor.DARK_GREEN));
 	}
 	
 	@NotNull

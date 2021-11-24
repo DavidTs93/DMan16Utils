@@ -7,7 +7,6 @@ import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -34,14 +33,12 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	
 	// Null applicable
 	@SuppressWarnings("unchecked")
-	protected <P extends Applicable<V,T>> Applicable(@NotNull String displayName, @Nullable Consumer<P> doFirst) {
+	protected <P extends Applicable<V,T>> Applicable(@NotNull Component displayName, @Nullable Consumer<P> doFirst) {
 		this.ID = 0;
 		this.rarity = Rarity.get(0);
 		this.name = "null";
 		if (doFirst != null) doFirst.accept((P) this);
-		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
-				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
+		this.defaultName = displayName;
 		this.displayItem = displayItem(this.defaultName);
 		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
@@ -50,6 +47,14 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		this.displayName = defaultName.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = null;
 		this.isNull = true;
+	}
+	
+	// Null applicable
+	protected <P extends Applicable<V,T>> Applicable(@NotNull String displayName, @Nullable Consumer<P> doFirst) {
+//		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+//				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
+//				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
+		this(Utils.stringToComponent(displayName,NamedTextColor.WHITE),doFirst);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -76,13 +81,18 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		this.isNull = false;
 	}
 	
+	@NotNull
+	public Component giveComponent() {
+		return displayName;
+	}
+	
 	public boolean isPurchasable() {
 		return this.ShopPrice != null;
 	}
 	
 	@NotNull
 	public ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val) {
-		return item(null,false,false);
+		return item(displayName.hoverEvent(null),false,false);
 	}
 	
 	@Nullable
@@ -91,7 +101,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	}
 	
 	@NotNull
-	public abstract ItemStack item(@Nullable Component name, boolean skinChooser, boolean chosen);
+	protected abstract ItemStack item(@NotNull Component name, boolean skinChooser, boolean chosen);
 	
 	@NotNull
 	public ItemStack item(boolean skinChooser, boolean chosen) {

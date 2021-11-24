@@ -265,13 +265,22 @@ public class Restrictions {
 		public void onClick(InventoryClickEvent event) {
 			if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE && is(event.getCursor())) new BukkitRunnable() {
 				public void run() {
-					ItemStack item = event.getWhoClicked().getInventory().getItem(event.getSlot());
-					if (is(item)) {
-						item.setAmount(1);
-						event.getWhoClicked().getInventory().setItem(event.getSlot(),add(remove(item)));
-					}
+					Inventory inventory = event.getClickedInventory();
+					if (inventory == null) return;
+					try {
+						ItemStack item = inventory.getItem(event.getSlot());
+						if (is(item)) {
+							item.setAmount(1);
+							inventory.setItem(event.getSlot(),add(remove(item)));
+						}
+					} catch (Exception e) {}
 				}
 			}.runTaskLater(POPUtilsMain.getInstance(),1);
+		}
+		
+		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+		public void onDrag(InventoryDragEvent event) {
+			if (event.getWhoClicked().getGameMode() == GameMode.CREATIVE && is(event.getOldCursor())) event.setCancelled(true);
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

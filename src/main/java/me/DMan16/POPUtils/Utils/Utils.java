@@ -82,6 +82,7 @@ public class Utils {
 	public static final BigInteger HUNDRED_INT = BigInteger.valueOf(100);
 	private static final Set<Long> SESSION_IDS = new HashSet<>();
 	private static final @Unmodifiable List<Integer> PLAYER_STORAGE_SLOTS;
+	private static final @Unmodifiable List<Integer> PLAYER_HOLDING_SLOTS;
 	private static final @Unmodifiable List<Integer> PLAYER_INVENTORY_SLOTS;
 	private static final Gson GSON = new GsonBuilder().create();
 	private static List<Material> interactable = null;
@@ -92,6 +93,9 @@ public class Utils {
 		slots.add(-106);
 		for (int i = 0; i < 4 * 9; i++) slots.add(i);
 		PLAYER_STORAGE_SLOTS = Collections.unmodifiableList(slots);
+		slots.remove(0);
+		PLAYER_HOLDING_SLOTS = Collections.unmodifiableList(slots);
+		slots.add(0,-106);
 		for (int i = 100; i <= 103; i++) slots.add(i);
 		PLAYER_INVENTORY_SLOTS = Collections.unmodifiableList(slots);
 	}
@@ -307,14 +311,20 @@ public class Utils {
 	
 	@NotNull
 	@Unmodifiable
-	public static List<@NotNull Integer> getPlayerInventorySlots() {
-		return PLAYER_INVENTORY_SLOTS;
+	public static List<@NotNull Integer> getPlayerStorageSlots() {
+		return PLAYER_STORAGE_SLOTS;
 	}
 	
 	@NotNull
 	@Unmodifiable
-	public static List<@NotNull Integer> getPlayerStorageSlots() {
-		return PLAYER_STORAGE_SLOTS;
+	public static List<@NotNull Integer> getPlayerHoldingSlots() {
+		return PLAYER_HOLDING_SLOTS;
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static List<@NotNull Integer> getPlayerInventorySlots() {
+		return PLAYER_INVENTORY_SLOTS;
 	}
 	
 	public static int getSlot(@NotNull Player player, EquipmentSlot slot) {
@@ -329,15 +339,14 @@ public class Utils {
 	
 	@Nullable
 	public static ItemStack getFromSlot(@NotNull Player player, int slot) {
-		ItemStack item = null;
+		if (!PLAYER_INVENTORY_SLOTS.contains(slot)) return null;
+		ItemStack item;
 		if (slot == -106) item = player.getInventory().getItemInOffHand();
-		else if (slot >= 0) {
-			if (slot == 100) item = player.getInventory().getBoots();
-			else if (slot == 101) item = player.getInventory().getLeggings();
-			else if (slot == 102) item = player.getInventory().getChestplate();
-			else if (slot == 103) item = player.getInventory().getHelmet();
-			else item = player.getInventory().getItem(slot);
-		}
+		else if (slot == 100) item = player.getInventory().getBoots();
+		else if (slot == 101) item = player.getInventory().getLeggings();
+		else if (slot == 102) item = player.getInventory().getChestplate();
+		else if (slot == 103) item = player.getInventory().getHelmet();
+		else item = player.getInventory().getItem(slot);
 		return item;
 	}
 	
@@ -510,7 +519,7 @@ public class Utils {
 	
 	@Contract(value = "null -> true",pure = true)
 	public static boolean isNull(@Nullable ItemStack item) {
-		return item == null || isNull(item.getType());
+		return item == null || isNull(item.getType()) || item.getAmount() <= 0;
 	}
 	
 	@Contract(value = "null -> true",pure = true)
@@ -921,6 +930,10 @@ public class Utils {
 		Utils.getCancelPlayers().removePlayer(player);
 	}
 	
+	public static void removeCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
+		Utils.getCancelPlayers().removePlayer(player,allowRotation,disableDamage);
+	}
+	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
 		return Utils.getCancelPlayers().isPlayerCancelled(player);
 	}
@@ -1130,6 +1143,18 @@ public class Utils {
 		if (comp == null) comp = mapToComponent(getListFromJSON(text));
 		return comp != null ? comp.color(color) : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
+	}
+	
+	@Nullable
+	@Contract("!null,_ -> !null; null,_ -> null")
+	public static Component stringToComponent(@Nullable String text, @Nullable String color) {
+		return stringToComponent(text,getTextColor(color));
+	}
+	
+	@Nullable
+	@Contract("!null -> !null; null -> null")
+	public static Component stringToComponent(@Nullable String text) {
+		return stringToComponent(text,(TextColor) null);
 	}
 	
 	@Nullable
@@ -1770,16 +1795,36 @@ public class Utils {
 		if (amount > 0) player.giveExp(amount);
 	}
 	
-	public static boolean addFully(@NotNull Player player, ItemStack item) {
-		if (isNull(item)) return false;
-		ItemStack[] inventory = player.getInventory().getStorageContents();
+	/**
+	 * @param toEmpty These slots will be emptied if the item is added!
+	 * @param toRemove These slots will remove the amounts specified if the item is added!
+	 * @return A HashMap containing the slots the item was added to and the respective amounts. Empty = nothing added = fail!
+	 */
+	@NotNull
+	public static HashMap<@NotNull Integer,@NotNull Integer> addFully(@NotNull Player player, ItemStack item, @Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
+		HashMap<Integer,Integer> map = new HashMap<>();
+		if (isNull(item)) return map;
+		List<@NotNull Integer> empty = Arrays.stream(toEmpty).boxed().toList();
+		if (toRemove == null) toRemove = new HashMap<>();
+		else toRemove = new HashMap<>(toRemove);
+		toRemove.entrySet().removeIf(entry -> !PLAYER_INVENTORY_SLOTS.contains(entry.getKey()));
 		int amount = item.getAmount();
-		for (ItemStack itemStack : inventory)
-			if ((isNull(itemStack) && (amount -= item.getMaxStackSize()) <= 0) || (itemStack.isSimilar(item) && (amount -= Math.max(0,item.getMaxStackSize() - itemStack.getAmount())) <= 0)) {
-				player.getInventory().addItem(item);
-				return true;
-			}
-		return false;
+		ItemStack itemStack;
+		int added;
+		for (int slot : PLAYER_HOLDING_SLOTS) {
+			itemStack = subtract(getFromSlot(player,slot),thisOrThatOrNull(toRemove.get(slot),0));
+			if (empty.contains(slot) || isNull(itemStack)) added = item.getMaxStackSize();
+			else if (itemStack.isSimilar(item)) added = Math.max(0,item.getMaxStackSize() - itemStack.getAmount());
+			else continue;
+			if (added <= 0) continue;
+			map.put(slot,added);
+			if ((amount -= added) <= 0) break;
+		}
+		if (amount > 0) return new HashMap<>();
+		toRemove.forEach((slot,remove) -> setSlot(player,subtract(getFromSlot(player,slot),remove),slot));
+		empty.forEach(slot -> setSlot(player,null,slot));
+		player.getInventory().addItem(item);
+		return map;
 	}
 	
 	public static int getWeightedRandomIndexDouble(@NotNull List<@Nullable Double> chances) {
@@ -1837,7 +1882,11 @@ public class Utils {
 	@Nullable
 	@Contract("null,_ -> null")
 	public static ItemStack subtract(ItemStack item, int amount) {
-		return isNull(item) ? null : (item.getAmount() <= amount ? null : item.subtract(amount));
+		if (isNull(item)) return null;
+		if (item.getAmount() > item.getMaxStackSize()) item.setAmount(item.getMaxStackSize());
+		else if (item.getAmount() <= 0) return null;
+		if (amount <= 0) return item;
+		return item.getAmount() <= amount ? null : item.subtract(amount);
 	}
 	
 	@Nullable
@@ -1856,5 +1905,15 @@ public class Utils {
 			amount -= clone.getAmount();
 		}
 		return items;
+	}
+	
+	public static int modulo(int num1, int num2) {
+		int result = num1 % num2;
+		return result < 0 ? result + num2 : result;
+	}
+	
+	public static long modulo(long num1, long num2) {
+		long result = num1 % num2;
+		return result < 0 ? result + num2 : result;
 	}
 }

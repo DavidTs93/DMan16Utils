@@ -37,6 +37,10 @@ public abstract class ListenerInventory implements Listener,Menu {
 		this.registered = false;
 	}
 	
+	protected void clear() {
+		inventory.clear();
+	}
+	
 	protected boolean isThisInventory(@NotNull Inventory inv) {
 		return inv.equals(inventory);
 	}
@@ -57,7 +61,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	@Override
 	public final void unregister() {
-		HandlerList.unregisterAll(this);
+		if (registered) HandlerList.unregisterAll(this);
 		PLAYER_MENUS.values().remove(this);
 		afterClose();
 	}
@@ -109,10 +113,12 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	@EventHandler(ignoreCancelled = true)
 	public void unregisterOnClose(InventoryCloseEvent event) {
-		if (isThisInventory(event.getView().getTopInventory()) && !cancelCloseUnregister) {
+		if (!isThisInventory(event.getView().getTopInventory())) return;
+		if (!cancelCloseUnregister) {
 			unregister();
 			afterCloseUnregister(event);
 		}
+		afterClose();
 	}
 	
 	protected void afterCloseUnregister(InventoryCloseEvent event) {}

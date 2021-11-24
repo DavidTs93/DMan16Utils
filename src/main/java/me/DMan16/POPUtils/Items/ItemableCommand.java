@@ -2,6 +2,7 @@ package me.DMan16.POPUtils.Items;
 
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -15,11 +16,13 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	private final ItemableStack item;
 	private final String command;
 	private final ExecuteAs executeAs;
+	private final Component displayName;
 	
-	private ItemableCommand(@NotNull ItemableStack item, @NotNull String command, @NotNull ExecuteAs executeAs) {
+	private ItemableCommand(@NotNull ItemableStack item, @NotNull String command, @NotNull ExecuteAs executeAs, @NotNull Component displayName) {
 		this.item = item;
 		this.command = command;
 		this.executeAs = executeAs;
+		this.displayName = displayName;
 	}
 	
 	@NotNull
@@ -28,8 +31,8 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	}
 	
 	@Override
-	public boolean give(@NotNull Player player) {
-		String command = this.command.replaceAll("<(?i)name>",player.getName()).replace("<(?i)uuid>",player.getUniqueId().toString());
+	public boolean give(@NotNull Player player, @Nullable Map<@NotNull Integer, @NotNull Integer> toRemove, int ... toEmpty) {
+		String command = this.command.replaceAll("<(?i)name>",player.getName()).replaceAll("<(?i)uuid>",player.getUniqueId().toString());
 		if (executeAs == ExecuteAs.OP) {
 			if (player.isOp()) player.performCommand(command);
 			else {
@@ -51,10 +54,11 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	@Nullable
 	@Contract("null,_,_ -> null; _,null,_ -> null")
 	public static ItemableCommand of(ItemableStack item, String command, ExecuteAs executeAs) {
-		if (item == null || command == null || command.trim().isEmpty() || item.asItem().getItemMeta().displayName() == null) return null;
+		Component displayName;
+		if (item == null || command == null || command.trim().isEmpty() || (displayName = item.asItem().getItemMeta().displayName()) == null) return null;
 		command = command.trim();
 		if (command.startsWith("/")) command = command.replaceFirst("/","");
-		return new ItemableCommand(item,command,executeAs == null ? ExecuteAs.PLAYER : executeAs);
+		return new ItemableCommand(item,command,executeAs == null ? ExecuteAs.PLAYER : executeAs,displayName);
 	}
 	
 	@Nullable
@@ -80,6 +84,11 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	@NotNull
 	public ItemableCommand copy() {
 		return this;
+	}
+	
+	@NotNull
+	public Component giveComponent() {
+		return displayName;
 	}
 	
 	public enum ExecuteAs {

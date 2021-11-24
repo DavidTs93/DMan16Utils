@@ -1,6 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
-import me.DMan16.POPUtils.Utils.Utils;
+import me.DMan16.POPUtils.Interfaces.Itemable;
+import me.DMan16.POPUtils.Items.ItemUtils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -10,7 +11,6 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -22,7 +22,7 @@ import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public abstract class InnerInventory<V> extends ListenerInventoryPages {
+public abstract class InnerInventory<V extends Itemable<?>> extends ListenerInventoryPages {
 	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu;
 	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> updatingMenu;
 	protected UUID ID;
@@ -30,21 +30,22 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	protected boolean first;
 	protected boolean allowEdit;
 	
+	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
+														   boolean owner, @NotNull UUID ID, Boolean allowEdit,
+														   @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu,
+														   @Nullable Function<T,@NotNull Boolean> doFirstMore) {
+		super(viewer,viewer,5,name,border,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
+	}
+	
 	protected InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
 							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
 		this(viewer,name,border,plugin,owner,ID,null,originalMenu,null);
 	}
 	
-	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
-										   boolean owner, @NotNull UUID ID, Boolean allowEdit,
-										   @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
-		super(viewer,viewer,5,name,border,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
-//				ID,owner,allowEdit,originalMenu,objs);
-	}
-	
 	@SuppressWarnings("unchecked")
-	private static <V,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner, @NotNull UUID ID, boolean owner, Boolean allowEdit, @NotNull HashMap<@NotNull Integer,
-			@NotNull List<@Nullable V>> originalMenu, @Nullable Function<T,@NotNull Boolean> doFirstMore) {
+	private static <V extends Itemable<?>,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner, @NotNull UUID ID, boolean owner, Boolean allowEdit,
+																					 @NotNull HashMap<@NotNull Integer, @NotNull List<@Nullable V>> originalMenu,
+																					 @Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		inner.ID = ID;
 		inner.owner = owner;
 		inner.allowEdit = allowEdit == null ? inner.owner : allowEdit;
@@ -98,15 +99,17 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 		if (this.allowEdit && event.getPlayer().equals(player)) saveExit();
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected void savePage() {
 		if (first) {
 			first = false;
 			return;
 		}
-		List<ItemStack> pageItems = new ArrayList<>();
-		for (int i = 0; i < size - 9; i++) {
-			ItemStack item = getItem(i);
-			pageItems.add(Utils.isNull(item) ? null : item);
+		List<V> pageItems = new ArrayList<>();
+		for (int i = 0; i < size - 9; i++) try {
+			pageItems.add((V) ItemUtils.ofOrHolder(getItem(i)));
+		} catch (Exception e) {
+			pageItems.add(null);
 		}
 		updateUpdatingMenu(pageItems);
 	}
@@ -129,5 +132,5 @@ public abstract class InnerInventory<V> extends ListenerInventoryPages {
 	}
 	
 	protected abstract void save();
-	protected abstract void updateUpdatingMenu(@NotNull List<ItemStack> items);
+	protected abstract void updateUpdatingMenu(@NotNull List<@Nullable V> items);
 }
