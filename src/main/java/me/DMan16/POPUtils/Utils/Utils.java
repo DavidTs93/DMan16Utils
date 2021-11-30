@@ -7,6 +7,7 @@ import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
+import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.Events.PlayerRequestSaveEvent;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Interfaces.Itemable;
@@ -67,6 +68,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Utils {
@@ -76,6 +78,7 @@ public class Utils {
 	public static final @NotNull TranslatableComponent NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.translatable("multiplayer.disconnect.server_shutdown",NamedTextColor.RED));
 	public static final @NotNull TranslatableComponent PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
 	public static final @NotNull TranslatableComponent COMING_SOON = noItalic(Component.translatable("menu.prisonpop.coming_soon",NamedTextColor.GOLD,TextDecoration.BOLD));
+	public static final @Unmodifiable List<String> NUMBER_SUFFIXES = List.of("k","m","b","t","q","qn","s","sp","oc","n","d","u","dd");
 	public static final BigDecimal THOUSAND = BigDecimal.valueOf(1000);
 	public static final BigInteger THOUSAND_INT = BigInteger.valueOf(1000);
 	public static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
@@ -89,13 +92,11 @@ public class Utils {
 	
 	static {
 		createInteractable();
+		PLAYER_HOLDING_SLOTS = IntStream.range(0,4 * 9).boxed().toList();
 		List<Integer> slots = new ArrayList<>();
 		slots.add(-106);
-		for (int i = 0; i < 4 * 9; i++) slots.add(i);
+		slots.addAll(PLAYER_HOLDING_SLOTS);
 		PLAYER_STORAGE_SLOTS = Collections.unmodifiableList(slots);
-		slots.remove(0);
-		PLAYER_HOLDING_SLOTS = Collections.unmodifiableList(slots);
-		slots.add(0,-106);
 		for (int i = 100; i <= 103; i++) slots.add(i);
 		PLAYER_INVENTORY_SLOTS = Collections.unmodifiableList(slots);
 	}
@@ -1337,17 +1338,35 @@ public class Utils {
 	}
 	
 	@Nullable
-	private static <V extends Number> V getNumber(@Nullable Object obj, @NotNull Function<@NotNull Number,@NotNull V> getValue,
-												  @NotNull Function<String,@NotNull V> parse) {
-		if (obj == null || (obj instanceof Character)) return null;
-		if (obj instanceof BigInteger) return getValue.apply((BigInteger) obj);
-		if (obj instanceof BigDecimal) return getValue.apply((BigDecimal) obj);
+	public static BigDecimal formatNumber(String str) {
+		if (str == null) return null;
 		try {
-			V num = getValue.apply((Number) obj);
-			if (num.doubleValue() == ((Number) obj).doubleValue()) return num;
+			return new BigDecimal(str);
 		} catch (Exception e) {}
+		String suffix,lower = str.toLowerCase();
+		if (!lower.contains("e")) for (int i = 0; i < NUMBER_SUFFIXES.size(); i++) if (lower.endsWith(NUMBER_SUFFIXES.get(i))) try {
+			return new BigDecimal(str.substring(0,str.length() - NUMBER_SUFFIXES.get(i).length())).multiply(BigDecimal.valueOf(1000).pow(i + 1));
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	public static <V extends Number> V getNumber(@Nullable Object obj, @NotNull Function<@NotNull BigDecimal,@NotNull V> getValue) {
+		if (obj == null || (obj instanceof Character)) return null;
+		if (obj instanceof String str) try {
+			return getValue.apply(Objects.requireNonNull(formatNumber(str)));
+		} catch (Exception e) {
+			return null;
+		}
+		if (obj instanceof BigInteger big) return getValue.apply(new BigDecimal(big));
+		if (obj instanceof BigDecimal big) return getValue.apply(big);
 		try {
-			return parse.apply(getString(obj));
+			if ((obj instanceof Byte) || (obj instanceof Short) || (obj instanceof Integer) || (obj instanceof Long)) return getValue.apply(BigDecimal.valueOf(((Number) obj).longValue()));
+			V num;
+			if ((obj instanceof Float f)) {
+				num = getValue.apply(BigDecimal.valueOf(f));
+				if (num.doubleValue() == f) return num;
+			} else if ((obj instanceof Double d)) return getValue.apply(BigDecimal.valueOf(d));
 		} catch (Exception e) {}
 		return null;
 	}
@@ -1355,37 +1374,37 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null")
 	public static Byte getByte(@Nullable Object obj) {
-		return getNumber(obj,Number::byteValue,Byte::parseByte);
+		return getNumber(obj,Number::byteValue);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Short getShort(@Nullable Object obj) {
-		return getNumber(obj,Number::shortValue,Short::parseShort);
+		return getNumber(obj,Number::shortValue);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Integer getInteger(@Nullable Object obj) {
-		return getNumber(obj,Number::intValue,Integer::parseInt);
+		return getNumber(obj,Number::intValue);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Long getLong(@Nullable Object obj) {
-		return getNumber(obj,Number::longValue,Long::parseLong);
+		return getNumber(obj,Number::longValue);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Float getFloat(@Nullable Object obj) {
-		return getNumber(obj,Number::floatValue,Float::parseFloat);
+		return getNumber(obj,Number::floatValue);
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Double getDouble(@Nullable Object obj) {
-		return getNumber(obj,Number::doubleValue,Double::parseDouble);
+		return getNumber(obj,Number::doubleValue);
 	}
 	
 	@Nullable
@@ -1801,30 +1820,51 @@ public class Utils {
 	 * @return A HashMap containing the slots the item was added to and the respective amounts. Empty = nothing added = fail!
 	 */
 	@NotNull
-	public static HashMap<@NotNull Integer,@NotNull Integer> addFully(@NotNull Player player, ItemStack item, @Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
-		HashMap<Integer,Integer> map = new HashMap<>();
-		if (isNull(item)) return map;
+	public static List<@NotNull HashMap<@NotNull Integer,@NotNull Integer>> addFully(@NotNull Player player, @NotNull List<ItemStack> items,
+																					 @Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
+		List<HashMap<Integer,Integer>> maps = new ArrayList<>();
 		List<@NotNull Integer> empty = Arrays.stream(toEmpty).boxed().toList();
 		if (toRemove == null) toRemove = new HashMap<>();
 		else toRemove = new HashMap<>(toRemove);
 		toRemove.entrySet().removeIf(entry -> !PLAYER_INVENTORY_SLOTS.contains(entry.getKey()));
-		int amount = item.getAmount();
-		ItemStack itemStack;
-		int added;
-		for (int slot : PLAYER_HOLDING_SLOTS) {
-			itemStack = subtract(getFromSlot(player,slot),thisOrThatOrNull(toRemove.get(slot),0));
-			if (empty.contains(slot) || isNull(itemStack)) added = item.getMaxStackSize();
-			else if (itemStack.isSimilar(item)) added = Math.max(0,item.getMaxStackSize() - itemStack.getAmount());
-			else continue;
-			if (added <= 0) continue;
-			map.put(slot,added);
-			if ((amount -= added) <= 0) break;
+		if (items.stream().filter(item -> !isNull(item)).toList().isEmpty()) return new ArrayList<>();
+		HashMap<Integer,Integer> map;
+		for (ItemStack item : items) {
+			map = new HashMap<>();
+			if (isNull(item)) {
+				maps.add(map);
+				continue;
+			}
+			int amount = item.getAmount();
+			ItemStack itemStack;
+			int added;
+			for (int slot : PLAYER_HOLDING_SLOTS) {
+				itemStack = subtract(getFromSlot(player,slot),thisOrThatOrNull(toRemove.get(slot),0));
+				if (empty.contains(slot) || isNull(itemStack)) added = item.getMaxStackSize();
+				else if (itemStack.isSimilar(item)) added = Math.max(0,item.getMaxStackSize() - itemStack.getAmount());
+				else continue;
+				if (added <= 0) continue;
+				map.put(slot,added);
+				if ((amount -= added) <= 0) break;
+			}
+			if (amount > 0) return new ArrayList<>();
+			maps.add(map);
 		}
-		if (amount > 0) return new HashMap<>();
 		toRemove.forEach((slot,remove) -> setSlot(player,subtract(getFromSlot(player,slot),remove),slot));
 		empty.forEach(slot -> setSlot(player,null,slot));
-		player.getInventory().addItem(item);
-		return map;
+		player.getInventory().addItem(items.stream().filter(item -> !isNull(item)).toList().toArray(new ItemStack[0]));
+		return maps;
+	}
+	
+	/**
+	 * @param toEmpty These slots will be emptied if the item is added!
+	 * @param toRemove These slots will remove the amounts specified if the item is added!
+	 * @return A HashMap containing the slots the item was added to and the respective amounts. Empty = nothing added = fail!
+	 */
+	@NotNull
+	public static HashMap<@NotNull Integer,@NotNull Integer> addFully(@NotNull Player player, ItemStack item, @Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
+		List<HashMap<Integer,Integer>> maps = addFully(player,List.of(item),toRemove,toEmpty);
+		return maps.isEmpty() ? new HashMap<>() : maps.get(0);
 	}
 	
 	public static int getWeightedRandomIndexDouble(@NotNull List<@Nullable Double> chances) {
@@ -1915,5 +1955,23 @@ public class Utils {
 	public static long modulo(long num1, long num2) {
 		long result = num1 % num2;
 		return result < 0 ? result + num2 : result;
+	}
+	
+	@NotNull
+	public static Trio<@NotNull BigInteger,@NotNull Integer,@NotNull Integer> formatNumber(@NotNull BigInteger number, int rounding, @Nullable Integer limitExponent) {
+		BigDecimal num = new BigDecimal(number.abs()).setScale(rounding,RoundingMode.FLOOR);
+		if (num.compareTo(THOUSAND) < 0) return Trio.of(number,0,0);
+		if (limitExponent != null && limitExponent < 1) limitExponent = null;
+		int exp = 0;
+		while (num.compareTo(THOUSAND) >= 0 && limitExponent != null && exp < limitExponent - 1) {
+			num = num.divide(THOUSAND,RoundingMode.FLOOR);
+			exp++;
+		}
+		num = num.multiply(HUNDRED);
+		BigInteger[] divide = toBigInteger(num,true).divideAndRemainder(HUNDRED_INT);
+		BigInteger big = divide[0];
+		if (number.compareTo(BigInteger.ZERO) < 0) big = big.multiply(BigInteger.valueOf(-1));
+		int small = divide[1].intValue();
+		return Trio.of(big,small,exp * 3);
 	}
 }

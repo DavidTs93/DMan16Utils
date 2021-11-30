@@ -84,7 +84,11 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void clickClose() {
-		close();
+		new BukkitRunnable() {
+			public void run() {
+				close();
+			}
+		}.runTaskLater(POPUtilsMain.getInstance(),1);
 	}
 	
 	/**

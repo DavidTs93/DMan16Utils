@@ -24,8 +24,14 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		super(player,player,lines,name,border,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
 	}
 	
+	@Nullable
+	protected T alterValueSetPagePurchases(@Nullable T val) {
+		return val;
+	}
+	
 	protected void setPagePurchases() {
-		if (!purchases.isEmpty()) purchases.get(currentPage - 1).forEach((slot,info) -> setItem(slot,info.first().itemPurchase(player,info.second())));
+		if (purchases != null && !purchases.isEmpty())
+			purchases.get(currentPage - 1).forEach((slot,info) -> setItem(slot,info.first().itemPurchase(player,alterValueSetPagePurchases(info.second()))));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -51,6 +57,11 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected void setPageContents() {
 		setPagePurchases();
 		setMoreContents();
+	}
+	
+	@Nullable
+	protected T alterValueHandlePurchase(@Nullable T val) {
+		return val;
 	}
 	
 	protected void handlePurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,

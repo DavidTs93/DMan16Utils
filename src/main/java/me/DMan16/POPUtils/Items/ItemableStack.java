@@ -12,10 +12,7 @@ import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.LeatherArmorMeta;
-import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.inventory.meta.*;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -28,7 +25,7 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	private final ItemStack item;
 	
 	private ItemableStack(@NotNull ItemStack item) {
-		this.item = item;
+		this.item = item.clone();
 	}
 	
 	@NotNull
@@ -108,7 +105,14 @@ public class ItemableStack implements Itemable<ItemableStack> {
 		if (Tags.LEATHER.contains(material)) ((LeatherArmorMeta) meta).setColor(Utils.getColor(Utils.getString(arguments.get("Color"))));
 		item.setItemMeta(meta);
 		item.setAmount(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("Amount")),1));
-		item.addUnsafeEnchantments(getEnchantments(arguments.get("Enchantments")));
+		Map<Enchantment,Integer> enchantments = getEnchantments(arguments.get("Enchantments"));
+		if (!enchantments.isEmpty()) {
+			if (material == Material.ENCHANTED_BOOK) {
+				EnchantmentStorageMeta enchantmentMeta = (EnchantmentStorageMeta) item.getItemMeta();
+				enchantments.forEach((key,value) -> enchantmentMeta.addStoredEnchant(key,value,true));
+				item.setItemMeta(enchantmentMeta);
+			} else item.addUnsafeEnchantments(enchantments);
+		}
 		try {
 			Restrictions.addRestrictions(item,
 					((List<?>) arguments.get("Restrictions")).stream().map(Utils::getString).filter(Objects::nonNull).map(Restrictions::byName).filter(Objects::nonNull).toList());

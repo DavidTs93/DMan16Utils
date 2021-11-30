@@ -56,6 +56,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 		VERSIONS.put(754,"1_16_5");
 		VERSIONS.put(755,"1_17");
 		VERSIONS.put(756,"1_17_1");
+		VERSIONS.put(757,"1_18");
 	}
 	
 	public PlayerVersionLogger() throws SQLException {
@@ -70,7 +71,8 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 			statement.execute("CREATE TABLE IF NOT EXISTS " + VERSIONS_PLAYERS_TABLE_NAME + " (UUID VARCHAR(36) NOT NULL UNIQUE," +
 					VERSIONS.values().stream().map(version -> "v" + version.replace("_","v") + " BIT(1) NOT NULL DEFAULT 0").collect(Collectors.joining(",")) + ");");
 			List<String> add = new ArrayList<>();
-			for (String version : VERSIONS.values()) if (!data.getColumns(null,null,VERSIONS_PLAYERS_TABLE_NAME,"v" + version.replace("_","v")).next()) add.add(version);
+			for (String version : VERSIONS.values())
+				if (!data.getColumns(null,null,VERSIONS_PLAYERS_TABLE_NAME,"v" + version.replace("_","v")).next()) add.add(version);
 			if (!add.isEmpty()) statement.execute("ALTER TABLE " + VERSIONS_PLAYERS_TABLE_NAME + " " +
 					add.stream().map(version -> "v" + version.replace("_","v") + " BIT(1) NOT NULL DEFAULT 0").collect(Collectors.joining(",")) + ";");
 		}
@@ -108,10 +110,12 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 		HashMap<String,Integer> uses = getUses();
 		if (uses.isEmpty()) Utils.chatColors(sender,"&aNo versions recorded yet");
 		else {
-			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).collect(Collectors.joining(";"));
+			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).
+					collect(Collectors.joining(";"));
 			String url = "https://DavidTs93.github.io/pie_chart.html?v=" + Base64Coder.encodeString(str);
 			ClickEvent click = ClickEvent.openUrl(url);
-			sender.sendMessage(Utils.noItalic(Component.text("Versions graph: ",NamedTextColor.GREEN,TextDecoration.UNDERLINED).append(Component.text(url,NamedTextColor.BLUE).clickEvent(click))));
+			sender.sendMessage(Utils.noItalic(Component.text("Versions graph: ",NamedTextColor.GREEN,TextDecoration.UNDERLINED).
+					append(Component.text(url,NamedTextColor.BLUE).clickEvent(click))));
 		}
 		return true;
 	}

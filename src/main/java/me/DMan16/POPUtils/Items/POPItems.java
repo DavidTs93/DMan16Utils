@@ -70,7 +70,7 @@ public class POPItems implements Listener {
 		return item == null ? meta : Utils.setKeyPersistentDataContainer(meta,POPITEM_KEY,PersistentDataType.STRING,item.key(),force);
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler
 	public void onInteractInteractableItem(PlayerInteractEvent event) {
 		if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.RIGHT_CLICK_AIR &&
 				(event.useItemInHand() == Event.Result.DENY || event.useInteractedBlock() == Event.Result.DENY)) return;

@@ -12,7 +12,7 @@ public class ItemHolder implements Itemable<ItemHolder> {
 	private final ItemStack item;
 	
 	public ItemHolder(@NotNull ItemStack item) {
-		this.item = item;
+		this.item = item.clone();
 	}
 	
 	@NotNull

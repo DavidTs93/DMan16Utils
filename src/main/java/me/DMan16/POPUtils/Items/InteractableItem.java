@@ -28,7 +28,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	
 	@NotNull
 	public InteractableItem rightClick(@NotNull PlayerInteractEvent event) {
-		if (rightClick != null && !Utils.isInteract(event) && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK)) rightClick.accept(event);
+		if (rightClick != null && (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) && !Utils.isInteract(event)) rightClick.accept(event);
 		return this;
 	}
 	

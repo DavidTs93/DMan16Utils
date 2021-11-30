@@ -28,6 +28,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	@NotNull protected final Component defaultName;
 	@NotNull public final Component displayName;
 	protected final ItemStack displayItem;
+	protected final @Nullable V currency;
 	@Nullable protected final BigInteger ShopPrice;
 	public final boolean isNull;
 	
@@ -45,6 +46,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
 		this.displayName = defaultName.hoverEvent(bundle.asHoverEvent());
+		this.currency = null;
 		this.ShopPrice = null;
 		this.isNull = true;
 	}
@@ -58,13 +60,14 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected <P extends Applicable<V,T>> Applicable(int ID, int rarity, @NotNull String name, @NotNull String displayName, @Nullable String color, @Nullable BigInteger shopPrice,
-													 @Nullable Function<P,@NotNull Boolean> doFirst) throws IllegalArgumentException {
+	protected <P extends Applicable<V,T>> Applicable(int ID, int rarity, @NotNull String name, @NotNull String displayName, @Nullable String color, @Nullable V currency,
+													 @Nullable BigInteger shopPrice, @Nullable Function<P,@NotNull Boolean> doFirst) throws IllegalArgumentException {
 		if (ID <= 0) throw new IllegalArgumentException();
 		this.ID = ID;
 		this.rarity = Rarity.get(rarity);
-		this.name = name.trim().replace(" ","_").toLowerCase();
-		if (this.name.isEmpty()) throw new IllegalArgumentException("Empty name!");
+		name = Utils.fixKey(name);
+		if (name == null) throw new IllegalArgumentException("Empty name!");
+		this.name = name;
 		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
 		TextColor textColor = Utils.getTextColor(color);
 		this.defaultName = Utils.stringToComponent(displayName,textColor);
@@ -78,6 +81,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		bundle.setItemMeta(meta);
 		this.displayName = defaultName.hoverEvent(bundle.asHoverEvent());
 		this.ShopPrice = shopPrice == null || shopPrice.compareTo(BigInteger.ZERO) < 0 ? null : shopPrice;
+		this.currency = currency;
 		this.isNull = false;
 	}
 	
@@ -98,6 +102,11 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	@Nullable
 	public BigInteger getPrice(@NotNull Player player, @Nullable T val) {
 		return this.ShopPrice;
+	}
+	
+	@NotNull
+	public final V getCurrencyType() {
+		return currency == null ? getDefaultCurrencyType() : currency;
 	}
 	
 	@NotNull

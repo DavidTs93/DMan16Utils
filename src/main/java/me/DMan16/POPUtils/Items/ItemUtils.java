@@ -3,6 +3,7 @@ package me.DMan16.POPUtils.Items;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Utils.Utils;
+import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -45,9 +46,8 @@ public class ItemUtils {
 	}
 	
 	@Nullable
-	@Contract("null -> null")
-	private static Pair<@NotNull String,@Nullable Map<String,?>> keyAndMap(@Nullable String str) {
-		if (str == null || str.isEmpty()) return null;
+	private static Pair<@NotNull String,@Nullable Map<String,?>> keyAndMap(@NotNull String str) {
+		if (str.isEmpty()) return null;
 		String key = null, arguments = null;
 		if (str.contains(":")) {
 			String[] arr = str.split(":",2);
@@ -63,6 +63,9 @@ public class ItemUtils {
 	@SuppressWarnings("unchecked")
 	@Contract("null,_ -> null")
 	public static <V extends Itemable<?>> V of(@Nullable String str, @NotNull Class<V> clazz) {
+		if (str == null) return null;
+		Material material = Material.getMaterial(str);
+		if (material != null) return clazz == ItemableStack.class ? (V) ItemableStack.of(material,null) : null;
 		Pair<String,Map<String,?>> keyAndMap = keyAndMap(str);
 		try {
 			if (keyAndMap == null) return (V) MAP.get(CLASS_MAP.get(clazz)).fromItem((ItemStack) Objects.requireNonNull(Utils.ObjectFromBase64(str)));
@@ -75,13 +78,17 @@ public class ItemUtils {
 	@Nullable
 	@Contract("null -> null")
 	public static Itemable<?> of(@Nullable String str) {
-		return of(keyAndMap(str));
+		if (str == null) return null;
+		Material material = Material.getMaterial(str);
+		return material != null ? ItemableStack.of(material,null) : of(keyAndMap(str));
 	}
 	
 	@Nullable
 	@Contract("null -> null")
 	public static Itemable<?> ofOrHolder(@Nullable String str) {
 		if (str == null) return null;
+		Material material = Material.getMaterial(str);
+		if (material != null) return ItemableStack.of(material,null);
 		Itemable<?> itemable = of(keyAndMap(str));
 		if (itemable != null) return itemable;
 		ItemStack item = (ItemStack) Utils.ObjectFromBase64(str);
