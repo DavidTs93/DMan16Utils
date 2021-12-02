@@ -70,11 +70,20 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 			DatabaseMetaData data = Utils.getConnection().getMetaData();
 			statement.execute("CREATE TABLE IF NOT EXISTS " + VERSIONS_PLAYERS_TABLE_NAME + " (UUID VARCHAR(36) NOT NULL UNIQUE," +
 					VERSIONS.values().stream().map(version -> "v" + version.replace("_","v") + " BIT(1) NOT NULL DEFAULT 0").collect(Collectors.joining(",")) + ");");
-			List<String> add = new ArrayList<>();
-			for (String version : VERSIONS.values())
-				if (!data.getColumns(null,null,VERSIONS_PLAYERS_TABLE_NAME,"v" + version.replace("_","v")).next()) add.add(version);
-			if (!add.isEmpty()) statement.execute("ALTER TABLE " + VERSIONS_PLAYERS_TABLE_NAME + " " +
-					add.stream().map(version -> "v" + version.replace("_","v") + " BIT(1) NOT NULL DEFAULT 0").collect(Collectors.joining(",")) + ";");
+//			List<Integer> versions = new ArrayList<>();
+//			Utils.chatColorsLogPlugin("&6First: " + Via.getAPI().getFullSupportedVersions().iterator().next().getClass().getName());
+//			for (Object obj : Via.getAPI().getSupportedVersions()) {
+//				Integer version = Utils.getInteger(obj);
+//				if (version != null) versions.add(version);
+//			}
+//			Utils.chatColorsLogPlugin("&6Versions: " + versions.stream().map(Object::toString).collect(Collectors.joining(",")));
+//			Collections.reverse(versions);
+			List<String> versions = VERSIONS.entrySet().stream().filter(entry -> entry.getKey() > 600).map(Map.Entry::getValue).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+			for (String version : versions) {
+				version = "v" + version.replace("_","v");
+				if (!data.getColumns(null,null,VERSIONS_PLAYERS_TABLE_NAME,version).next())
+					statement.execute("ALTER TABLE " + VERSIONS_PLAYERS_TABLE_NAME + " ADD " + version + " BIT(1) NOT NULL DEFAULT 0;");
+			}
 		}
 	}
 	

@@ -3,7 +3,7 @@ version: 1.0
 description: Utilities for PrisonPOP
 main: me.DMan16.POPUtils.POPUtilsMain
 depend: [POPUpdater]
-softdepend: [Essentials,Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion]
+softdepend: [Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion,Essentials]
 author: DMan16
 api-version: 1.17
 

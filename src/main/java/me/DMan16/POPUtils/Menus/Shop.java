@@ -2,6 +2,7 @@ package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Interfaces.Purchasable;
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -22,6 +24,26 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected  <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,
 									  @Nullable Function<P,@NotNull Boolean> doFirstMore) {
 		super(player,player,lines,name,border,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
+	}
+	
+	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
+		HashMap<Integer,Pair<V,T>> map = new HashMap<>();
+		int i,idx;
+		while (iter.hasNext()) {
+			for (i = 0; i < size; i++) {
+				if (getInnerIndex(i) == null) continue;
+				map.put(i,Pair.of(iter.next(),null));
+				if (!iter.hasNext()) break;
+			}
+			if (!map.isEmpty()) {
+				purchases.add(map);
+				map = new HashMap<>();
+			}
+		}
+	}
+	
+	protected void setPurchases(@NotNull List<@NotNull V> list) {
+		setPurchases(list.iterator());
 	}
 	
 	@Nullable
@@ -71,7 +93,9 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	
 	protected void handleAfterPurchase(boolean purchaseSuccessful, @NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,
 			@NotNull Pair<@NotNull V,@Nullable T>> page, @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
-		if (purchaseSuccessful) setPage(currentPage);
+		if (!purchaseSuccessful) return;
+		Utils.savePlayer(player);
+		reloadPage();
 	}
 	
 	@Override

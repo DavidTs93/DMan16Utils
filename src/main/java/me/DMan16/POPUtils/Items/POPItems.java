@@ -6,7 +6,6 @@ import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
@@ -18,9 +17,15 @@ import org.jetbrains.annotations.Nullable;
 import java.util.HashMap;
 
 public class POPItems implements Listener {
-	private final static NamespacedKey POPITEM_KEY = new NamespacedKey(POPUtilsMain.getInstance(),"popitem");
-	private static final HashMap<@NotNull String,@NotNull InteractableItem> ITEMS = new HashMap<>();
 	private static POPItems INSTANCE = null;
+	
+	private final NamespacedKey keyPOPItem;
+	private final HashMap<@NotNull String,@NotNull InteractableItem> items;
+	
+	private POPItems() {
+		keyPOPItem = new NamespacedKey(POPUtilsMain.getInstance(),"popitem");
+		items = new HashMap<>();
+	}
 	
 	public static void start() {
 		if (INSTANCE == null) {
@@ -30,26 +35,26 @@ public class POPItems implements Listener {
 	}
 	
 	public static boolean create(@NotNull InteractableItem item) {
-		return ITEMS.putIfAbsent(item.key(),item) == null;
+		return INSTANCE.items.putIfAbsent(item.key(),item) == null;
 	}
 	
 	@Nullable
 	public static InteractableItem get(@NotNull String key) {
-		return ITEMS.get(Utils.fixKey(key));
+		return INSTANCE.items.get(Utils.fixKey(key));
 	}
 	
 	public static boolean exists(@NotNull String key) {
-		return ITEMS.containsKey(Utils.fixKey(key));
+		return INSTANCE.items.containsKey(Utils.fixKey(key));
 	}
 	
 	@Nullable
 	public static InteractableItem get(ItemStack item) {
-		return ITEMS.get(Utils.getKeyPersistentDataContainer(item,POPITEM_KEY,PersistentDataType.STRING));
+		return INSTANCE.items.get(Utils.getKeyPersistentDataContainer(item,INSTANCE.keyPOPItem,PersistentDataType.STRING));
 	}
 	
 	@Nullable
 	public static InteractableItem get(ItemMeta meta) {
-		return ITEMS.get(Utils.getKeyPersistentDataContainer(meta,POPITEM_KEY,PersistentDataType.STRING));
+		return INSTANCE.items.get(Utils.getKeyPersistentDataContainer(meta,INSTANCE.keyPOPItem,PersistentDataType.STRING));
 	}
 	
 	public static ItemStack set(ItemStack original, @NotNull String key) {
@@ -58,7 +63,7 @@ public class POPItems implements Listener {
 	
 	public static ItemStack set(ItemStack original, @NotNull String key, boolean force) {
 		InteractableItem item = get(key);
-		return item == null ? original : Utils.setKeyPersistentDataContainer(original,POPITEM_KEY,PersistentDataType.STRING,item.key());
+		return item == null ? original : Utils.setKeyPersistentDataContainer(original,INSTANCE.keyPOPItem,PersistentDataType.STRING,item.key());
 	}
 	
 	public static ItemMeta set(ItemMeta meta, @NotNull String key) {
@@ -67,7 +72,7 @@ public class POPItems implements Listener {
 	
 	public static ItemMeta set(ItemMeta meta, @NotNull String key, boolean force) {
 		InteractableItem item = get(key);
-		return item == null ? meta : Utils.setKeyPersistentDataContainer(meta,POPITEM_KEY,PersistentDataType.STRING,item.key(),force);
+		return item == null ? meta : Utils.setKeyPersistentDataContainer(meta,INSTANCE.keyPOPItem,PersistentDataType.STRING,item.key(),force);
 	}
 	
 	@EventHandler

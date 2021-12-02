@@ -17,7 +17,10 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.Iterator;
 
 public final class POPUtilsMain extends JavaPlugin {
 	private static POPUtilsMain INSTANCE = null;
@@ -65,6 +68,7 @@ public final class POPUtilsMain extends JavaPlugin {
 	
 	private void firstOfAll() {
 		initiateMenuItems();
+		removeRecipes();
 		new EventCallers();
 		new RestrictionsCommandListener();
 		new ItemCommandListener();
@@ -87,15 +91,23 @@ public final class POPUtilsMain extends JavaPlugin {
 		PluginsItems.add(new ItemInitializerInfo("menu_previous",Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW)));
 		PluginsItems.add(new ItemInitializerInfo("menu_done",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN)));
 		PluginsItems.add(new ItemInitializerInfo("menu_ok",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN)));
-		PluginsItems.add(new ItemInitializerInfo("menu_ok_no",Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN).decoration(TextDecoration.STRIKETHROUGH,true)));
+		PluginsItems.add(new ItemInitializerInfo("menu_ok_no",Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN,TextDecoration.STRIKETHROUGH)));
 		PluginsItems.add(new ItemInitializerInfo("menu_cancel",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED)));
 		PluginsItems.add(new ItemInitializerInfo("menu_back",Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD)));
 		PluginsItems.add(new ItemInitializerInfo("menu_up",Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN)));
 		PluginsItems.add(new ItemInitializerInfo("menu_down",Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED)));
 		PluginsItems.add(new ItemInitializerInfo("menu_yes",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN)));
 		PluginsItems.add(new ItemInitializerInfo("menu_no",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED)));
-		PluginsItems.add(new ItemInitializerInfo("menu_border",Material.GRAY_STAINED_GLASS_PANE,Component.empty()));
+		PluginsItems.add(new ItemInitializerInfo("menu_border",Material.BLACK_STAINED_GLASS_PANE,Component.empty()));
 		PluginsItems.add(new ItemInitializerInfo("menu_inside",Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty()));
+		PluginsItems.add(new ItemInitializerInfo("menu_inside_dark",Material.GRAY_STAINED_GLASS_PANE,Component.empty()));
+	}
+	
+	private void removeRecipes() {
+		Iterator<Recipe> recipes = Bukkit.recipeIterator();
+		Recipe recipe;
+		while (recipes.hasNext()) if (((recipe = recipes.next()) instanceof ComplexRecipe) || (recipe instanceof ShapedRecipe) || (recipe instanceof ShapelessRecipe) ||
+				(recipe instanceof SmithingRecipe)) recipes.remove();
 	}
 	
 	public static POPUtilsMain getInstance() {

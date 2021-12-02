@@ -946,13 +946,15 @@ public class Utils {
 	}
 	
 	@Nullable
-	public static UUID getPlayerUUIDByName(@NotNull String name) {
-		return POPUpdaterMain.getPlayerUUIDByName(name);
+	@Contract("null -> null")
+	public static UUID getPlayerUUIDByName(String name) {
+		return name == null ? null : POPUpdaterMain.getPlayerUUIDByName(name);
 	}
 	
 	@Nullable
-	public static String getPlayerNameByUUID(@NotNull UUID ID) {
-		return POPUpdaterMain.getPlayerNameByUUID(ID);
+	@Contract("null -> null")
+	public static String getPlayerNameByUUID(UUID ID) {
+		return ID == null ? null : POPUpdaterMain.getPlayerNameByUUID(ID);
 	}
 	
 	@NotNull
@@ -1935,7 +1937,7 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static List<ItemStack> asAmount(ItemStack item, int amount) {
+	public static List<@NotNull ItemStack> asAmount(ItemStack item, int amount) {
 		List<ItemStack> items = new ArrayList<>();
 		if (isNull(item) || amount <= 0) return items;
 		ItemStack clone;

@@ -3,6 +3,7 @@ package me.DMan16.POPUtils.Menus;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
+import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,6 +20,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
+import java.util.List;
 
 public abstract class ListenerInventory implements Listener,Menu {
 	protected static final int LINE_SIZE = 9;
@@ -39,6 +41,22 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected void clear() {
 		inventory.clear();
+	}
+	
+	protected void clear(@NotNull List<@NotNull Integer> slots) {
+		slots.forEach(inventory::clear);
+	}
+	
+	protected void clear(int ... slots) {
+		for (int slot : slots) inventory.clear(slot);
+	}
+	
+	protected void subtract(int amount, int ... slots) {
+		for (int slot : slots) setItem(slot,Utils.subtract(getItem(slot),amount));
+	}
+	
+	protected void subtract(int amount, @NotNull List<@NotNull Integer> slots) {
+		slots.forEach(slot -> setItem(slot,Utils.subtract(getItem(slot),amount)));
 	}
 	
 	protected boolean isThisInventory(@NotNull Inventory inv) {
@@ -175,5 +193,9 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected ItemStack itemInside() {
 		return PluginsItems.getItem("menu_inside");
+	}
+	
+	protected ItemStack itemInsideDark() {
+		return PluginsItems.getItem("menu_inside_dark");
 	}
 }

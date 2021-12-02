@@ -212,7 +212,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected boolean isEmpty(@Nullable ItemStack item) {
-		return Utils.isNull(item) || Utils.sameItem(itemBorder(),item) || Utils.sameItem(itemInside(),item);
+		return Utils.isNull(item) || Utils.sameItem(itemBorder(),item) || Utils.sameItem(itemInside(),item) || Utils.sameItem(itemInsideDark(),item);
 	}
 	
 	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
