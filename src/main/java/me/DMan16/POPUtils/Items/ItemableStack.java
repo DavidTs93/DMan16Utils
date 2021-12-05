@@ -125,7 +125,7 @@ public class ItemableStack implements Itemable<ItemableStack> {
 	public static ItemableStack of(@Nullable Map<String,?> arguments) {
 		if (arguments == null) return null;
 		String material = Utils.getString(arguments.get("Material"));
-		return material == null ? null : of(Material.getMaterial(material),arguments);
+		return material == null ? null : of(Utils.getMaterial(material),arguments);
 	}
 	
 	@Override

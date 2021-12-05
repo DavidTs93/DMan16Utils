@@ -16,7 +16,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public class TextHologram implements Hologram<TextHologram> {
-	public static final double LINE_HEIGHT = 0.5;
+	public static final double LINE_HEIGHT = 0.25;
 	
 	protected int ID;
 	protected final ChatBaseComponent line;

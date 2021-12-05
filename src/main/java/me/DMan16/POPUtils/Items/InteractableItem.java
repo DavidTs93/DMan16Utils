@@ -84,9 +84,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 					if (ownedMessageOnFailedAdd) event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.prisonpop.owned",NamedTextColor.GREEN)));
 					return;
 				}
-				if (item.getAmount() == 1) item = null;
-				else item.subtract();
-				Utils.setSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.setSlot(event.getPlayer(),Utils.subtract(item,1),event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
 				Utils.savePlayer(event.getPlayer());
 			} catch (Exception e) {}
 		};
@@ -105,9 +103,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 					if (ownedMessageOnFailedAdd) event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.prisonpop.owned",NamedTextColor.GREEN)));
 					return;
 				}
-				if (item.getAmount() == 1) item = null;
-				else item.subtract();
-				Utils.setSlot(event.getPlayer(),item,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+				Utils.setSlot(event.getPlayer(),Utils.subtract(item,1),event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
 				Utils.savePlayer(event.getPlayer());
 			} catch (Exception e) {}
 		};

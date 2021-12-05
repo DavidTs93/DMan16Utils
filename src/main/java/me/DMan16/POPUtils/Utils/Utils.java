@@ -8,6 +8,7 @@ import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Classes.Trio;
+import me.DMan16.POPUtils.Enums.Rarity;
 import me.DMan16.POPUtils.Events.PlayerRequestSaveEvent;
 import me.DMan16.POPUtils.Interfaces.InterfacesUtils;
 import me.DMan16.POPUtils.Interfaces.Itemable;
@@ -64,6 +65,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -87,7 +89,7 @@ public class Utils {
 	private static final @Unmodifiable List<Integer> PLAYER_STORAGE_SLOTS;
 	private static final @Unmodifiable List<Integer> PLAYER_HOLDING_SLOTS;
 	private static final @Unmodifiable List<Integer> PLAYER_INVENTORY_SLOTS;
-	private static final Gson GSON = new GsonBuilder().create();
+	public static final Gson GSON = new GsonBuilder().create();
 	private static List<Material> interactable = null;
 	
 	static {
@@ -293,7 +295,10 @@ public class Utils {
 			str = str.trim();
 			if (str.startsWith("#")) color = TextColor.fromHexString(str);
 			else if ("0123456789".contains(str.substring(0,1))) color = TextColor.fromHexString("#" + str);
-			else color = NamedTextColor.NAMES.value(str.replace(" ","_").toLowerCase());
+			else {
+				Rarity rarity = Rarity.get(str);
+				color = rarity == null ? NamedTextColor.NAMES.value(str.replace(" ","_").toLowerCase()) : rarity.color;
+			}
 		} catch (Exception e) {}
 		return color;
 	}
@@ -305,7 +310,11 @@ public class Utils {
 			str = str.trim();
 			if (str.startsWith("#")) str = str.replaceFirst("#","");
 			if ("0123456789".contains(str.substring(0,1))) color = Color.fromRGB(Integer.parseInt(str));
-			else color = ReflectionUtils.getStaticFields(Color.class,Color.class,true).get(str.replace(" ","_").toUpperCase());
+			else {
+				Rarity rarity = Rarity.get(str);
+				color = rarity == null ? ReflectionUtils.getStaticFields(Color.class,Color.class,true).get(str.replace(" ","_").toUpperCase()) :
+						Color.fromRGB(rarity.color.value());
+			}
 		} catch (Exception e) {}
 		return color;
 	}
@@ -1144,7 +1153,7 @@ public class Utils {
 		if (text == null) return null;
 		Component comp = mapToComponent(getMapFromJSON(text));
 		if (comp == null) comp = mapToComponent(getListFromJSON(text));
-		return comp != null ? comp.color(color) : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
+		return comp != null ? comp.colorIfAbsent(color) : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
 				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
 	}
 	
@@ -1680,9 +1689,9 @@ public class Utils {
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
 		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
-		if (component.children().isEmpty()) return new ArrayList<>(Arrays.asList(map));
+		if (component.children().isEmpty()) return new ArrayList<>(List.of(map));
 		List<HashMap<String,?>> children = Utils.joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
-		return textContent != null && textContent.isEmpty() ? children : Utils.joinLists(Arrays.asList(map),children);
+		return textContent != null && textContent.isEmpty() ? children : Utils.joinLists(List.of(map),children);
 	}
 	
 	@Nullable
@@ -1936,6 +1945,10 @@ public class Utils {
 		return obj == null ? null : apply.apply(obj);
 	}
 	
+	public static <V> void runIfNotNull(@Nullable V obj, @NotNull Consumer<@NotNull V> apply) {
+		if (obj != null) apply.accept(obj);
+	}
+	
 	@NotNull
 	public static List<@NotNull ItemStack> asAmount(ItemStack item, int amount) {
 		List<ItemStack> items = new ArrayList<>();
@@ -1975,5 +1988,11 @@ public class Utils {
 		if (number.compareTo(BigInteger.ZERO) < 0) big = big.multiply(BigInteger.valueOf(-1));
 		int small = divide[1].intValue();
 		return Trio.of(big,small,exp * 3);
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Material getMaterial(@Nullable String name) {
+		return name == null ? null : Material.getMaterial(name.toUpperCase());
 	}
 }

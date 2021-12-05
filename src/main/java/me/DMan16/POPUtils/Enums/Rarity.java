@@ -1,10 +1,12 @@
 package me.DMan16.POPUtils.Enums;
 
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public enum Rarity {
 	COMMON(0,NamedTextColor.WHITE),
@@ -27,9 +29,10 @@ public enum Rarity {
 	
 	@NotNull
 	public Component displayName() {
-		return Component.translatable(prefix + name().toLowerCase(),color).decoration(TextDecoration.ITALIC,false);
+		return Utils.noItalic(Component.translatable(prefix + name().toLowerCase(),color));
 	}
 	
+	@NotNull
 	public static Rarity get(int level) {
 		if (level <= 0) return COMMON;
 		Rarity rarity = COMMON;
@@ -38,5 +41,11 @@ public enum Rarity {
 			else break;
 		}
 		return rarity;
+	}
+	
+	@Nullable
+	public static Rarity get(@NotNull String rarity) {
+		for (Rarity val : values()) if (val.name().equalsIgnoreCase(rarity)) return val;
+		return null;
 	}
 }

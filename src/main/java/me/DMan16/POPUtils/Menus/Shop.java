@@ -88,7 +88,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	
 	protected void handlePurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,
 										   @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
-		handleAfterPurchase(purchase.first().purchase(player,purchase.second()),event,slot,page,purchase,slotItem,click);
+		handleAfterPurchase(purchase.first().purchase(player,alterValueHandlePurchase(purchase.second())),event,slot,page,purchase,slotItem,click);
 	}
 	
 	protected void handleAfterPurchase(boolean purchaseSuccessful, @NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,

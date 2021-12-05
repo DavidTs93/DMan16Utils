@@ -64,7 +64,7 @@ public class ItemUtils {
 	@Contract("null,_ -> null")
 	public static <V extends Itemable<?>> V of(@Nullable String str, @NotNull Class<V> clazz) {
 		if (str == null) return null;
-		Material material = Material.getMaterial(str);
+		Material material = Utils.getMaterial(str);
 		if (material != null) return clazz == ItemableStack.class ? (V) ItemableStack.of(material,null) : null;
 		Pair<String,Map<String,?>> keyAndMap = keyAndMap(str);
 		try {
@@ -79,7 +79,7 @@ public class ItemUtils {
 	@Contract("null -> null")
 	public static Itemable<?> of(@Nullable String str) {
 		if (str == null) return null;
-		Material material = Material.getMaterial(str);
+		Material material = Utils.getMaterial(str);
 		return material != null ? ItemableStack.of(material,null) : of(keyAndMap(str));
 	}
 	
@@ -87,7 +87,7 @@ public class ItemUtils {
 	@Contract("null -> null")
 	public static Itemable<?> ofOrHolder(@Nullable String str) {
 		if (str == null) return null;
-		Material material = Material.getMaterial(str);
+		Material material = Utils.getMaterial(str);
 		if (material != null) return ItemableStack.of(material,null);
 		Itemable<?> itemable = of(keyAndMap(str));
 		if (itemable != null) return itemable;
@@ -102,6 +102,17 @@ public class ItemUtils {
 		if (key != null) try {
 			return (V) of(key,arguments);
 		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	@Nullable
+	@SuppressWarnings("unchecked")
+	public static <V> V off(@NotNull Class<V> clazz, @Nullable Map<String,?> arguments) {
+		String key = CLASS_MAP.get(clazz);
+		if (key != null) try {
+			return (V) of(key,arguments);
+		} catch (Exception e) {e.printStackTrace();}
+		else Utils.chatColorsLogPlugin("No class found?!");
 		return null;
 	}
 	
