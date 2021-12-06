@@ -20,7 +20,7 @@ import org.bukkit.Material;
 import org.bukkit.inventory.*;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.Iterator;
+import java.util.*;
 
 public final class POPUtilsMain extends JavaPlugin {
 	private static POPUtilsMain INSTANCE = null;
@@ -104,10 +104,15 @@ public final class POPUtilsMain extends JavaPlugin {
 	}
 	
 	private void removeRecipes() {
+		Set<Recipe> removed = new HashSet<>();
 		Iterator<Recipe> recipes = Bukkit.recipeIterator();
 		Recipe recipe;
 		while (recipes.hasNext()) if (((recipe = recipes.next()) instanceof ComplexRecipe) || (recipe instanceof ShapedRecipe) || (recipe instanceof ShapelessRecipe) ||
-				(recipe instanceof SmithingRecipe)) recipes.remove();
+				(recipe instanceof SmithingRecipe)) {
+			recipes.remove();
+			removed.add(recipe);
+		}
+		Utils.setRemovedRecipes(removed);
 	}
 	
 	public static POPUtilsMain getInstance() {

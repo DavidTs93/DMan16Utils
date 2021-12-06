@@ -4,7 +4,6 @@ import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -230,14 +229,4 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected abstract void setPageContents();
 	public abstract int maxPage();
 	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click);
-	
-	@NotNull
-	public static Component defaultMenuName(@NotNull String name, boolean bold) {
-		return Utils.noItalic(bold ? Component.translatable(name,NamedTextColor.DARK_GREEN,TextDecoration.BOLD) : Component.translatable(name,NamedTextColor.DARK_GREEN));
-	}
-	
-	@NotNull
-	public static Component defaultMenuName(@NotNull String name) {
-		return defaultMenuName(name,true);
-	}
 }

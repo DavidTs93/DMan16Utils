@@ -4,6 +4,9 @@ import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
 import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -81,7 +84,6 @@ public abstract class ListenerInventory implements Listener,Menu {
 	public final void unregister() {
 		if (registered) HandlerList.unregisterAll(this);
 		PLAYER_MENUS.values().remove(this);
-		afterClose();
 	}
 	
 	protected void close(boolean unregister, boolean cancelCloseUnregister) {
@@ -153,7 +155,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
-		if (isThisInventory(event.getView().getTopInventory())) for (int slot : event.getRawSlots()) if (slot < inventory.getSize()) {
+		if (isThisInventory(event.getView().getTopInventory())) for (int slot : event.getRawSlots()) if (slot < size) {
 			event.setCancelled(true);
 			return;
 		}
@@ -197,5 +199,15 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected ItemStack itemInsideDark() {
 		return PluginsItems.getItem("menu_inside_dark");
+	}
+	
+	@NotNull
+	public static Component defaultMenuName(@NotNull String name, boolean bold) {
+		return Utils.noItalic(bold ? Component.translatable(name,NamedTextColor.DARK_GREEN,TextDecoration.BOLD) : Component.translatable(name,NamedTextColor.DARK_GREEN));
+	}
+	
+	@NotNull
+	public static Component defaultMenuName(@NotNull String name) {
+		return defaultMenuName(name,true);
 	}
 }

@@ -91,6 +91,7 @@ public class Utils {
 	private static final @Unmodifiable List<Integer> PLAYER_INVENTORY_SLOTS;
 	public static final Gson GSON = new GsonBuilder().create();
 	private static List<Material> interactable = null;
+	private static Set<@NotNull Recipe> removedRecipes = null;
 	
 	static {
 		createInteractable();
@@ -936,12 +937,20 @@ public class Utils {
 		Utils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
 	}
 	
+	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage, boolean disableInventoryClicks) {
+		Utils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage,disableInventoryClicks);
+	}
+	
 	public static void removeCancelledPlayer(@NotNull Player player) {
 		Utils.getCancelPlayers().removePlayer(player);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
 		Utils.getCancelPlayers().removePlayer(player,allowRotation,disableDamage);
+	}
+	
+	public static void removeCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage, boolean disableInventoryClicks) {
+		Utils.getCancelPlayers().removePlayer(player,allowRotation,disableDamage,disableInventoryClicks);
 	}
 	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
@@ -1850,7 +1859,7 @@ public class Utils {
 			ItemStack itemStack;
 			int added;
 			for (int slot : PLAYER_HOLDING_SLOTS) {
-				itemStack = subtract(getFromSlot(player,slot),thisOrThatOrNull(toRemove.get(slot),0));
+				itemStack = subtract(applyIfNotNull(getFromSlot(player,slot),ItemStack::clone),thisOrThatOrNull(toRemove.get(slot),0));
 				if (empty.contains(slot) || isNull(itemStack)) added = item.getMaxStackSize();
 				else if (itemStack.isSimilar(item)) added = Math.max(0,item.getMaxStackSize() - itemStack.getAmount());
 				else continue;
@@ -1994,5 +2003,15 @@ public class Utils {
 	@Contract("null -> null")
 	public static Material getMaterial(@Nullable String name) {
 		return name == null ? null : Material.getMaterial(name.toUpperCase());
+	}
+	
+	public static void setRemovedRecipes(@NotNull Set<@NotNull Recipe> recipes) {
+		if (removedRecipes == null) removedRecipes = Collections.unmodifiableSet(recipes);
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static Set<@NotNull Recipe> removedRecipes() {
+		return removedRecipes;
 	}
 }

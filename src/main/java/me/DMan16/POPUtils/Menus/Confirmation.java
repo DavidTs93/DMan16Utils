@@ -16,6 +16,8 @@ import java.util.List;
 import java.util.function.Function;
 
 public abstract class Confirmation extends ListenerInventory {
+	protected static final int SLOT_MIDDLE = 2;
+	
 	protected int slotCancel;
 	protected int slotConfirm;
 	protected final Player player;
@@ -28,10 +30,8 @@ public abstract class Confirmation extends ListenerInventory {
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
-		this.register(plugin);
 		setItem(slotCancel,itemCancel());
-		setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() :
-				Utils.cloneChange(itemOkNo(),false,null,true,noConfirmLore,-1,false)));
+		setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() : Utils.addAfterLore(itemOkNo(),noConfirmLore)));
 		open(plugin,player);
 	}
 	
