@@ -63,7 +63,7 @@ public class CitizensManager {
 	}
 	
 	public boolean applySkin(@NotNull NPC npc, String name, String signature, String data) {
-		if (name != null && signature != null && data != null && (npc.getEntity() instanceof Player)) try {
+		if (name != null && signature != null && data != null) try {
 			npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(name,signature,data);
 			return true;
 		} catch (Exception e) {e.printStackTrace();}
@@ -75,7 +75,7 @@ public class CitizensManager {
 			GameProfile profile = Utils.getProfile(player);
 			Property property = Iterables.getFirst(profile.getProperties().get("textures"),null);
 			assert property != null;
-			Utils.getCitizensManager().applySkin(npc,player.getName(),property.getSignature(),property.getValue());
+			applySkin(npc,player.getName(),property.getSignature(),property.getValue());
 			return true;
 		} catch (Exception e1) {
 			e1.printStackTrace();
@@ -93,5 +93,29 @@ public class CitizensManager {
 			return true;
 		} catch (Exception e2) {}
 		return false;
+	}
+	
+	@NotNull
+	public NPC addInvisible(@NotNull NPC npc) {
+		npc.data().setPersistent("invisible",true);
+		return npc;
+	}
+	
+	@NotNull
+	public NPC removeInvisible(@NotNull NPC npc) {
+		npc.data().setPersistent("invisible",false);
+		return npc;
+	}
+	
+	@NotNull
+	public NPC addGlow(@NotNull NPC npc) {
+		npc.data().setPersistent("glowing",true);
+		return npc;
+	}
+	
+	@NotNull
+	public NPC removeGlow(@NotNull NPC npc) {
+		npc.data().setPersistent("glowing",false);
+		return npc;
 	}
 }

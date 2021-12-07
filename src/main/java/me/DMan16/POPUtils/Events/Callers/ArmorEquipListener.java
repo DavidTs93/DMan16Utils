@@ -142,7 +142,7 @@ public class ArmorEquipListener implements Listener {
 		if (!event.hasItem() || event.useItemInHand().equals(Result.DENY)) return;
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 		Player player = event.getPlayer();
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && Utils.isInteract(event.getClickedBlock().getType(),player)) return;
+		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null && Utils.isInteract(event.getClickedBlock().getType(),player)) return;
 		ItemStack item = event.getItem();
 		if (Utils.isNull(item)) return;
 		EquipmentSlot method = item.getType().getEquipmentSlot();

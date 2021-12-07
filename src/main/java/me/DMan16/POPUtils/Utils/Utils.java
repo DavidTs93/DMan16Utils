@@ -582,7 +582,7 @@ public class Utils {
 	public static List<@NotNull ItemStack> addItems(@NotNull LivingEntity entity, List<ItemStack> items) {
 		if (items == null || items.isEmpty()) return new ArrayList<>();
 		if (!(entity instanceof InventoryHolder e)) return items;
-		return new ArrayList<>(e.getInventory().addItem(items.stream().filter(item -> !Utils.isNull(item)).toArray(ItemStack[]::new)).values());
+		return new ArrayList<>(e.getInventory().addItem(items.stream().filter(item -> !isNull(item)).toArray(ItemStack[]::new)).values());
 	}
 	
 	/**
@@ -925,36 +925,36 @@ public class Utils {
 	}
 	
 	public static boolean isPlayerNPC(@NotNull Player player) {
-		if (Utils.getCitizensManager() == null) return false;
-		return Utils.getCitizensManager().isNPC(player);
+		if (getCitizensManager() == null) return false;
+		return getCitizensManager().isNPC(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player) {
-		Utils.getCancelPlayers().addPlayer(player);
+		getCancelPlayers().addPlayer(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		Utils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
+		getCancelPlayers().addPlayer(player,allowRotation,disableDamage);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage, boolean disableInventoryClicks) {
-		Utils.getCancelPlayers().addPlayer(player,allowRotation,disableDamage,disableInventoryClicks);
+		getCancelPlayers().addPlayer(player,allowRotation,disableDamage,disableInventoryClicks);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player) {
-		Utils.getCancelPlayers().removePlayer(player);
+		getCancelPlayers().removePlayer(player);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage) {
-		Utils.getCancelPlayers().removePlayer(player,allowRotation,disableDamage);
+		getCancelPlayers().removePlayer(player,allowRotation,disableDamage);
 	}
 	
 	public static void removeCancelledPlayer(@NotNull Player player, boolean allowRotation, boolean disableDamage, boolean disableInventoryClicks) {
-		Utils.getCancelPlayers().removePlayer(player,allowRotation,disableDamage,disableInventoryClicks);
+		getCancelPlayers().removePlayer(player,allowRotation,disableDamage,disableInventoryClicks);
 	}
 	
 	public static boolean isPlayerCancelled(@NotNull Player player) {
-		return Utils.getCancelPlayers().isPlayerCancelled(player);
+		return getCancelPlayers().isPlayerCancelled(player);
 	}
 	
 	public static void savePlayer(@NotNull Player player) {
@@ -1153,7 +1153,7 @@ public class Utils {
 	@Contract("!null,_ -> !null; null,_ -> null")
 	public static Component textToComponent(@Nullable String text, @Nullable TextColor color) {
 		return text == null ? null : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
+				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(chatColors(text),color)));
 	}
 	
 	@Nullable
@@ -1163,7 +1163,7 @@ public class Utils {
 		Component comp = mapToComponent(getMapFromJSON(text));
 		if (comp == null) comp = mapToComponent(getListFromJSON(text));
 		return comp != null ? comp.colorIfAbsent(color) : (text.trim().isEmpty() ? Component.empty() : noItalic(text.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(Utils.chatColors(text),color)));
+				Component.translatable(text.substring(InterfacesUtils.TRANSLATABLE.length()),color) : Component.text(chatColors(text),color)));
 	}
 	
 	@Nullable
@@ -1345,7 +1345,7 @@ public class Utils {
 	@Nullable
 	@Contract("null,_,_ -> null; !null,_,_ -> !null")
 	public static ItemStack addEnchantment(@Nullable ItemStack item, @NotNull Enchantment enchantment, int level) {
-		if (Utils.isNull(item)) return item;
+		if (isNull(item)) return item;
 		item.addUnsafeEnchantment(enchantment,level);
 		return item;
 	}
@@ -1693,14 +1693,14 @@ public class Utils {
 			map.put("text",textContent);
 		} else if (component instanceof TranslatableComponent translate) {
 			map.put("translate",translate.key());
-			if (!translate.args().isEmpty()) map.put("args",Utils.joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
+			if (!translate.args().isEmpty()) map.put("args",joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
 		} else return null;
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
 		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
 		if (component.children().isEmpty()) return new ArrayList<>(List.of(map));
-		List<HashMap<String,?>> children = Utils.joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
-		return textContent != null && textContent.isEmpty() ? children : Utils.joinLists(List.of(map),children);
+		List<HashMap<String,?>> children = joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
+		return textContent != null && textContent.isEmpty() ? children : joinLists(List.of(map),children);
 	}
 	
 	@Nullable
@@ -1716,17 +1716,17 @@ public class Utils {
 			map = (Map<String,?>) obj;
 		} catch (Exception e1) {
 			try {
-				return textToComponent(Objects.requireNonNull(Utils.getString(obj)),(TextColor) null);
+				return textToComponent(Objects.requireNonNull(getString(obj)),(TextColor) null);
 			} catch (Exception e2) {
 				return null;
 			}
 		}
 		Component comp;
-		String str = Utils.getString(map.get("text"));
+		String str = getString(map.get("text"));
 		if (str != null) {
 			if (str.equals("\n")) return Component.newline();
 			comp = Component.text(str);
-		} else if ((str = Utils.getString(map.get("translate"))) != null) {
+		} else if ((str = getString(map.get("translate"))) != null) {
 			TranslatableComponent translate = Component.translatable(str);
 			try {
 				translate = translate.args(Objects.requireNonNull(mapToComponent(map.get("args"))));
@@ -1736,11 +1736,11 @@ public class Utils {
 			}
 			comp = translate;
 		} else return null;
-		TextColor color = Utils.getTextColor(Utils.getString(map.get("color")));
+		TextColor color = getTextColor(getString(map.get("color")));
 		if (color != null) comp = comp.color(color);
 		Boolean bool;
 		for (TextDecoration decoration : TextDecoration.values()) {
-			bool = Utils.getBoolean(map.get(decoration.toString().toLowerCase()));
+			bool = getBoolean(map.get(decoration.toString().toLowerCase()));
 			if (decoration == TextDecoration.ITALIC && bool == null) bool = false;
 			if (bool != null) comp = comp.decoration(decoration,bool);
 		}
@@ -1755,13 +1755,13 @@ public class Utils {
 				list.add(listToComponent((List<?>) o));
 			} catch (Exception e1) {
 				try {
-					list.add(Objects.requireNonNull(Utils.mapToComponent(o)));
+					list.add(Objects.requireNonNull(mapToComponent(o)));
 				} catch (Exception e) {}
 			}
 			return list.isEmpty() ? null : list;
 		} catch (Exception e1) {
 			try {
-				return Arrays.stream(String.join("\n",Objects.requireNonNull(Utils.getString(obj)).split("\\n")).split("\n")).map(Utils::mapToComponent).toList();
+				return Arrays.stream(String.join("\n",Objects.requireNonNull(getString(obj)).split("\\n")).split("\n")).map(Utils::mapToComponent).toList();
 			} catch (Exception e2) {}
 		}
 		return null;
@@ -1770,7 +1770,7 @@ public class Utils {
 	@Nullable
 	public static Component listToComponent(List<?> list) {
 		if (list == null) return null;
-		return Utils.combineComponents(list.stream().map(Utils::mapToComponent).toList());
+		return combineComponents(list.stream().map(Utils::mapToComponent).toList());
 	}
 	
 	@Contract("null,_ -> null; !null,_ -> !null")

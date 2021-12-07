@@ -92,7 +92,7 @@ public class CancelPlayers implements Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void cancelDeath(PlayerDeathEvent event) {
-		event.setCancelled(true);
+		if (players.containsKey(event.getPlayer())) event.setCancelled(true);
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
