@@ -1684,23 +1684,26 @@ public class Utils {
 	
 	@Nullable
 	@Contract("null -> null")
-	public static List<HashMap<@NotNull String,?>> mapComponent(Component component) {
+	public static List<@NotNull HashMap<@NotNull String,?>> mapComponent(Component component) {
 		if (component == null) return null;
-		HashMap<String,Object> map = new HashMap<>();
+		HashMap<@NotNull String,@NotNull Object> map = new HashMap<>();
 		String textContent = null;
 		if (component instanceof TextComponent text) {
 			textContent = text.content();
 			map.put("text",textContent);
 		} else if (component instanceof TranslatableComponent translate) {
 			map.put("translate",translate.key());
-			if (!translate.args().isEmpty()) map.put("args",joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList())));
+			if (!translate.args().isEmpty()) {
+				List<HashMap<String,?>> args = joinLists(translate.args().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
+				if (!args.isEmpty()) map.put("args",args);
+			}
 		} else return null;
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
 		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
 		if (component.children().isEmpty()) return new ArrayList<>(List.of(map));
 		List<HashMap<String,?>> children = joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
-		return textContent != null && textContent.isEmpty() ? children : joinLists(List.of(map),children);
+		return textContent != null && textContent.isEmpty() ? (children.isEmpty() ? null : children) : joinLists(List.of(map),children);
 	}
 	
 	@Nullable

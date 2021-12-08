@@ -24,12 +24,12 @@ import java.util.stream.Collectors;
 public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	public final int ID;
 	public final Rarity rarity;
-	@NotNull public final String name;
-	@NotNull protected final Component defaultName;
-	@NotNull public final Component displayName;
+	public final @NotNull String name;
+	public final @NotNull Component defaultName;
+	public final @NotNull Component displayName;
 	protected final ItemStack displayItem;
 	protected final @Nullable V currency;
-	@Nullable protected final BigInteger ShopPrice;
+	protected final @Nullable BigInteger ShopPrice;
 	public final boolean isNull;
 	
 	// Null applicable
@@ -41,7 +41,7 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		if (doFirst != null) doFirst.accept((P) this);
 		this.defaultName = displayName;
 		this.displayItem = displayItem(this.defaultName);
-		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
+		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
@@ -53,9 +53,6 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	
 	// Null applicable
 	protected <P extends Applicable<V,T>> Applicable(@NotNull String displayName, @Nullable Consumer<P> doFirst) {
-//		this.defaultName = (displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-//				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),NamedTextColor.WHITE) :
-//				Component.text(Utils.chatColors(displayName),NamedTextColor.WHITE)).decoration(TextDecoration.ITALIC,false);
 		this(Utils.stringToComponent(displayName,NamedTextColor.WHITE),doFirst);
 	}
 	
@@ -71,11 +68,8 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 		if (doFirst != null) if (!doFirst.apply((P) this)) throw new IllegalArgumentException();
 		TextColor textColor = Utils.getTextColor(color);
 		this.defaultName = Utils.stringToComponent(displayName,textColor);
-//		this.defaultName = Utils.thisOrThatOrNull(Utils.mapToComponent(Utils.getMapFromJSON(displayName)),Utils.noItalic(displayName.toLowerCase().startsWith(InterfacesUtils.TRANSLATABLE) ?
-//				Component.translatable(displayName.substring(InterfacesUtils.TRANSLATABLE.length()),textColor) :
-//				Component.text(Utils.chatColors(displayName),textColor)));
 		this.displayItem = displayItem(defaultName);
-		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false,this.rarity),ItemFlag.values());
+		ItemStack bundle = Utils.makeItem(Material.BUNDLE,defaultName,lore(false),ItemFlag.values());
 		BundleMeta meta = (BundleMeta) bundle.getItemMeta();
 		meta.addItem(this.displayItem);
 		bundle.setItemMeta(meta);
@@ -123,9 +117,14 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	}
 	
 	@NotNull
+	protected List<Component> lore(boolean chosen) {
+		return lore(chosen,rarity);
+	}
+	
+	@NotNull
 	protected static List<Component> lore(boolean chosen, @NotNull Rarity rarity) {
-		return chosen ? Arrays.asList(Component.empty(),rarity.displayName(),Component.empty(),InterfacesUtils.CHOSEN) :
-				Arrays.asList(Component.empty(),rarity.displayName());
+		return new ArrayList<>(chosen ? Arrays.asList(Component.empty(),rarity.displayName(),Component.empty(),InterfacesUtils.CHOSEN) :
+				Arrays.asList(Component.empty(),rarity.displayName()));
 	}
 	
 	@NotNull

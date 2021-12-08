@@ -78,7 +78,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 //			}
 //			Utils.chatColorsLogPlugin("&6Versions: " + versions.stream().map(Object::toString).collect(Collectors.joining(",")));
 //			Collections.reverse(versions);
-			List<String> versions = VERSIONS.entrySet().stream().filter(entry -> entry.getKey() > 600).map(Map.Entry::getValue).sorted(Comparator.reverseOrder()).collect(Collectors.toList());
+			List<String> versions = VERSIONS.entrySet().stream().filter(entry -> entry.getKey() > 600).map(Map.Entry::getValue).sorted(Comparator.reverseOrder()).toList();
 			for (String version : versions) {
 				version = "v" + version.replace("_","v");
 				if (!data.getColumns(null,null,VERSIONS_PLAYERS_TABLE_NAME,version).next())
@@ -103,7 +103,8 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	public HashMap<@NotNull String,@NotNull Integer> getUses() {
 		LinkedHashMap<@NotNull String,@NotNull Integer> map = new LinkedHashMap<>();
 		try (Statement statement = Utils.getConnection().createStatement()) {
-			for (String version : VERSIONS.values()) {
+			List<String> versions = VERSIONS.entrySet().stream().filter(entry -> entry.getKey() > 600).map(Map.Entry::getValue).sorted(Comparator.reverseOrder()).toList();
+			for (String version : versions) {
 				try (ResultSet results = statement.executeQuery("SELECT SUM(" + "v" + version.replace("_","v") + ") FROM " + VERSIONS_PLAYERS_TABLE_NAME)) {
 					results.next();
 					int amount = results.getInt("SUM(" + "v" + version.replace("_","v") + ")");
