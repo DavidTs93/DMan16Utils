@@ -1788,6 +1788,21 @@ public class Utils {
 		return meta;
 	}
 	
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static ItemMeta addInsideLore(ItemMeta meta, List<Component> add, int idx) {
+		if (meta == null || add == null) return meta;
+		if (idx < 0) idx = 0;
+		List<Component> lore = new ArrayList<>();
+		if (meta.hasLore()) {
+			List<Component> oldLore = meta.lore();
+			if (oldLore != null) lore.addAll(oldLore);
+		}
+		if (idx > lore.size()) idx = lore.size();
+		lore.addAll(idx,add);
+		meta.lore(lore);
+		return meta;
+	}
+	
 	@Contract("null,_ -> null; !null,_ -> !null")
 	public static ItemMeta addAfterLore(ItemMeta meta, List<Component> add) {
 		if (meta == null || add == null) return meta;
@@ -1804,6 +1819,12 @@ public class Utils {
 	@Contract("null,_ -> null")
 	public static ItemStack addBeforeLore(ItemStack item, List<Component> add) {
 		if (!isNull(item)) item.setItemMeta(addBeforeLore(item.getItemMeta(),add));
+		return item;
+	}
+	
+	@Contract("null,_,_ -> null")
+	public static ItemStack addInsideLore(ItemStack item, List<Component> add, int idx) {
+		if (!isNull(item)) item.setItemMeta(addInsideLore(item.getItemMeta(),add,idx));
 		return item;
 	}
 	
@@ -1985,7 +2006,8 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static Trio<@NotNull BigInteger,@NotNull Integer,@NotNull Integer> formatNumber(@NotNull BigInteger number, int rounding, @Nullable Integer limitExponent) {
+	public static Trio<@NotNull BigInteger,@NotNull Integer,@NotNull Integer> formatNumber(BigInteger number, int rounding, @Nullable Integer limitExponent) {
+		if (number == null) number = BigInteger.ZERO;
 		BigDecimal num = new BigDecimal(number.abs()).setScale(rounding,RoundingMode.FLOOR);
 		if (num.compareTo(THOUSAND) < 0) return Trio.of(number,0,0);
 		if (limitExponent != null && limitExponent < 1) limitExponent = null;

@@ -22,6 +22,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -58,7 +59,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		for (int slot : slots) setItem(slot,Utils.subtract(getItem(slot),amount));
 	}
 	
-	protected void subtract(int amount, @NotNull List<@NotNull Integer> slots) {
+	protected void subtract(int amount, @NotNull Collection<@NotNull Integer> slots) {
 		slots.forEach(slot -> setItem(slot,Utils.subtract(getItem(slot),amount)));
 	}
 	
