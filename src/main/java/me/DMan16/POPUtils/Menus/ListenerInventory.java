@@ -47,7 +47,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		inventory.clear();
 	}
 	
-	protected void clear(@NotNull List<@NotNull Integer> slots) {
+	protected void clear(@NotNull Collection<@NotNull Integer> slots) {
 		slots.forEach(inventory::clear);
 	}
 	
