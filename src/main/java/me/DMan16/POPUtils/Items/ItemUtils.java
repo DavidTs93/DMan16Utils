@@ -101,7 +101,7 @@ public class ItemUtils {
 		String key = CLASS_MAP.get(clazz);
 		if (key != null) try {
 			return (V) of(key,arguments);
-		} catch (Exception e) {e.printStackTrace();}
+		} catch (Exception e) {}
 		return null;
 	}
 	
@@ -137,9 +137,9 @@ public class ItemUtils {
 	}
 	
 	@Nullable
-	@Contract("null -> null")
+	@Contract("null -> null; !null -> !null")
 	public static Itemable<?> ofOrHolder(@Nullable ItemStack item) {
-		if (Utils.isNull(item)) return null;
+		if (item == null) return null;
 		Itemable<?> itemable;
 		for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
 		return new ItemHolder(item);

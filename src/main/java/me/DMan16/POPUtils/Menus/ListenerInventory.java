@@ -24,7 +24,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 public abstract class ListenerInventory implements Listener,Menu {
 	protected static final int LINE_SIZE = 9;
@@ -111,20 +110,24 @@ public abstract class ListenerInventory implements Listener,Menu {
 		open(player);
 	}
 	
-	protected final void open(@NotNull Player player) {
-		if (!registered) return;
-		if (!openInventory(player)) return;
+	@Nullable
+	protected InventoryView open(@NotNull Player player) {
+		if (!registered) return null;
+		InventoryView view = openInventory(player);
+		if (view == null) return null;
 		PLAYER_MENUS.put(player,this);
-		afterOpen(player);
+		afterOpen(player,view);
+		return view;
 	}
 	
-	protected void afterOpen(@NotNull Player player) {}
+	protected void afterOpen(@NotNull Player player, @NotNull InventoryView view) {}
 	
-	protected final boolean openInventory(@NotNull Player player) {
+	@Nullable
+	protected final InventoryView openInventory(@NotNull Player player) {
 		InventoryView view = player.openInventory(inventory);
-		if (view == null) return false;
+		if (view == null) return null;
 		playerViews.put(player,view);
-		return true;
+		return view;
 	}
 	
 	@Nullable

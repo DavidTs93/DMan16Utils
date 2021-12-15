@@ -26,6 +26,8 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -65,6 +67,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Matcher;
@@ -74,8 +77,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class Utils {
-	private static final Pattern COLOR_PATTERN = Pattern.compile("&#[a-fA-F0-9]{6}");
-	private static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+[a-fA-F0-9]{4}");
+	public static final Pattern COLOR_PATTERN = Pattern.compile("&(#[a-fA-F0-9]{6})");
+	public static final Function<String,ChatColor> COLOR_FUNCTION = ChatColor::of;
+	public static final Pattern UNICODE_PATTERN = Pattern.compile("\\\\u\\+([a-fA-F0-9]{4})");
+	public static final Function<String,Character> UNICODE_FUNCTION = str -> (char) Integer.parseInt(str,16);
 	public static final @NotNull TextComponent KICK_MESSAGE = noItalic(Component.text("An error occurred, please try to reconnect",NamedTextColor.RED));
 	public static final @NotNull TranslatableComponent NOT_FINISHED_LOADING_MESSAGE = noItalic(Component.translatable("multiplayer.disconnect.server_shutdown",NamedTextColor.RED));
 	public static final @NotNull TranslatableComponent PLAYER_NOT_FOUND = noItalic(Component.translatable("multiplayer.prisonpop.player_not_found",NamedTextColor.RED));
@@ -115,26 +120,52 @@ public class Utils {
 		return javaVersion;
 	}
 	
+	@NotNull
+	public static String matchAndReplace(@NotNull final String str, @NotNull Pattern pattern, @NotNull Function<String,?> replace) {
+		int lastIndex = 0;
+		StringBuilder output = new StringBuilder();
+		Matcher matcher = pattern.matcher(str);
+		Object replaced;
+		while (matcher.find()) {
+			replaced = replace.apply(matcher.group(1));
+			if (replaced == null) continue;
+			output.append(str,lastIndex,matcher.start()).append(replaced);
+			lastIndex = matcher.end();
+		}
+		if (lastIndex < str.length()) output.append(str,lastIndex,str.length());
+		return output.toString();
+	}
+	
+	@NotNull
+	public static <V> String matchAndReplace(@NotNull final String str, @NotNull Pattern pattern, @NotNull BiFunction<String,V,?> replace, V val) {
+		int lastIndex = 0;
+		StringBuilder output = new StringBuilder();
+		Matcher matcher = pattern.matcher(str);
+		while (matcher.find()) {
+			output.append(str,lastIndex,matcher.start()).append(replace.apply(matcher.group(1),val));
+			lastIndex = matcher.end();
+		}
+		if (lastIndex < str.length()) output.append(str,lastIndex,str.length());
+		return output.toString();
+	}
+	
+	@NotNull
+	public static String unicode(@NotNull String str) {
+		return matchAndReplace(str,UNICODE_PATTERN,UNICODE_FUNCTION);
+	}
+	
+	@NotNull
+	public static String colors(@NotNull String str) {
+		return ChatColor.translateAlternateColorCodes('&',matchAndReplace(str,COLOR_PATTERN,COLOR_FUNCTION));
+	}
+	
 	/**
-	 * @return Strips the string from colors and converts to color code using &.
+	 * @return Converts to color code using &.
 	 * 1.16+ HEX colors can be used via &#??????.
 	 */
 	@NotNull
 	public static String chatColors(@NotNull String str) {
-//		str = chatColorsStrip(str);
-		Matcher match = UNICODE_PATTERN.matcher(str);
-		while (match.find()) {
-			String code = str.substring(match.start(),match.end());
-			str = str.replace(code,Character.toString((char) Integer.parseInt(code.replace("\\u+",""),16)));
-			match = UNICODE_PATTERN.matcher(str);
-		}
-		match = COLOR_PATTERN.matcher(str);
-		while (match.find()) {
-			String color = str.substring(match.start(),match.end());
-			str = str.replace(color,ChatColor.of(color.replace("&","")) + "");
-			match = COLOR_PATTERN.matcher(str);
-		}
-		return ChatColor.translateAlternateColorCodes('&',str);
+		return colors(unicode(str));
 	}
 	
 	@NotNull
@@ -203,8 +234,16 @@ public class Utils {
 		return Collections.unmodifiableList(newList);
 	}
 	
-	@Nullable
-	public static Component combineComponents(@NotNull List<@Nullable Component> comps) {
+	public static Component combineComponents(List<@Nullable Component> comps) {
+		Component combined = null;
+		if (comps != null) for (Component comp : comps) if (comp != null) {
+			if (combined == null) combined = comp;
+			else combined = combined.append(comp);
+		}
+		return combined;
+	}
+	
+	public static Component combineComponents(@Nullable Component ... comps) {
 		Component combined = null;
 		for (Component comp : comps) if (comp != null) {
 			if (combined == null) combined = comp;
@@ -213,12 +252,30 @@ public class Utils {
 		return combined;
 	}
 	
-	@Nullable
-	public static Component combineComponents(@Nullable Component ... comps) {
-		Component combined = null;
-		for (Component comp : comps) if (comp != null) {
-			if (combined == null) combined = comp;
-			else combined = combined.append(comp);
+	public static Component joinComponents(@NotNull Component delimiter, List<@Nullable Component> comps) {
+		if (comps == null || comps.isEmpty()) return null;
+		Component combined = comps.get(0);
+		Component comp;
+		for (int i = 1; i < comps.size(); i++) {
+			comp = comps.get(i);
+			if (comp != null) {
+				if (combined == null) combined = comp;
+				else combined = combined.append(delimiter).append(comp);
+			}
+		}
+		return combined;
+	}
+	
+	public static Component joinComponents(@NotNull Component delimiter, @Nullable Component ... comps) {
+		if (comps == null || comps.length == 0) return null;
+		Component combined = comps[0];
+		Component comp;
+		for (int i = 1; i < comps.length; i++) {
+			comp = comps[i];
+			if (comp != null) {
+				if (combined == null) combined = comp;
+				else combined = combined.append(delimiter).append(comp);
+			}
 		}
 		return combined;
 	}
@@ -1689,7 +1746,22 @@ public class Utils {
 		HashMap<@NotNull String,@NotNull Object> map = new HashMap<>();
 		String textContent = null;
 		if (component instanceof TextComponent text) {
-			textContent = text.content();
+			if (text.equals(Component.newline())) textContent = "\n";
+			else {
+				textContent = text.content();
+				if (textContent.contains("\n") && !textContent.equalsIgnoreCase("\n")) {
+					TextComponent comp = Component.empty(), empty = text.children(List.of());
+					int lastIndex = 0;
+					Matcher matcher = Pattern.compile("\n").matcher(textContent);
+					while (matcher.find()) {
+						comp = comp.append(empty.content(textContent.substring(lastIndex,matcher.start())));
+						lastIndex = matcher.end();
+						comp = comp.append(Component.newline().style(empty.style()));
+					}
+					if (lastIndex < textContent.length()) comp = comp.append(empty.content(textContent.substring(lastIndex)));
+					return mapComponent(comp.children(joinLists(comp.children(),text.children())));
+				}
+			}
 			map.put("text",textContent);
 		} else if (component instanceof TranslatableComponent translate) {
 			map.put("translate",translate.key());
@@ -1700,10 +1772,17 @@ public class Utils {
 		} else return null;
 		TextColor color = component.color();
 		if (color != null) map.put("color",(color instanceof NamedTextColor named) ? named.toString() : color.asHexString());
-		for (TextDecoration decoration : TextDecoration.values()) if (component.hasDecoration(decoration)) map.put(decoration.toString().toLowerCase(),true);
+		TextDecoration.State state;
+		boolean decorations = false;
+		for (TextDecoration decoration : TextDecoration.values()) {
+			state = component.decoration(decoration);
+			if (state != TextDecoration.State.NOT_SET) decorations = true;
+			if (state == TextDecoration.State.TRUE) map.put(decoration.toString().toLowerCase(),true);
+			else if (state == TextDecoration.State.FALSE) map.put(decoration.toString().toLowerCase(),false);
+		}
 		if (component.children().isEmpty()) return new ArrayList<>(List.of(map));
 		List<HashMap<String,?>> children = joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
-		return textContent != null && textContent.isEmpty() ? (children.isEmpty() ? null : children) : joinLists(List.of(map),children);
+		return textContent != null && textContent.isEmpty() && color == null && !decorations ? (children.isEmpty() ? null : children) : joinLists(List.of(map),children);
 	}
 	
 	@Nullable
@@ -1727,8 +1806,9 @@ public class Utils {
 		Component comp;
 		String str = getString(map.get("text"));
 		if (str != null) {
-			if (str.equals("\n")) return Component.newline();
-			comp = Component.text(str);
+			if (str.isEmpty()) comp = Component.empty();
+			else if (str.equalsIgnoreCase("\n")) comp = Component.newline();
+			else comp = Component.text(str);
 		} else if ((str = getString(map.get("translate"))) != null) {
 			TranslatableComponent translate = Component.translatable(str);
 			try {
@@ -1983,6 +2063,18 @@ public class Utils {
 	}
 	
 	@NotNull
+	public static <V> V runGetOriginal(@NotNull V obj, @NotNull Consumer<@NotNull V> apply) {
+		apply.accept(obj);
+		return obj;
+	}
+	
+	@NotNull
+	public static <V> V runGetOriginalIf(@NotNull V obj, @NotNull Consumer<@NotNull V> apply, boolean arg) {
+		if (arg) apply.accept(obj);
+		return obj;
+	}
+	
+	@NotNull
 	public static List<@NotNull ItemStack> asAmount(ItemStack item, int amount) {
 		List<ItemStack> items = new ArrayList<>();
 		if (isNull(item) || amount <= 0) return items;
@@ -2038,5 +2130,52 @@ public class Utils {
 	@Unmodifiable
 	public static Set<@NotNull Recipe> removedRecipes() {
 		return removedRecipes;
+	}
+	
+	@NotNull
+	public static Component healthComponent(@NotNull Player player) {
+		AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
+		String max = health == null ? "?" : toString(health.getValue());
+		return noItalic(Component.translatable("character.attribute.health",NamedTextColor.RED).
+				append(Component.translatable("character.attribute.of_x_x",NamedTextColor.WHITE).
+						args(Component.text(toString(player.getHealth()),NamedTextColor.AQUA),Component.text(max,NamedTextColor.GREEN))).
+				append(Component.text(" \u2665",NamedTextColor.RED)));
+	}
+	
+	@NotNull
+	public static Component armorComponent(@NotNull Player player) {
+		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR);
+		String val = armor == null ? "?" : toString(armor.getValue());
+		return noItalic(Component.translatable("attribute.name.generic.armor",NamedTextColor.DARK_GRAY).
+				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
+	}
+	
+	@NotNull
+	public static Component armorToughnessComponent(@NotNull Player player) {
+		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR);
+		String val = armor == null ? "?" : toString(armor.getValue());
+		return noItalic(Component.translatable("attribute.name.generic.armor_toughness",NamedTextColor.GRAY).
+				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
+	}
+	
+	@NotNull
+	public static Component pingComponent(@NotNull Player player) {
+		return noItalic(Component.translatable("character.attribute.ping_x",NamedTextColor.GRAY).
+				args(Component.translatable("multiplayer.status.ping",NamedTextColor.GREEN).args(Component.text(player.getPing(),NamedTextColor.AQUA))));
+	}
+	
+	@NotNull
+	private static List<Component> playerInfoHeadLore(@NotNull Player player) {
+		return List.of(healthComponent(player),armorComponent(player),armorToughnessComponent(player));
+	}
+	
+	@NotNull
+	public static ItemStack playerInfoHead(@NotNull Player player) {
+		return setSkinGetItem(makeItem(Material.PLAYER_HEAD,noItalic(player.teamDisplayName()),playerInfoHeadLore(player),ItemFlag.values()),player);
+	}
+	
+	@NotNull
+	public static ItemStack playerInfoHead(@NotNull Player player, @NotNull String skin, @Nullable String name) {
+		return setSkinGetItem(makeItem(Material.PLAYER_HEAD,noItalic(player.teamDisplayName()),playerInfoHeadLore(player),ItemFlag.values()),skin,name);
 	}
 }

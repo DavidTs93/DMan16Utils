@@ -8,6 +8,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -21,6 +22,7 @@ public abstract class Confirmation extends ListenerInventory {
 	protected int slotCancel;
 	protected int slotConfirm;
 	protected final Player player;
+	protected InventoryView view;
 	
 	@SuppressWarnings("unchecked")
 	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component name, @Nullable List<Component> noConfirmLore,
@@ -33,6 +35,13 @@ public abstract class Confirmation extends ListenerInventory {
 		setItem(slotCancel,itemCancel());
 		setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() : Utils.addAfterLore(itemOkNo(),noConfirmLore)));
 		open(plugin,player);
+	}
+	
+	@Override
+	@Nullable
+	protected final InventoryView open(@NotNull Player player) {
+		this.view = super.open(player);
+		return this.view;
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)

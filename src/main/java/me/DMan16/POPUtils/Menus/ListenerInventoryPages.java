@@ -12,6 +12,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -36,6 +37,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
 	protected final @NotNull JavaPlugin plugin;
+	protected InventoryView view;
 	
 	/**
 	 * @param lines Number of lines - NOT including the bottom (Close,Next,Previous) - 1-5
@@ -50,6 +52,13 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		setPage(1);
 		if (openOnInitialize) open(plugin,player);
+	}
+	
+	@Override
+	@Nullable
+	protected final InventoryView open(@NotNull Player player) {
+		this.view = super.open(player);
+		return this.view;
 	}
 	
 	@EventHandler
@@ -106,6 +115,11 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	@Nullable
 	protected Integer getInnerIndex(int slot) {
 		return slot < 0 || slot >= size || isBorder(slot) ? null : ((slot / 9) - 1) * 7 + (slot % 9) - 1;
+	}
+	
+	@Nullable
+	public static Integer getInnerIndex(int slot, int size, @NotNull Function<@NotNull Integer,@NotNull Boolean> isBorder) {
+		return slot < 0 || slot >= size || isBorder.apply(slot) ? null : ((slot / 9) - 1) * 7 + (slot % 9) - 1;
 	}
 	
 	public int slotBack() {

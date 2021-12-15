@@ -27,19 +27,27 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
+		purchases = toMapList(iter,size,this::isBorder);
+	}
+	
+	@NotNull
+	public static <V,T> List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> toMapList(@NotNull Iterator<@NotNull V> iter, int size,
+																											 @NotNull Function<@NotNull Integer,@NotNull Boolean> isBorder) {
+		List<HashMap<Integer,Pair<V,T>>> list = new ArrayList<>();
 		HashMap<Integer,Pair<V,T>> map = new HashMap<>();
 		int i,idx;
 		while (iter.hasNext()) {
 			for (i = 0; i < size; i++) {
-				if (getInnerIndex(i) == null) continue;
+				if (getInnerIndex(i,size,isBorder) == null) continue;
 				map.put(i,Pair.of(iter.next(),null));
 				if (!iter.hasNext()) break;
 			}
 			if (!map.isEmpty()) {
-				purchases.add(map);
+				list.add(map);
 				map = new HashMap<>();
 			}
 		}
+		return list;
 	}
 	
 	protected void setPurchases(@NotNull List<@NotNull V> list) {
