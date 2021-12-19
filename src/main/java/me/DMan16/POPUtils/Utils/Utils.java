@@ -1871,13 +1871,14 @@ public class Utils {
 	@Contract("null,_,_ -> null; !null,_,_ -> !null")
 	public static ItemMeta addInsideLore(ItemMeta meta, List<Component> add, int idx) {
 		if (meta == null || add == null) return meta;
-		if (idx < 0) idx = 0;
 		List<Component> lore = new ArrayList<>();
 		if (meta.hasLore()) {
 			List<Component> oldLore = meta.lore();
 			if (oldLore != null) lore.addAll(oldLore);
 		}
-		if (idx > lore.size()) idx = lore.size();
+		if (lore.isEmpty()) idx = 0;
+		else if (idx > lore.size()) while (idx > lore.size()) idx -= lore.size();
+		else while (idx < 0) idx += lore.size();
 		lore.addAll(idx,add);
 		meta.lore(lore);
 		return meta;
@@ -2160,7 +2161,7 @@ public class Utils {
 	
 	@NotNull
 	public static Component pingComponent(@NotNull Player player) {
-		return noItalic(Component.translatable("character.attribute.ping_x",NamedTextColor.GRAY).
+		return noItalic(Component.translatable("chat.player.ping_x",NamedTextColor.GRAY).
 				args(Component.translatable("multiplayer.status.ping",NamedTextColor.GREEN).args(Component.text(player.getPing(),NamedTextColor.AQUA))));
 	}
 	

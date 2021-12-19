@@ -108,7 +108,7 @@ public final class POPUtilsMain extends JavaPlugin {
 		Iterator<Recipe> recipes = Bukkit.recipeIterator();
 		Recipe recipe;
 		while (recipes.hasNext()) if (((recipe = recipes.next()) instanceof ComplexRecipe) || (recipe instanceof ShapedRecipe) || (recipe instanceof ShapelessRecipe) ||
-				(recipe instanceof SmithingRecipe)) {
+				(recipe instanceof SmithingRecipe) || (recipe instanceof StonecuttingRecipe)) {
 			recipes.remove();
 			removed.add(recipe);
 		}

@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Enums;
 
 public enum EquipMethod {
 	CUSTOM,
-	PICK_DROP,
+	PLACE,
 	HOTBAR_SWAP,
 	SHIFT_CLICK,
 	DRAG,

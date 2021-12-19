@@ -49,7 +49,7 @@ public class ArmorEquipListener implements Listener {
 			case PLACE_ONE:
 			case SWAP_WITH_CURSOR:
 				if (event.getSlotType() == SlotType.ARMOR) {
-					method = EquipMethod.PICK_DROP;
+					method = EquipMethod.PLACE;
 					equipSlot = fromSlot(event.getSlot());
 					oldArmor = event.getCurrentItem();
 					newArmor = event.getCursor();
