@@ -121,7 +121,7 @@ public enum Tags {
 	}
 	
 	public static boolean isExtra(@NotNull Material material) {
-		return (SHIELD.materials.contains(material) || EXTRA_TOOLS.materials.contains(material) || EXTRA_ARMORY.materials.contains(material));
+		return isToolExtra(material) || isArmorExtra(material);
 	}
 	
 	public static boolean isExtra(@NotNull ItemStack item) {

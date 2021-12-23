@@ -8,26 +8,28 @@ import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 public class ItemUtils {
-	private static final LinkedHashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new LinkedHashMap<>();
+	private static final HashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new HashMap<>();
 	private static final LinkedHashMap<@NotNull Class<?>,@NotNull String> CLASS_MAP = new LinkedHashMap<>();
 	
 	public static <V extends Itemable<?>> boolean registerItemable(@NotNull String key, @NotNull ItemableInfo<V> info) {
-		key = key.toLowerCase();
-		if (MAP.containsKey(key) || CLASS_MAP.containsKey(info.getItemableClass())) return false;
+		key = Utils.fixKey(key);
+		if (key == null || MAP.containsKey(key) || CLASS_MAP.containsKey(info.getItemableClass())) return false;
 		MAP.put(key,info);
 		CLASS_MAP.put(info.getItemableClass(),key);
 		key = CLASS_MAP.remove(ItemableStack.class);
-		if (key != null) {
-			MAP.put(key,MAP.remove(key));
-			CLASS_MAP.put(ItemableStack.class,key);
-		}
+		if (key != null) CLASS_MAP.put(ItemableStack.class,key);
 		return true;
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public static Set<@NotNull String> getRegisteredItemables() {
+		return Collections.unmodifiableSet(MAP.keySet());
 	}
 	
 	@Nullable
@@ -36,13 +38,28 @@ public class ItemUtils {
 	}
 	
 	@Nullable
+	private static Itemable<?> ofOrSubstitute(@Nullable ItemableInfo<?> info, @Nullable Map<String,?> arguments) {
+		return info == null ? null : (info.getItemableClass() == ItemableStack.class ? ItemableStack.ofOrSubstitute(arguments) : info.fromArguments(arguments));
+	}
+	
+	@Nullable
 	public static Itemable<?> of(@NotNull String key, @Nullable Map<String,?> arguments) {
 		return of(MAP.get(key.toLowerCase()),arguments);
 	}
 	
 	@Nullable
+	public static Itemable<?> ofOrSubstitute(@NotNull String key, @Nullable Map<String,?> arguments) {
+		return ofOrSubstitute(MAP.get(key.toLowerCase()),arguments);
+	}
+	
+	@Nullable
 	private static Itemable<?> of(@Nullable Pair<@NotNull String,@Nullable Map<String,?>> keyAndMap) {
 		return keyAndMap == null ? null : of(keyAndMap.first(),keyAndMap.second());
+	}
+	
+	@Nullable
+	private static Itemable<?> ofOrSubstitute(@Nullable Pair<@NotNull String,@Nullable Map<String,?>> keyAndMap) {
+		return keyAndMap == null ? null : ofOrSubstitute(keyAndMap.first(),keyAndMap.second());
 	}
 	
 	@Nullable
@@ -65,7 +82,7 @@ public class ItemUtils {
 	public static <V extends Itemable<?>> V of(@Nullable String str, @NotNull Class<V> clazz) {
 		if (str == null) return null;
 		Material material = Utils.getMaterial(str);
-		if (material != null) return clazz == ItemableStack.class ? (V) ItemableStack.of(material,null) : null;
+		if (material != null) return clazz == ItemableStack.class ? (V) ItemableStack.of(material) : null;
 		Pair<String,Map<String,?>> keyAndMap = keyAndMap(str);
 		try {
 			if (keyAndMap == null) return (V) MAP.get(CLASS_MAP.get(clazz)).fromItem((ItemStack) Objects.requireNonNull(Utils.ObjectFromBase64(str)));
@@ -73,6 +90,14 @@ public class ItemUtils {
 			return info != null && info.getItemableClass().equals(clazz) ? (V) of(info,keyAndMap.second()) : null;
 		} catch (Exception e) {}
 		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrSubstitute(@Nullable String str) {
+		if (str == null) return null;
+		Material material = Utils.getMaterial(str);
+		return material != null ? ItemableStack.ofOrSubstitute(material) : ofOrSubstitute(keyAndMap(str));
 	}
 	
 	@Nullable

@@ -16,6 +16,7 @@ import me.DMan16.POPUtils.Items.ItemUtils;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.Classes.AdvancedRecipes;
 import me.DMan16.POPUtils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ScopedComponent;
@@ -44,6 +45,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -348,33 +350,32 @@ public class Utils {
 	
 	@Nullable
 	public static TextColor getTextColor(String str) {
-		TextColor color = null;
 		if (str != null) try {
 			str = str.trim();
-			if (str.startsWith("#")) color = TextColor.fromHexString(str);
-			else if ("0123456789".contains(str.substring(0,1))) color = TextColor.fromHexString("#" + str);
-			else {
-				Rarity rarity = Rarity.get(str);
-				color = rarity == null ? NamedTextColor.NAMES.value(str.replace(" ","_").toLowerCase()) : rarity.color;
-			}
+			if (str.startsWith("#")) return TextColor.fromHexString(str);
+			try {
+				return TextColor.color(Integer.parseInt(str,16));
+			} catch (Exception e) {}
+			Rarity rarity = Rarity.get(str);
+			str = fixKey(str);
+			return rarity == null ? (str == null ? null : NamedTextColor.NAMES.value(str)) : rarity.color;
 		} catch (Exception e) {}
-		return color;
+		return null;
 	}
 	
 	@Nullable
 	public static Color getColor(String str) {
-		Color color = null;
 		if (str != null) try {
 			str = str.trim();
 			if (str.startsWith("#")) str = str.replaceFirst("#","");
-			if ("0123456789".contains(str.substring(0,1))) color = Color.fromRGB(Integer.parseInt(str));
-			else {
-				Rarity rarity = Rarity.get(str);
-				color = rarity == null ? ReflectionUtils.getStaticFields(Color.class,Color.class,true).get(str.replace(" ","_").toUpperCase()) :
-						Color.fromRGB(rarity.color.value());
-			}
+			try {
+				return Color.fromRGB(Integer.parseInt(str,16));
+			} catch (Exception e) {}
+			Rarity rarity = Rarity.get(str);
+			str = fixKey(str);
+			return rarity == null ? (str == null ? null : ReflectionUtils.getStaticFields(Color.class,Color.class,true).get(str.toUpperCase())) : Color.fromRGB(rarity.color.value());
 		} catch (Exception e) {}
-		return color;
+		return null;
 	}
 	
 	@NotNull
@@ -457,11 +458,18 @@ public class Utils {
 	public static ItemStack setDamage(@Nullable ItemStack item, int damage) {
 		if (isNull(item)) return item;
 		int maxDMG = item.getType().getMaxDurability();
-		if (maxDMG <= 0) return item;
-		Damageable meta = (Damageable) item.getItemMeta();
-		if (meta.getDamage() >= maxDMG || damage >= maxDMG) return item;
-		meta.setDamage(Math.max(damage,0));
-		item.setItemMeta(meta);
+		if (maxDMG > 0) try {
+			item.setItemMeta(runGetOriginalIf((Damageable) item.getItemMeta(),meta -> meta.setDamage(Math.max(damage,0)),damage < maxDMG));
+		} catch (Exception e) {}
+		return item;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemStack setRepairCost(@Nullable ItemStack item, @NonNegative int cost) {
+		if (!isNull(item)) try {
+			item.setItemMeta(runGetOriginal(item.getItemMeta(),meta -> ((Repairable) meta).setRepairCost(0)));
+		} catch (Exception e) {}
 		return item;
 	}
 	
@@ -470,15 +478,11 @@ public class Utils {
 	 */
 	public static boolean sameItem(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
-		item1 = Restrictions.Unstackable.remove(item1.clone());
-		item2 = Restrictions.Unstackable.remove(item2.clone());
+		item1 = setRepairCost(Restrictions.Unstackable.remove(item1.clone()),0);
+		item2 = setRepairCost(Restrictions.Unstackable.remove(item2.clone()),0);
 		if (Objects.equals(mapComponent(item1.getItemMeta().displayName()),mapComponent(item2.getItemMeta().displayName()))) {
-			ItemMeta meta1 = item1.getItemMeta();
-			ItemMeta meta2 = item2.getItemMeta();
-			meta1.displayName(null);
-			meta2.displayName(null);
-			item1.setItemMeta(meta1);
-			item2.setItemMeta(meta2);
+			item1.setItemMeta(runGetOriginal(item1.getItemMeta(),meta -> meta.displayName(null)));
+			item2.setItemMeta(runGetOriginal(item2.getItemMeta(),meta -> meta.displayName(null)));
 		}
 		return item1.isSimilar(item2);
 	}
@@ -488,22 +492,10 @@ public class Utils {
 	 */
 	public static boolean similarItem(@Nullable ItemStack item1, @Nullable ItemStack item2, boolean ignoreDurability, boolean ignoreFlags) {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
-		item1 = Restrictions.Unstackable.remove(item1.clone());
-		item2 = Restrictions.Unstackable.remove(item2.clone());
-		if (ignoreDurability) {
-			item1 = setDamage(item1,0);
-			item2 = setDamage(item2,0);
-		}
-		ItemMeta meta1 = item1.getItemMeta();
-		ItemMeta meta2 = item2.getItemMeta();
-		meta1.displayName(null);
-		meta2.displayName(null);
-		if (ignoreFlags) {
-			meta1.removeItemFlags(ItemFlag.values());
-			meta2.removeItemFlags(ItemFlag.values());
-		}
-		item1.setItemMeta(meta1);
-		item2.setItemMeta(meta2);
+		item1 = runGetOriginalIf(setRepairCost(Restrictions.Unstackable.remove(item1.clone()),0),item -> setDamage(item,0),ignoreDurability);
+		item2 = runGetOriginalIf(setRepairCost(Restrictions.Unstackable.remove(item2.clone()),0),item -> setDamage(item,0),ignoreDurability);
+		item1.setItemMeta(runGetOriginalIf(runGetOriginal(item1.getItemMeta(),meta -> meta.displayName(null)),meta -> meta.removeItemFlags(ItemFlag.values()),ignoreFlags));
+		item2.setItemMeta(runGetOriginalIf(runGetOriginal(item2.getItemMeta(),meta -> meta.displayName(null)),meta -> meta.removeItemFlags(ItemFlag.values()),ignoreFlags));
 		return item1.isSimilar(item2);
 	}
 	
@@ -1144,9 +1136,26 @@ public class Utils {
 		return Pair.of(null,null);
 	}
 	
+	
+	@NotNull
+	public static String toString(float var) {
+		return Float.isFinite(var) && var == Math.floor(var) ? Float.toString(var).split("\\.",2)[0] : Float.toString(var);
+	}
+	
+	@NotNull
 	public static String toString(double var) {
-		double floor = Math.floor(var);
-		return floor == var ? Double.toString(floor).replace(".0","") : Double.toString(var);
+		return Double.isFinite(var) && var == Math.floor(var) ? Double.toString(var).split("\\.",2)[0] : Double.toString(var);
+	}
+	
+	
+	@NotNull
+	public static String toString(float var, int digitsAfterDot) {
+		return Float.isFinite(var) && (digitsAfterDot <= 0 || var == Math.floor(var)) ? Float.toString(var).split("\\.",2)[0] : Float.toString(roundAfterDot(var,digitsAfterDot));
+	}
+	
+	@NotNull
+	public static String toString(double var, int digitsAfterDot) {
+		return Double.isFinite(var) && (digitsAfterDot <= 0 || var == Math.floor(var)) ? Double.toString(var).split("\\.",2)[0] : Double.toString(roundAfterDot(var,digitsAfterDot));
 	}
 	
 	@NotNull
@@ -1176,6 +1185,16 @@ public class Utils {
 	
 	public static PlayerVersionLogger getPlayerVersionLogger() {
 		return POPUtilsMain.getInstance().getPlayerVersionLogger();
+	}
+	
+	@NotNull
+	public static AdvancedRecipes<AnvilInventory> getAdvancedAnvilRecipes() {
+		return POPUtilsMain.getInstance().getAdvancedAnvilRecipes();
+	}
+	
+	@NotNull
+	public static AdvancedRecipes<SmithingInventory> getAdvancedSmithingRecipes() {
+		return POPUtilsMain.getInstance().getAdvancedSmithingRecipes();
 	}
 	
 	public static boolean containsTabComplete(String arg1, String arg2) {
@@ -1281,7 +1300,12 @@ public class Utils {
 		return item;
 	}
 	
-	public static <T> ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key) {
+	public static ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key, String value) {
+		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key,value));
+		return item;
+	}
+	
+	public static ItemStack setKeyPersistentDataContainer(ItemStack item, @NotNull NamespacedKey key) {
 		if (!isNull(item)) item.setItemMeta(setKeyPersistentDataContainer(item.getItemMeta(),key));
 		return item;
 	}
@@ -1313,7 +1337,11 @@ public class Utils {
 		return setKeyPersistentDataContainer(meta,key,type,value,false);
 	}
 	
-	public static <T> ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key) {
+	public static ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key, String value) {
+		return setKeyPersistentDataContainer(meta,key,PersistentDataType.STRING,value,false);
+	}
+	
+	public static ItemMeta setKeyPersistentDataContainer(ItemMeta meta, @NotNull NamespacedKey key) {
 		return setKeyPersistentDataContainer(meta,key,false);
 	}
 	
@@ -1395,8 +1423,7 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null; !null -> !null")
 	public static <V extends ScopedComponent<V>> V noItalic(@Nullable V comp) {
-		if (comp == null || comp.hasDecoration(TextDecoration.ITALIC)) return null;
-		return comp.decoration(TextDecoration.ITALIC,false);
+		return comp == null || comp.hasDecoration(TextDecoration.ITALIC) ? comp : comp.decoration(TextDecoration.ITALIC,false);
 	}
 	
 	@Nullable
@@ -1404,6 +1431,32 @@ public class Utils {
 	public static ItemStack addEnchantment(@Nullable ItemStack item, @NotNull Enchantment enchantment, int level) {
 		if (isNull(item)) return item;
 		item.addUnsafeEnchantment(enchantment,level);
+		return item;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemStack addEnchantments(@Nullable ItemStack item, @NotNull Map<@NotNull Enchantment,@NotNull Integer> enchantments) {
+		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK) {
+			EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
+			enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true));
+			item.setItemMeta(meta);
+		} else item.addUnsafeEnchantments(enchantments);
+		return item;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemStack setEnchantments(@Nullable ItemStack item, @NotNull Map<@NotNull Enchantment,@NotNull Integer> enchantments) {
+		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK) {
+			EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
+			if (meta.hasStoredEnchants()) meta.getStoredEnchants().keySet().forEach(meta::removeStoredEnchant);
+			enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true));
+			item.setItemMeta(meta);
+		} else {
+			item.getEnchantments().keySet().forEach(item::removeEnchantment);
+			item.addUnsafeEnchantments(enchantments);
+		}
 		return item;
 	}
 	
@@ -1964,7 +2017,7 @@ public class Utils {
 			ItemStack itemStack;
 			int added;
 			for (int slot : PLAYER_HOLDING_SLOTS) {
-				itemStack = subtract(applyIfNotNull(getFromSlot(player,slot),ItemStack::clone),thisOrThatOrNull(toRemove.get(slot),0));
+				itemStack = subtract(applyNotNull(getFromSlot(player,slot),ItemStack::clone),thisOrThatOrNull(toRemove.get(slot),0));
 				if (empty.contains(slot) || isNull(itemStack)) added = item.getMaxStackSize();
 				else if (itemStack.isSimilar(item)) added = Math.max(0,item.getMaxStackSize() - itemStack.getAmount());
 				else continue;
@@ -2055,12 +2108,30 @@ public class Utils {
 	}
 	
 	@Nullable
-	public static <V,T> T applyIfNotNull(@Nullable V obj, @NotNull Function<@NotNull V,T> apply) {
+	public static <V,T> T applyNotNull(@Nullable V obj, @NotNull Function<@NotNull V,T> apply) {
 		return obj == null ? null : apply.apply(obj);
 	}
 	
-	public static <V> void runIfNotNull(@Nullable V obj, @NotNull Consumer<@NotNull V> apply) {
+	@Nullable
+	public static <V,T> T applyNotNullIf(@Nullable V obj, @NotNull Function<@NotNull V,T> apply, boolean arg) {
+		return obj == null || !arg ? null : apply.apply(obj);
+	}
+	
+	@Nullable
+	public static <V,T> T applyNotNullIf(@Nullable V obj, @NotNull Function<@NotNull V,T> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
+		return obj == null || !arg.apply(obj) ? null : apply.apply(obj);
+	}
+	
+	public static <V> void runNotNull(@Nullable V obj, @NotNull Consumer<@NotNull V> apply) {
 		if (obj != null) apply.accept(obj);
+	}
+	
+	public static <V> void runNotNullIf(@Nullable V obj, @NotNull Consumer<@NotNull V> apply, boolean arg) {
+		if (obj != null && arg) apply.accept(obj);
+	}
+	
+	public static <V> void runNotNullIf(@Nullable V obj, @NotNull Consumer<@NotNull V> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
+		if (obj != null && arg.apply(obj)) apply.accept(obj);
 	}
 	
 	@NotNull
@@ -2072,6 +2143,12 @@ public class Utils {
 	@NotNull
 	public static <V> V runGetOriginalIf(@NotNull V obj, @NotNull Consumer<@NotNull V> apply, boolean arg) {
 		if (arg) apply.accept(obj);
+		return obj;
+	}
+	
+	@NotNull
+	public static <V> V runGetOriginalIf(@NotNull V obj, @NotNull Consumer<@NotNull V> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
+		if (arg.apply(obj)) apply.accept(obj);
 		return obj;
 	}
 	
@@ -2120,7 +2197,12 @@ public class Utils {
 	@Nullable
 	@Contract("null -> null")
 	public static Material getMaterial(@Nullable String name) {
-		return name == null ? null : Material.getMaterial(name.toUpperCase());
+		if (name == null) return null;
+		if (name.contains(":")) {
+			String[] split = name.split(":",2);
+			return split.length != 2 || !split[0].equalsIgnoreCase("minecraft") ? null : Material.getMaterial(split[1].toUpperCase());
+		}
+		return Material.getMaterial(name.toUpperCase());
 	}
 	
 	public static void setRemovedRecipes(@NotNull Set<@NotNull Recipe> recipes) {
@@ -2131,6 +2213,22 @@ public class Utils {
 	@Unmodifiable
 	public static Set<@NotNull Recipe> removedRecipes() {
 		return removedRecipes;
+	}
+	
+	public static int clamp(int val, int min, int max) {
+		return Math.max(min,Math.min(val,max));
+	}
+	
+	public static long clamp(long val, long min, long max) {
+		return Math.max(min,Math.min(val,max));
+	}
+	
+	public static float clamp(float val, float min, float max) {
+		return Math.max(min,Math.min(val,max));
+	}
+	
+	public static double clamp(double val, double min, double max) {
+		return Math.max(min,Math.min(val,max));
 	}
 	
 	@NotNull
@@ -2146,15 +2244,15 @@ public class Utils {
 	@NotNull
 	public static Component armorComponent(@NotNull Player player) {
 		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR);
-		String val = armor == null ? "?" : toString(armor.getValue());
+		String val = armor == null ? "?" : toString(clamp(armor.getValue(),0,20));
 		return noItalic(Component.translatable("attribute.name.generic.armor",NamedTextColor.DARK_GRAY).
 				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
 	}
 	
 	@NotNull
 	public static Component armorToughnessComponent(@NotNull Player player) {
-		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR);
-		String val = armor == null ? "?" : toString(armor.getValue());
+		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
+		String val = armor == null ? "?" : toString(clamp(armor.getValue(),0,20));
 		return noItalic(Component.translatable("attribute.name.generic.armor_toughness",NamedTextColor.GRAY).
 				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
 	}
@@ -2178,5 +2276,42 @@ public class Utils {
 	@NotNull
 	public static ItemStack playerInfoHead(@NotNull Player player, @NotNull String skin, @Nullable String name) {
 		return setSkinGetItem(makeItem(Material.PLAYER_HEAD,noItalic(player.teamDisplayName()),playerInfoHeadLore(player),ItemFlag.values()),skin,name);
+	}
+	
+	@NotNull
+	public static ItemStack addDurabilityLore(@NotNull ItemStack item, int maxDurability, int addDamage, boolean setInsteadIfDamageExists) {
+		int oldDamage;
+		if (item.getType().getMaxDurability() > 0) try {
+			oldDamage = ((Damageable) item.getItemMeta()).getDamage();
+		} catch (Exception e) {
+			return item;
+		} else return item;
+		int durability = maxDurability - oldDamage - addDamage;
+		if (durability <= 0) return new ItemStack(Material.AIR);
+		TextColor color;
+		int ratio = (int) Math.ceil(((double) maxDurability) / durability);
+		if (ratio >= 100) color = NamedTextColor.RED;
+		else if (ratio >= 20) color = NamedTextColor.GOLD;
+		else if (ratio >= 2) color = NamedTextColor.YELLOW;
+		else color = NamedTextColor.GREEN;
+		List<Component> lore = List.of(Component.empty(),
+				Utils.noItalic(Component.translatable("item.durability",NamedTextColor.WHITE,Component.text(durability,color),Component.text(maxDurability,NamedTextColor.GRAY))));
+		return setInsteadIfDamageExists && oldDamage > 0 && !item.getItemMeta().hasLore() ? Utils.setLore(item,lore) : Utils.addAfterLore(item,lore);
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static Component noDecorations(@Nullable Component comp) {
+		if (comp == null) return null;
+		for (TextDecoration decoration : TextDecoration.values()) comp = comp.decoration(decoration,TextDecoration.State.FALSE);
+		return comp;
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static <V extends ScopedComponent<V>> V noDecorations(@Nullable V comp) {
+		if (comp == null) return null;
+		for (TextDecoration decoration : TextDecoration.values()) comp = comp.decoration(decoration,TextDecoration.State.FALSE);
+		return comp;
 	}
 }

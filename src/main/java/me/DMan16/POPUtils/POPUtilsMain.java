@@ -10,6 +10,7 @@ import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.MiscListeners;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
+import me.DMan16.POPUtils.Classes.AdvancedRecipes;
 import me.DMan16.POPUtils.Restrictions.RestrictionsCommandListener;
 import me.DMan16.POPUtils.Utils.*;
 import net.kyori.adventure.text.Component;
@@ -18,7 +19,9 @@ import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.inventory.*;
+import org.bukkit.inventory.SmithingRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 
@@ -32,6 +35,8 @@ public final class POPUtilsMain extends JavaPlugin {
 	private ProtocolManager ProtocolManager = null;
 	private CancelPlayers CancelPlayers = null;
 	private PlayerVersionLogger PlayerVersionLogger = null;
+	private final AdvancedRecipes<AnvilInventory> advancedAnvilRecipes = new AdvancedRecipes<>();
+	private final AdvancedRecipes<SmithingInventory> advancedSmithingRecipes = new AdvancedRecipes<>();
 	
 	public void onLoad() {
 		INSTANCE = this;
@@ -108,7 +113,7 @@ public final class POPUtilsMain extends JavaPlugin {
 		Iterator<Recipe> recipes = Bukkit.recipeIterator();
 		Recipe recipe;
 		while (recipes.hasNext()) if (((recipe = recipes.next()) instanceof ComplexRecipe) || (recipe instanceof ShapedRecipe) || (recipe instanceof ShapelessRecipe) ||
-				(recipe instanceof SmithingRecipe) || (recipe instanceof StonecuttingRecipe)) {
+				(recipe instanceof SmithingRecipe)/* || (recipe instanceof StonecuttingRecipe)*/) {
 			recipes.remove();
 			removed.add(recipe);
 		}
@@ -141,5 +146,15 @@ public final class POPUtilsMain extends JavaPlugin {
 	
 	public PlayerVersionLogger getPlayerVersionLogger() {
 		return PlayerVersionLogger;
+	}
+	
+	@NotNull
+	public AdvancedRecipes<AnvilInventory> getAdvancedAnvilRecipes() {
+		return advancedAnvilRecipes;
+	}
+	
+	@NotNull
+	public AdvancedRecipes<SmithingInventory> getAdvancedSmithingRecipes() {
+		return advancedSmithingRecipes;
 	}
 }

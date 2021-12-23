@@ -120,7 +120,7 @@ public class ReflectionUtils {
 		return MobEffectList.fromId(ID);
 	}
 	
-	public static boolean[] addEffects(@NotNull Player player, @NotNull Cause cause, @NotNull List<PotionEffect> effects) {
+	public static boolean[] addEffects(@NotNull LivingEntity entity, @NotNull Cause cause, @NotNull List<PotionEffect> effects) {
 		if (effects.isEmpty()) return null;
 		boolean[] result = new boolean[effects.size()];
 		Arrays.fill(result,false);
@@ -129,13 +129,13 @@ public class ReflectionUtils {
 			MobEffectList mobEffectList = MobEffectFromID(effect.getType().getId());
 			if (mobEffectList == null) continue;
 			MobEffect mobEffect = new MobEffect(mobEffectList,effect.getDuration() * 20,effect.getAmplifier(),effect.isAmbient(),effect.hasParticles(),effect.hasIcon());
-			result[i] = getHandle(player).addEffect(mobEffect,cause);
+			result[i] = getHandle(entity).addEffect(mobEffect,cause);
 		}
 		return result;
 	}
 	
-	public static boolean[] addEffects(@NotNull Player player, @NotNull Cause cause, @NotNull PotionEffect ... effects) {
-		return addEffects(player,cause,Arrays.asList(effects));
+	public static boolean[] addEffects(@NotNull LivingEntity entity, @NotNull Cause cause, @NotNull PotionEffect ... effects) {
+		return addEffects(entity,cause,Arrays.asList(effects));
 	}
 	
 	public static boolean[] RemoveEffects(@NotNull Player player, @NotNull Cause cause, @NotNull List<PotionEffectType> effects) {

@@ -13,6 +13,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockDispenseArmorEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -23,6 +24,8 @@ import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class ArmorEquipListener implements Listener {
 	public ArmorEquipListener() {
@@ -40,22 +43,31 @@ public class ArmorEquipListener implements Listener {
 		ItemStack newArmor = null;
 		int hotbar = -1;
 		switch (event.getAction()) {
-			case PICKUP_ALL:
-			case PICKUP_SOME:
-			case PICKUP_HALF:
-			case PICKUP_ONE:
-			case PLACE_ALL:
-			case PLACE_SOME:
-			case PLACE_ONE:
-			case SWAP_WITH_CURSOR:
+			case PICKUP_ALL,PICKUP_SOME,PICKUP_HALF,PICKUP_ONE,COLLECT_TO_CURSOR -> {
 				if (event.getSlotType() == SlotType.ARMOR) {
-					method = EquipMethod.PLACE;
+					method = EquipMethod.PICKUP;
+					equipSlot = fromSlot(event.getSlot());
+					oldArmor = event.getCurrentItem();
+				}
+			}
+			case PLACE_ALL,PLACE_SOME,PLACE_ONE,SWAP_WITH_CURSOR -> {
+				if (event.getSlotType() == SlotType.ARMOR) {
+					if (event.getAction() == InventoryAction.SWAP_WITH_CURSOR) {
+						method = EquipMethod.CURSOR_SWAP;
+					} else method = EquipMethod.PLACE;
 					equipSlot = fromSlot(event.getSlot());
 					oldArmor = event.getCurrentItem();
 					newArmor = event.getCursor();
 				}
-				break;
-			case HOTBAR_SWAP:
+			}
+			case DROP_ONE_SLOT,DROP_ALL_SLOT -> {
+				if (event.getSlotType() == SlotType.ARMOR) {
+					method = EquipMethod.DROP;
+					equipSlot = fromSlot(event.getSlot());
+					oldArmor = event.getCurrentItem();
+				}
+			}
+			case HOTBAR_SWAP -> {
 				if (event.getSlotType() == SlotType.ARMOR) {
 					method = EquipMethod.HOTBAR_SWAP;
 					equipSlot = fromSlot(event.getSlot());
@@ -63,16 +75,15 @@ public class ArmorEquipListener implements Listener {
 					hotbar = event.getHotbarButton();
 					newArmor = player.getInventory().getItem(hotbar);
 				}
-				break;
-			case MOVE_TO_OTHER_INVENTORY:
+			}
+			case MOVE_TO_OTHER_INVENTORY -> {
 				method = EquipMethod.SHIFT_CLICK;
-				equipSlot = event.getSlotType() == SlotType.ARMOR ? fromSlot(event.getSlot()) : event.getCurrentItem().getType().getEquipmentSlot();
+				equipSlot = event.getSlotType() == SlotType.ARMOR ? fromSlot(event.getSlot()) : Objects.requireNonNull(event.getCurrentItem()).getType().getEquipmentSlot();
 				oldArmor = event.getSlotType() == SlotType.ARMOR ? event.getCurrentItem() : null;
 				newArmor = event.getSlotType() != SlotType.ARMOR ? event.getCurrentItem() : null;
-				break;
-			default: return;
+			}
 		}
-		if (method == null || equipSlot == null || oldArmor == null || newArmor == null) return;
+		if (method == null || equipSlot == null) return;
 		if (!new ArmorEquipEvent(player,method,equipSlot,oldArmor,newArmor,hotbar).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	
