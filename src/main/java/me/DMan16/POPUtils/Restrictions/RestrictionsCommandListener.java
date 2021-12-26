@@ -62,7 +62,7 @@ public class RestrictionsCommandListener implements CommandExecutor,TabCompleter
 		if (idx == 1 || idx == 2) {
 			List<String> restrictions = Restrictions.getRestrictions().stream().map(Restrictions.Restriction::name).
 					filter(name -> Utils.containsTabComplete(args[args.length - 1],name)).collect(Collectors.toList());
-			restrictions.removeAll(Arrays.stream(Arrays.copyOfRange(args,2,args.length - 1)).map(String::toLowerCase).toList());
+			restrictions.removeAll(Arrays.stream(Arrays.copyOfRange(args,1,args.length - 1)).map(String::toLowerCase).toList());
 			return restrictions;
 		}
 		return new ArrayList<>();

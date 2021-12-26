@@ -23,19 +23,21 @@ public class AdvancedRecipes<V extends Inventory> {
 	}
 	
 	@Nullable
-	@Contract("null,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>> getResult(Itemable<?> first,ItemableStack second) {
+	@Contract("null,_,_ -> null")
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>>
+	getResult(Itemable<?> first, ItemableStack second, Itemable<?> originalResult) {
 		Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>> result;
 		if (first != null) for (AdvancedRecipe<V> recipe : RECIPES.values()) {
-			result = recipe.getResult(first,second);
+			result = recipe.getResult(first,second,originalResult);
 			if (result != null) return Pair.of(recipe,result);
 		}
 		return null;
 	}
 	
 	@Nullable
-	@Contract("null,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>> getResult(ItemStack first,ItemStack second) {
-		return getResult(ItemUtils.of(first),ItemUtils.of(ItemableStack.class,second));
+	@Contract("null,_,_ -> null")
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>>
+	getResult(ItemStack first, ItemStack second, ItemStack originalResult) {
+		return getResult(ItemUtils.of(first),ItemUtils.of(ItemableStack.class,second),ItemUtils.of(originalResult));
 	}
 }

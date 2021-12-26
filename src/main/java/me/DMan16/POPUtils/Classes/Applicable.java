@@ -80,6 +80,11 @@ public abstract class Applicable<V,T> implements Purchasable<V,T> {
 	}
 	
 	@NotNull
+	public String name() {
+		return name;
+	}
+	
+	@NotNull
 	public Component giveComponent() {
 		return displayName;
 	}

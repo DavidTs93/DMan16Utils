@@ -15,16 +15,18 @@ public abstract class SuccessfulPrepareEvent<V extends Inventory> extends Event 
 	protected @Nullable Itemable<?> result;
 	protected @Nullable Itemable<?> firstAfter;
 	protected @Nullable Itemable<?> secondAfter;
+	public final @Nullable Itemable<?> originalResult;
 	private boolean cancelled;
 	
 	public SuccessfulPrepareEvent(@Nullable Itemable<?> first,@Nullable Itemable<?> second,@Nullable AdvancedRecipe<V> recipe,
-								  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter) {
+								  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter, @Nullable Itemable<?> originalResult) {
 		this.first = first;
 		this.second = second;
 		this.recipe = recipe;
 		this.result = result;
 		this.firstAfter = firstAfter;
 		this.secondAfter = secondAfter;
+		this.originalResult = originalResult;
 		this.cancelled = false;
 	}
 	

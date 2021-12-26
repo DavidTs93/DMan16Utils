@@ -82,6 +82,9 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@Nullable
 	private static ItemableStack getLegalItemableStack(@NotNull ItemStack item) {
+		if (item.getType().getMaxDurability() > 0) try {
+			if (((Damageable) item.getItemMeta()).getDamage() <= 0) item = Utils.setLore(item,null);
+		} catch (Exception e) {}
 		ItemableStack stack = new ItemableStack(item);
 		ItemableStack fromMap = of(stack.toMap());
 		return fromMap == null || !Utils.sameItem(item,fromMap.item) ? null : stack;
@@ -226,8 +229,31 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		ItemMeta meta = item.getItemMeta();
 		List<HashMap<String,?>> name = Utils.mapComponent(meta.displayName());
 		if (name != null) map.put("Name",name);
-		List<List<HashMap<@NotNull String,?>>> lore = Utils.thisOrThatOrNull(meta.lore(), new ArrayList<Component>()).stream().map(Utils::mapComponent).toList();
-		if (!lore.isEmpty()) map.put("Lore",lore);
+		List<List<HashMap<@NotNull String,?>>> lore = null;
+		if (item.getType().getMaxDurability() > 0) try {
+			int damage = ((Damageable) meta).getDamage();
+			if (damage > 0) map.put("Damage",damage);
+		} catch (Exception e) {
+		} else lore = Utils.applyNotNull(meta.lore(),l -> l.stream().map(Utils::mapComponent).toList());
+//		List<Component> originalLore = meta.lore();
+//		if (originalLore != null) {
+//			originalLore = new ArrayList<>(originalLore);
+//			Component line;
+//			Integer j = null;
+//			for (int i = 0; i < originalLore.size() - 1; i++) {
+//				line = originalLore.get(i);
+//				if (!(line instanceof TextComponent text) || !text.content().isEmpty()) continue;
+//				line = originalLore.get(i + 1);
+//				if (!(line instanceof TranslatableComponent translate) || !translate.key().equalsIgnoreCase("item.durability")) continue;
+//				j = i;
+//				break;
+//			}
+//			if (j != null) {
+//				originalLore.remove(j + 1);
+//				originalLore.remove((int) j);
+//			}
+//		}
+		if (lore != null && !lore.isEmpty()) map.put("Lore",lore);
 		if (item.getType() == Material.PLAYER_HEAD) try {
 			map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first());
 		} catch (Exception e) {}
@@ -240,10 +266,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		int flags = 0;
 		for (ItemFlag flag : meta.getItemFlags()) flags += Math.pow(2,flag.ordinal());
 		if (flags > 0) map.put("HideFlags",(short) flags);
-		if (((Damageable) meta).getDamage() > 0) map.put("Damage",((Damageable) meta).getDamage());
-//		Map<String,Integer> enchantments = new HashMap<>();
-//		for (Map.Entry<Enchantment,Integer> entry : item.getEnchantments().entrySet()) if (entry.getValue() > 0) enchantments.put(entry.getKey().getKey().getKey(),entry.getValue());
-		Map<String,Integer> enchantments = getEnchantments(item.getEnchantments());
+		Map<String,Integer> enchantments = getEnchantments(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments()));
 		if (!enchantments.isEmpty()) map.put("Enchantments",enchantments);
 		List<String> restrictions = Restrictions.getRestrictions(meta).stream().map(Restrictions.Restriction::name).toList();
 		if (!restrictions.isEmpty()) map.put("Restrictions",restrictions);

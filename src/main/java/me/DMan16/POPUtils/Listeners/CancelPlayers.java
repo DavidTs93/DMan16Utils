@@ -164,7 +164,7 @@ public class CancelPlayers implements Listener {
 		return (entity instanceof Player player) && disableInventoryClicks(player);
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.HIGHEST)
 	public void onDamage(EntityDamageEvent event) {
 		if (!disableDamage(event.getEntity())) return;
 		event.setCancelled(true);

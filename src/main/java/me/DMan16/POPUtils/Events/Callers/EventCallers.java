@@ -5,6 +5,5 @@ public class EventCallers {
 		new LoginEventsListener();
 		new ArmorEquipListener();
 		new BlockChangeListener();
-		new GeneralListeners();
 	}
 }

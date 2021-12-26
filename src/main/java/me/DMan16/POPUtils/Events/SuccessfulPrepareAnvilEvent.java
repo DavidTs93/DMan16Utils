@@ -11,8 +11,8 @@ public final class SuccessfulPrepareAnvilEvent extends SuccessfulPrepareEvent<An
 	public final PrepareAnvilEvent event;
 	
 	public SuccessfulPrepareAnvilEvent(@NotNull PrepareAnvilEvent event, @Nullable Itemable<?> first, @Nullable Itemable<?> second, @Nullable AdvancedRecipe<AnvilInventory> recipe,
-									   @Nullable Itemable<?> result, @Nullable Itemable<?> firstAfter, @Nullable Itemable<?> secondAfter) {
-		super(first,second,recipe,result,firstAfter,secondAfter);
+									   @Nullable Itemable<?> result, @Nullable Itemable<?> firstAfter, @Nullable Itemable<?> secondAfter, @Nullable Itemable<?> originalResult) {
+		super(first,second,recipe,result,firstAfter,secondAfter,originalResult);
 		this.event = event;
 	}
 	

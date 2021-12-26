@@ -17,10 +17,8 @@ import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.block.Block;
-import org.bukkit.block.Lidded;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
@@ -258,9 +256,8 @@ public class PacketUtils {
 		return packetWorldBorder(world,center,size,border.getDamageAmount(),border.getDamageBuffer(),border.getWarningDistance(),border.getWarningTime());
 	}
 	
-	@Nullable
+	@NotNull
 	public static PacketPlayOutBlockAction changeLidded(@NotNull Block block, boolean open) {
-		return (block.getState() instanceof Lidded) ?
-				new PacketPlayOutBlockAction(new BlockPosition(block.getX(),block.getY(),block.getZ()),CraftUtils.getBlockCraftMagicNumbers(block.getType()),1,open ? 1 : 0) : null;
+		return new PacketPlayOutBlockAction(new BlockPosition(block.getX(),block.getY(),block.getZ()),CraftUtils.getBlockCraftMagicNumbers(block.getType()),1,open ? 1 : 0);
 	}
 }

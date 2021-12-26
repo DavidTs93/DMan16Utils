@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Restrictions;
 
+import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
 import me.DMan16.POPUtils.Listeners.Listener;
 import me.DMan16.POPUtils.POPUtilsMain;
@@ -13,7 +14,7 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.block.BlockPlaceEvent;
-import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.enchantment.PrepareItemEnchantEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerDropItemEvent;
@@ -62,7 +63,7 @@ public class Restrictions {
 	@NotNull
 	@Unmodifiable
 	public static List<@NotNull Restriction> getRestrictions(ItemMeta meta) {
-		if (meta == null) return Arrays.asList();
+		if (meta == null) return List.of();
 		return Restrictions.restrictions.stream().filter(restriction -> restriction.is(meta)).toList();
 	}
 	
@@ -127,7 +128,7 @@ public class Restrictions {
 	
 	private static class Unequippable extends Restriction {
 		public Unequippable() {
-			super("Unequippable");
+			super("unequippable");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -139,7 +140,7 @@ public class Restrictions {
 	
 	private static class Unplaceable extends Restriction {
 		public Unplaceable() {
-			super("Unplaceable");
+			super("unplaceable");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -151,7 +152,7 @@ public class Restrictions {
 	
 	private static class Undroppable extends Restriction {
 		public Undroppable() {
-			super("Undroppable");
+			super("undroppable");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -163,19 +164,25 @@ public class Restrictions {
 	
 	private static class Unenchantable extends Restriction {
 		public Unenchantable() {
-			super("Unenchantable");
+			super("unenchantable");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-		public void onEnchantItem(EnchantItemEvent event) {
+		public void onPrepareEnchant(PrepareItemEnchantEvent event) {
 			if (!is(event.getItem())) return;
 			restrictionEvent(event,event.getItem(),event.getEnchanter(),true);
 		}
+		
+//		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+//		public void onEnchantItem(EnchantItemEvent event) {
+//			if (!is(event.getItem())) return;
+//			restrictionEvent(event,event.getItem(),event.getEnchanter(),true);
+//		}
 	}
 	
 	private static class Uncraftable extends Restriction {
 		public Uncraftable() {
-			super("Uncraftable");
+			super("uncraftable");
 		}
 		
 		@EventHandler(priority = EventPriority.LOWEST)
@@ -190,45 +197,56 @@ public class Restrictions {
 	
 	private static class Unforgeable extends Restriction {
 		public Unforgeable() {
-			super("Unforgeable");
+			super("unforgeable");
 		}
 		
-		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-		public void onForgeItem(InventoryClickEvent event) {
-			if (event.getInventory().getType() != InventoryType.ANVIL) return;
-			int slot = event.getRawSlot();
-			if (slot == 0 || slot == 1) {
-				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
-					if (is(event.getCursor())) restrictionEvent(event,event.getCursor(),event.getWhoClicked(),true);
-			} else if (slot > 2 && slot <= 38) {
-				if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
-					if (is(event.getCurrentItem())) restrictionEvent(event,event.getCurrentItem(),event.getWhoClicked(),true);
-			}
+		@EventHandler(priority = EventPriority.LOWEST)
+		public void onPrepare(PrepareSmithingEvent event) {
+			if (is(event.getResult())) if (restrictionEvent(event,event.getResult(),event.getView().getPlayer(),true)) event.setResult(null);
 		}
+		
+//		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+//		public void onForgeItem(InventoryClickEvent event) {
+//			if (event.getInventory().getType() != InventoryType.ANVIL) return;
+//			int slot = event.getRawSlot();
+//			if (slot == 0 || slot == 1) {
+//				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
+//					if (is(event.getCursor())) restrictionEvent(event,event.getCursor(),event.getWhoClicked(),true);
+//			} else if (slot > 2 && slot <= 38) {
+//				if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
+//					if (is(event.getCurrentItem())) restrictionEvent(event,event.getCurrentItem(),event.getWhoClicked(),true);
+//			}
+//		}
 	}
 	
 	private static class Ungrindable extends Restriction {
 		public Ungrindable() {
-			super("Ungrindable");
+			super("ungrindable");
 		}
 		
-		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-		public void onGrindItem(InventoryClickEvent event) {
-			if (event.getInventory().getType() != InventoryType.GRINDSTONE) return;
-			int slot = event.getRawSlot();
-			if (slot == 0 || slot == 1) {
-				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
-					if (is(event.getCursor())) restrictionEvent(event,event.getCursor(),event.getWhoClicked(),true);
-			} else if (slot > 2 && slot <= 38) {
-				if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
-					if (is(event.getCurrentItem())) restrictionEvent(event,event.getCurrentItem(),event.getWhoClicked(),true);
-			}
+		@EventHandler(priority = EventPriority.LOWEST)
+		public void onPrepare(PrepareResultEvent event) {
+			if ((event.getInventory() instanceof GrindstoneInventory grindstone) && is(event.getResult()))
+				if (restrictionEvent(event,event.getResult(),event.getView().getPlayer(),true)) event.setResult(null);
 		}
+		
+//		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+//		public void onGrindItem(InventoryClickEvent event) {
+//			if (event.getInventory().getType() != InventoryType.GRINDSTONE) return;
+//			int slot = event.getRawSlot();
+//			if (slot == 0 || slot == 1) {
+//				if (event.getAction() == InventoryAction.HOTBAR_SWAP || event.getAction().name().startsWith("PLACE") || event.getAction() == InventoryAction.SWAP_WITH_CURSOR)
+//					if (is(event.getCursor())) restrictionEvent(event,event.getCursor(),event.getWhoClicked(),true);
+//			} else if (slot > 2 && slot <= 38) {
+//				if (event.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
+//					if (is(event.getCurrentItem())) restrictionEvent(event,event.getCurrentItem(),event.getWhoClicked(),true);
+//			}
+//		}
 	}
 	
 	private static class Unfuelable extends Restriction {
 		public Unfuelable() {
-			super("Unfuelable");
+			super("unfuelable");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
@@ -253,7 +271,7 @@ public class Restrictions {
 	
 	private static class Unstackable extends Restriction {
 		public Unstackable() {
-			super("Unstackable");
+			super("unstackable");
 		}
 		
 		@NotNull
@@ -294,13 +312,13 @@ public class Restrictions {
 	
 	private static class Untradeable extends Restriction {
 		public Untradeable() {
-			super("Untradeable");
+			super("untradeable");
 		}
 	}
 	
 	private static class DropRemove extends Restriction {
 		public DropRemove() {
-			super("DropRemove");
+			super("drop_remove");
 		}
 		
 		@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -349,7 +367,7 @@ public class Restrictions {
 		private final String name;
 		
 		private Restriction(@NotNull String name) {
-			this.name = Utils.splitCapitalize(name.toLowerCase().replace("_"," ")).replace(" ","");
+			this.name = Utils.fixKey(name);
 			register(POPUtilsMain.getInstance());
 		}
 		

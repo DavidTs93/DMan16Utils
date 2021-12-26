@@ -111,6 +111,12 @@ public class Utils {
 		PLAYER_INVENTORY_SLOTS = Collections.unmodifiableList(slots);
 	}
 	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static <V> V self(@Nullable V val) {
+		return val;
+	}
+	
 	@NotNull
 	public static String javaVersion() {
 		String javaVersion = "";
@@ -480,9 +486,20 @@ public class Utils {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
 		item1 = setRepairCost(Restrictions.Unstackable.remove(item1.clone()),0);
 		item2 = setRepairCost(Restrictions.Unstackable.remove(item2.clone()),0);
-		if (Objects.equals(mapComponent(item1.getItemMeta().displayName()),mapComponent(item2.getItemMeta().displayName()))) {
+		Component displayName1 = item1.getItemMeta().displayName();
+		Component displayName2 = item2.getItemMeta().displayName();
+		List<Component> lore1 = item1.getItemMeta().lore();
+		List<Component> lore2 = item2.getItemMeta().lore();
+		if ((displayName1 == null) != (displayName2 == null) || (lore1 == null) != (lore2 == null)) return false;
+		if (displayName1 != null) {
+			if (!Objects.equals(mapComponent(item1.getItemMeta().displayName()),mapComponent(item2.getItemMeta().displayName()))) return false;
 			item1.setItemMeta(runGetOriginal(item1.getItemMeta(),meta -> meta.displayName(null)));
 			item2.setItemMeta(runGetOriginal(item2.getItemMeta(),meta -> meta.displayName(null)));
+		}
+		if (lore1 != null) {
+			if (!Objects.equals(applyNotNull(lore1,l -> l.stream().map(Utils::mapComponent).toList()),applyNotNull(lore2,l -> l.stream().map(Utils::mapComponent).toList()))) return false;
+			item1.setItemMeta(Utils.runGetOriginal(item1.getItemMeta(),meta -> meta.lore(null)));
+			item2.setItemMeta(Utils.runGetOriginal(item2.getItemMeta(),meta -> meta.lore(null)));
 		}
 		return item1.isSimilar(item2);
 	}
@@ -542,6 +559,7 @@ public class Utils {
 	/**
 	 * @return stored Enchantments in an Enchanted Book
 	 */
+	@Nullable
 	public static Map<Enchantment,Integer> getStoredEnchants(ItemStack item) {
 		if (isNull(item)) return null;
 		if (item.getType() != Material.ENCHANTED_BOOK) return null;
@@ -974,8 +992,7 @@ public class Utils {
 	}
 	
 	public static boolean isPlayerNPC(@NotNull Player player) {
-		if (getCitizensManager() == null) return false;
-		return getCitizensManager().isNPC(player);
+		return getCitizensManager() != null && getCitizensManager().isNPC(player);
 	}
 	
 	public static void addCancelledPlayer(@NotNull Player player) {
@@ -1829,9 +1846,13 @@ public class Utils {
 		boolean decorations = false;
 		for (TextDecoration decoration : TextDecoration.values()) {
 			state = component.decoration(decoration);
-			if (state != TextDecoration.State.NOT_SET) decorations = true;
-			if (state == TextDecoration.State.TRUE) map.put(decoration.toString().toLowerCase(),true);
-			else if (state == TextDecoration.State.FALSE) map.put(decoration.toString().toLowerCase(),false);
+			if (state == TextDecoration.State.TRUE) {
+				map.put(decoration.toString().toLowerCase(),true);
+				decorations = true;
+			} else if (state == TextDecoration.State.FALSE) {
+				map.put(decoration.toString().toLowerCase(),false);
+				decorations = true;
+			}
 		}
 		if (component.children().isEmpty()) return new ArrayList<>(List.of(map));
 		List<HashMap<String,?>> children = joinLists(component.children().stream().map(Utils::mapComponent).filter(Objects::nonNull).collect(Collectors.toList()));
@@ -1865,7 +1886,7 @@ public class Utils {
 		} else if ((str = getString(map.get("translate"))) != null) {
 			TranslatableComponent translate = Component.translatable(str);
 			try {
-				translate = translate.args(Objects.requireNonNull(mapToComponent(map.get("args"))));
+				translate = translate.args(Objects.requireNonNull(mapToListComponent(map.get("args"))));
 			} catch (Exception e) {
 				List<Component> args = mapToListComponent(map.get("args"));
 				if (args != null && !args.isEmpty()) translate = translate.args(args);
@@ -1877,7 +1898,7 @@ public class Utils {
 		Boolean bool;
 		for (TextDecoration decoration : TextDecoration.values()) {
 			bool = getBoolean(map.get(decoration.toString().toLowerCase()));
-			if (decoration == TextDecoration.ITALIC && bool == null) bool = false;
+//			if (decoration == TextDecoration.ITALIC && bool == null) bool = false;
 			if (bool != null) comp = comp.decoration(decoration,bool);
 		}
 		return comp;
@@ -2234,7 +2255,7 @@ public class Utils {
 	@NotNull
 	public static Component healthComponent(@NotNull Player player) {
 		AttributeInstance health = player.getAttribute(Attribute.GENERIC_MAX_HEALTH);
-		String max = health == null ? "?" : toString(health.getValue());
+		String max = health == null ? "?" : toString(roundAfterDot(health.getValue(),2));
 		return noItalic(Component.translatable("character.attribute.health",NamedTextColor.RED).
 				append(Component.translatable("character.attribute.of_x_x",NamedTextColor.WHITE).
 						args(Component.text(toString(player.getHealth()),NamedTextColor.AQUA),Component.text(max,NamedTextColor.GREEN))).
@@ -2244,7 +2265,7 @@ public class Utils {
 	@NotNull
 	public static Component armorComponent(@NotNull Player player) {
 		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR);
-		String val = armor == null ? "?" : toString(clamp(armor.getValue(),0,20));
+		String val = armor == null ? "?" : toString(clamp(roundAfterDot(armor.getValue(),2),0,20));
 		return noItalic(Component.translatable("attribute.name.generic.armor",NamedTextColor.DARK_GRAY).
 				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
 	}
@@ -2252,7 +2273,7 @@ public class Utils {
 	@NotNull
 	public static Component armorToughnessComponent(@NotNull Player player) {
 		AttributeInstance armor = player.getAttribute(Attribute.GENERIC_ARMOR_TOUGHNESS);
-		String val = armor == null ? "?" : toString(clamp(armor.getValue(),0,20));
+		String val = armor == null ? "?" : toString(clamp(roundAfterDot(armor.getValue(),2),0,20));
 		return noItalic(Component.translatable("attribute.name.generic.armor_toughness",NamedTextColor.GRAY).
 				append(Component.translatable("character.attribute.of_x",NamedTextColor.WHITE).args(Component.text(val,NamedTextColor.AQUA))));
 	}
@@ -2280,12 +2301,11 @@ public class Utils {
 	
 	@NotNull
 	public static ItemStack addDurabilityLore(@NotNull ItemStack item, int maxDurability, int addDamage, boolean setInsteadIfDamageExists) {
-		int oldDamage;
+		Integer oldDamage = null;
 		if (item.getType().getMaxDurability() > 0) try {
 			oldDamage = ((Damageable) item.getItemMeta()).getDamage();
-		} catch (Exception e) {
-			return item;
-		} else return item;
+		} catch (Exception e) {}
+		if (oldDamage == null) return item;
 		int durability = maxDurability - oldDamage - addDamage;
 		if (durability <= 0) return new ItemStack(Material.AIR);
 		TextColor color;
@@ -2296,7 +2316,7 @@ public class Utils {
 		else color = NamedTextColor.GREEN;
 		List<Component> lore = List.of(Component.empty(),
 				Utils.noItalic(Component.translatable("item.durability",NamedTextColor.WHITE,Component.text(durability,color),Component.text(maxDurability,NamedTextColor.GRAY))));
-		return setInsteadIfDamageExists && oldDamage > 0 && !item.getItemMeta().hasLore() ? Utils.setLore(item,lore) : Utils.addAfterLore(item,lore);
+		return setInsteadIfDamageExists && oldDamage > 0 && item.getItemMeta().hasLore() ? Utils.setLore(item,lore) : Utils.addAfterLore(item,lore);
 	}
 	
 	@Nullable

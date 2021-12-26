@@ -87,8 +87,11 @@ public abstract class ListenerInventory implements Listener,Menu {
 	}
 	
 	protected void close(boolean unregister, boolean cancelCloseUnregister) {
-		if (unregister) unregister();
-		else if (cancelCloseUnregister) this.cancelCloseUnregister = true;
+		if (unregister) {
+			unregister();
+			afterCloseUnregister(null);
+			afterClose();
+		} else if (cancelCloseUnregister) this.cancelCloseUnregister = true;
 		inventory.close();
 	}
 	
