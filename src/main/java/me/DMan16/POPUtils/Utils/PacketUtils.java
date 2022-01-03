@@ -29,14 +29,23 @@ public class PacketUtils {
 	public static float ARMOR_STAND_HEIGHT_SMALL = 0.9875f;
 	
 	public static void sendPackets(@NotNull Player player, Packet<?> ... packets) {
+		if (packets.length <= 0) return;
 		EntityPlayer handle = ReflectionUtils.getHandle(player);
 		for (Packet<?> packet : packets) if (packet != null) handle.b.sendPacket(packet);
 	}
 	
-	public static void sendPackets(@NotNull Player player, List<Packet<?>> packets) {
+	public static void sendPackets(@NotNull Player player, Collection<? extends Packet<?>> packets) {
 		if (packets == null) return;
 		EntityPlayer handle = ReflectionUtils.getHandle(player);
 		for (Packet<?> packet : packets) if (packet != null) handle.b.sendPacket(packet);
+	}
+	
+	public static void sendPackets(@NotNull Collection<@NotNull Player> players, Packet<?> ... packets) {
+		if (players.size() > 0 && packets.length > 0) players.forEach(player -> sendPackets(player,packets));
+	}
+	
+	public static void sendPackets(@NotNull Collection<@NotNull Player> players, Collection<? extends Packet<?>> packets) {
+		if (players.size() > 0 && packets != null) players.forEach(player -> sendPackets(player,packets));
 	}
 	
 //	public static int getNextEntityID() {
@@ -157,7 +166,7 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static DataWatcher createDataWatcherArmorStandName(IChatBaseComponent name) {
+	public static DataWatcher createDataWatcherName(IChatBaseComponent name) {
 		DataWatcher data = new DataWatcher(null);
 		data.register(new DataWatcherObject<>(2,DataWatcherRegistry.f),Optional.ofNullable(name));
 		data.register(new DataWatcherObject<>(3,DataWatcherRegistry.i),true);

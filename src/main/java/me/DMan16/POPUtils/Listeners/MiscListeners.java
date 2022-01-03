@@ -55,15 +55,15 @@ public class MiscListeners implements Listener {
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
-	public void onGiveTool(PlayerCommandPreprocessEvent event) {
-		if (DISABLED_GIVE_MATERIALS.isEmpty()) return;
+	public void onCommand(PlayerCommandPreprocessEvent event) {
 		String cmd = event.getMessage();
 		if (cmd.startsWith("/")) cmd = cmd.replaceFirst("/","");
 		String[] split = cmd.split(" ",3);
 		if (split.length < 2) return;
 		String command = split[0];
 		if (command.contains(":")) command = command.split(":")[1];
-		if (!command.equalsIgnoreCase("give")) return;
+		else if (command.equalsIgnoreCase("enchant")) return;
+		if (!command.equalsIgnoreCase("give") || DISABLED_GIVE_MATERIALS.isEmpty()) return;
 		Material material = Utils.getMaterial(split[1].split("\\{",2)[0]);
 		if (material == null || !DISABLED_GIVE_MATERIALS.contains(material)) return;
 		event.setCancelled(true);

@@ -148,18 +148,15 @@ public class ArmorEquipListener implements Listener {
 		if (armorEquipEvent.isCancelled()) event.setCancelled(true);
 	}*/
 	
-	@EventHandler(priority = EventPriority.LOWEST)
+	@EventHandler(priority = EventPriority.HIGHEST)
 	public void playerInteractEvent(PlayerInteractEvent event) {
-		if (!event.hasItem() || event.useItemInHand().equals(Result.DENY)) return;
-		if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
-		Player player = event.getPlayer();
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && event.getClickedBlock() != null && Utils.isInteract(event.getClickedBlock().getType(),player)) return;
 		ItemStack item = event.getItem();
-		if (Utils.isNull(item)) return;
+		if (!event.hasItem() || event.useItemInHand().equals(Result.DENY) || Utils.isInteract(event) || Utils.isNull(item)) return;
+		if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 		EquipmentSlot method = item.getType().getEquipmentSlot();
 		if (method != EquipmentSlot.HEAD && method != EquipmentSlot.CHEST && method != EquipmentSlot.LEGS && method != EquipmentSlot.FEET) return;
 		if (nonArmorHelmet(item.getType())) return;
-		if (!Utils.isNull(player.getInventory().getItem(method))) return;
+		if (!Utils.isNull(event.getPlayer().getInventory().getItem(method))) return;
 		if (!new ArmorEquipEvent(event.getPlayer(),EquipMethod.RIGHT_CLICK,method,null,item).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	

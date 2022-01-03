@@ -14,6 +14,10 @@ commands:
     permission: prisonpop.command.restrictions
   item:
     permission: prisonpop.command.item
+  book:
+    permission: prisonpop.command.book
+  enchant:
+    permission: prisonpop.command.enchant
   test_effect:
     permission: prisonpop.command.test_effect
 permissions:
@@ -22,6 +26,10 @@ permissions:
   prisonpop.command.restrictions:
     default: op
   prisonpop.command.item:
+    default: op
+  prisonpop.command.book:
+    default: op
+  prisonpop.command.enchant:
     default: op
   prisonpop.command.test_effect:
     default: op

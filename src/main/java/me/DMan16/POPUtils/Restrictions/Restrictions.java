@@ -68,9 +68,9 @@ public class Restrictions {
 	}
 	
 	@Nullable
-	public static Restriction byName(@NotNull String name) {
-		name = name.replace(" ","_");
-		if (!name.isEmpty()) for (Restriction restriction : restrictions) if (restriction.name().equalsIgnoreCase(name)) return restriction;
+	@Contract("null -> null")
+	public static Restriction byName(@Nullable String name) {
+		if ((name = Utils.fixKey(name)) != null) for (Restriction restriction : restrictions) if (restriction.name().equalsIgnoreCase(name)) return restriction;
 		return null;
 	}
 	

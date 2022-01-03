@@ -9,12 +9,14 @@ import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLivingEntity;
 import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
 import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_17_R1.scoreboard.CraftScoreboard;
 import org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 
 public class CraftUtils {
@@ -51,6 +53,11 @@ public class CraftUtils {
 	@NotNull
 	public static CraftWorld toCraft(@NotNull World world) {
 		return (CraftWorld) world;
+	}
+	
+	@NotNull
+	public static CraftScoreboard toCraft(@NotNull Scoreboard scoreboard) {
+		return (CraftScoreboard) scoreboard;
 	}
 	
 	public static Block getBlockCraftMagicNumbers(@NotNull Material material) {

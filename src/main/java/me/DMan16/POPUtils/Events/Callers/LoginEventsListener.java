@@ -6,9 +6,11 @@ import me.DMan16.POPUtils.Events.SuccessfulLoginEvent;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 
 import java.sql.Statement;
@@ -21,7 +23,8 @@ public class LoginEventsListener implements Listener {
 	
 	@EventHandler(priority = EventPriority.LOWEST)
 	public void onSuccessfulLogin(me.DMan16.POPUpdater.AllowLoginEvent event) {
-		new SuccessfulLoginEvent(event.event).callEventAndDoTasksIfNotCancelled();
+		SuccessfulLoginEvent loginEvent = new SuccessfulLoginEvent(event.event);
+		if (!loginEvent.callEventAndDoTasksIfNotCancelled()) event.event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,Utils.thisOrThatOrNull(loginEvent.kickMessage(),Component.empty()));
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST)
@@ -36,6 +39,6 @@ public class LoginEventsListener implements Listener {
 		} catch (Exception e) {
 			joinEvent.disallow(e);
 		}
-		joinEvent.callEventAndDoTasksIfNotCancelled();
+		if (!joinEvent.callEventAndDoTasksIfNotCancelled()) event.getPlayer().kick(Utils.KICK_MESSAGE);
 	}
 }

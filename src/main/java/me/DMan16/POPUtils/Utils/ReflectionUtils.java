@@ -13,6 +13,7 @@ import org.bukkit.event.entity.EntityPotionEffectEvent.Cause;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Unmodifiable;
 
@@ -106,6 +107,10 @@ public class ReflectionUtils {
 	
 	public static WorldServer getHandle(@NotNull World world) {
 		return CraftUtils.toCraft(world).getHandle();
+	}
+	
+	public static net.minecraft.world.scores.Scoreboard getHandle(@NotNull Scoreboard scoreboard) {
+		return CraftUtils.toCraft(scoreboard).getHandle();
 	}
 	
 	public static net.minecraft.world.entity.Entity getHandle(@NotNull Entity entity) {

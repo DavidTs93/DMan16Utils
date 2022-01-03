@@ -1,13 +1,16 @@
 package me.DMan16.POPUtils.Events;
 
 import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.player.AsyncPlayerPreLoginEvent;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class SuccessfulLoginEvent extends Event implements Cancellable {
 	public final AsyncPlayerPreLoginEvent event;
 	private boolean cancelled;
+	private Component kickMessage;
 	
 	public SuccessfulLoginEvent(@NotNull AsyncPlayerPreLoginEvent event) {
 		super(true);
@@ -19,18 +22,25 @@ public class SuccessfulLoginEvent extends Event implements Cancellable {
 		return cancelled;
 	}
 	
-	public void setCancelled(boolean cancel) {
-		cancelled = cancel;
-	}
+	/**
+	 * Can't be changed once it's disabled!
+	 * Use {@link #disallow(Exception)} or {@link #notLoaded()} instead
+	 */
+	public void setCancelled(boolean cancel) {}
 	
 	public void disallow(@NotNull Exception exception) {
+		cancelled = true;
+		kickMessage = Utils.KICK_MESSAGE;
 		exception.printStackTrace();
-		event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,Utils.KICK_MESSAGE);
-		setCancelled(true);
 	}
 	
 	public void notLoaded() {
-		event.disallow(AsyncPlayerPreLoginEvent.Result.KICK_OTHER,Utils.NOT_FINISHED_LOADING_MESSAGE);
-		setCancelled(true);
+		cancelled = true;
+		kickMessage = Utils.NOT_FINISHED_LOADING_MESSAGE;
+	}
+	
+	@Nullable
+	public Component kickMessage() {
+		return kickMessage;
 	}
 }

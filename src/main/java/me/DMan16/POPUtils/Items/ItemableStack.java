@@ -9,8 +9,11 @@ import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Color;
+import org.bukkit.DyeColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.block.banner.Pattern;
+import org.bukkit.block.banner.PatternType;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
@@ -23,6 +26,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public class ItemableStack implements Itemable<ItemableStack>,Amountable<ItemableStack> {
 	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
@@ -60,8 +64,20 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@NotNull
+	public static List<Component> enchantmentsLore(@NotNull Map<Enchantment,Integer> enchantments) {
+		return new ArrayList<>(enchantments.entrySet()).stream().sorted(Comparator.comparing(entry -> entry.getKey().getKey().getKey())).
+				map(entry -> Utils.applyOrOriginalIf(Utils.noItalic(Component.translatable(entry.getKey().translationKey(),NamedTextColor.GRAY)),line -> line.append(Component.space()).
+						append(Component.translatable("enchantment.level." + entry.getValue())),entry.getKey().getMaxLevel() > 1)).collect(Collectors.toList());
+	}
+	
+	@NotNull
 	public ItemStack asItem() {
-		return Utils.addDurabilityLore(item.clone(),item.getType().getMaxDurability(),0,true);
+		if (material() == Material.ENCHANTED_BOOK) {
+			Map<Enchantment,Integer> enchantments = Utils.getStoredEnchants(item);
+			if (enchantments == null || enchantments.size() != 1) return new ItemStack(Material.BOOK);
+			return Utils.setEnchantments(Utils.makeItem(Material.ENCHANTED_BOOK,null,enchantmentsLore(enchantments),ItemFlag.values()),enchantments);
+		}
+		return Utils.addDurabilityLore(item.clone(),material().getMaxDurability(),0,true);
 	}
 	
 	@NotNull
@@ -87,7 +103,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		} catch (Exception e) {}
 		ItemableStack stack = new ItemableStack(item);
 		ItemableStack fromMap = of(stack.toMap());
-		return fromMap == null || !Utils.sameItem(item,fromMap.item) ? null : stack;
+		return fromMap == null || (item.getType() != Material.ENCHANTED_BOOK && !Utils.sameItem(item,fromMap.item)) ? null : stack;
 	}
 	
 	@Nullable
@@ -126,7 +142,6 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@NotNull
-	@SuppressWarnings("deprecation")
 	public static Map<@NotNull Enchantment,@NotNull Integer> getEnchantments(Object obj) {
 		HashMap<Enchantment,Integer> enchants = new HashMap<>();
 		Enchantment enchant;
@@ -137,21 +152,43 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 			Map<?,?> enchantment;
 			for (Object o : enchantments) try {
 				enchantment = (Map<?,?>) o;
-				enchant = Enchantment.getByName(Utils.getString(enchantment.get("id")));
+				enchant = Utils.getEnchantment(Utils.getString(enchantment.get("id")));
 				level = Utils.getInteger(enchantment.get("lvl"));
 				if (enchant != null && level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
 			} catch (Exception e1) {}
 		} catch (Exception e) {
-			Map<?,?> enchantments = (Map<?,?>) obj;
-			String name;
-			for (Map.Entry<?,?> entry : enchantments.entrySet()) try {
-				name = Objects.requireNonNull(Utils.getString(entry.getKey()));
-				level = Utils.getInteger(entry.getValue());
-				enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
-				if (level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
+			try {
+				Map<?,?> enchantments = (Map<?,?>) obj;
+				String name;
+				for (Map.Entry<?,?> entry : enchantments.entrySet()) try {
+					name = Objects.requireNonNull(Utils.getString(entry.getKey()));
+					level = Utils.getInteger(entry.getValue());
+					enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
+					if (level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
+				} catch (Exception e3) {}
 			} catch (Exception e2) {}
 		}
 		return enchants;
+	}
+	
+	@NotNull
+	public static List<@NotNull Map<@NotNull String,@NotNull String>> getPatterns(@NotNull List<@NotNull Pattern> patterns) {
+		return patterns.stream().map(pattern -> Map.of("pattern",pattern.getPattern().name(),"color",pattern.getColor().name())).toList();
+	}
+	
+	@NotNull
+	public static List<@NotNull Pattern> getPatterns(Object obj) {
+		List<@NotNull Pattern> patterns = new ArrayList<>();
+		if (obj != null) try {
+			List<?> list = (List<?>) obj;
+			Map<?,?> map;
+			for (Object o : list) try {
+				map = (Map<?,?>) o;
+				patterns.add(new Pattern(DyeColor.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("color"))),String::toUpperCase)),
+						PatternType.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("pattern"))),String::toUpperCase))));
+			} catch (Exception e1) {}
+		} catch (Exception e) {}
+		return patterns;
 	}
 	
 	@NotNull
@@ -177,8 +214,9 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		if (!legal(material)) return null;
 		ItemStack item = new ItemStack(material);
 		if (arguments == null) return new ItemableStack(item);
-		Integer damage = Utils.getInteger(arguments.get("Damage"));
+		if (material == Material.ENCHANTED_BOOK) return new ItemableStack(Utils.addEnchantments(item,getEnchantments(arguments.get("Enchantments"))));
 		ItemMeta meta = item.getItemMeta();
+		Integer damage = Utils.getInteger(arguments.get("Damage"));
 		if (damage != null) {
 			if (damage >= material.getMaxDurability()) return new ItemableStack(item);
 			else if (damage >= 0) try {
@@ -195,13 +233,12 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		if (skin != null && material == Material.PLAYER_HEAD) Utils.setSkin((SkullMeta) meta,skin,null);
 		meta.addItemFlags(getFlags(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("HideFlags")),0)));
 		if (Tags.LEATHER.contains(material)) ((LeatherArmorMeta) meta).setColor(Utils.getColor(Utils.getString(arguments.get("Color"))));
+		else if (material == Material.SHIELD || material.name().endsWith("_BANNER")) Utils.setPatterns(meta,getPatterns(arguments.get("Patterns")));
 		item.setItemMeta(meta);
 		item.setAmount(Math.max(1,Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("Amount")),1)));
 		item = Utils.addEnchantments(item,getEnchantments(arguments.get("Enchantments")));
-		try {
-			Restrictions.addRestrictions(item,
-					((List<?>) arguments.get("Restrictions")).stream().map(Utils::getString).filter(Objects::nonNull).map(Restrictions::byName).filter(Objects::nonNull).toList());
-		} catch (Exception e) {}
+		if (arguments.get("Restrictions") instanceof List<?> restrictions)
+			Restrictions.addRestrictions(item,restrictions.stream().map(Utils::getString).map(Restrictions::byName).filter(Objects::nonNull).toList());
 		return new ItemableStack(item);
 	}
 	
@@ -226,15 +263,17 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	public Map<@NotNull String,?> toMap() {
 		HashMap<String,Object> map = new HashMap<>();
 		map.put("Material",item.getType().name());
+		if (item.getType() == Material.ENCHANTED_BOOK) {
+			Utils.runNotNullIf(Utils.applyNotNull(Utils.getStoredEnchants(item),ItemableStack::getEnchantments),enchants -> map.put("Enchantments",enchants),enchants -> !enchants.isEmpty());
+			return map;
+		}
 		ItemMeta meta = item.getItemMeta();
-		List<HashMap<String,?>> name = Utils.mapComponent(meta.displayName());
-		if (name != null) map.put("Name",name);
-		List<List<HashMap<@NotNull String,?>>> lore = null;
+		Utils.runNotNull(Utils.mapComponent(meta.displayName()), name -> map.put("Name",name));
 		if (item.getType().getMaxDurability() > 0) try {
 			int damage = ((Damageable) meta).getDamage();
 			if (damage > 0) map.put("Damage",damage);
 		} catch (Exception e) {
-		} else lore = Utils.applyNotNull(meta.lore(),l -> l.stream().map(Utils::mapComponent).toList());
+		} else Utils.runNotNullIf(Utils.applyNotNull(meta.lore(),lore -> lore.stream().map(Utils::mapComponent).toList()),lore -> map.put("Lore",lore),lore -> !lore.isEmpty());
 //		List<Component> originalLore = meta.lore();
 //		if (originalLore != null) {
 //			originalLore = new ArrayList<>(originalLore);
@@ -253,7 +292,6 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 //				originalLore.remove((int) j);
 //			}
 //		}
-		if (lore != null && !lore.isEmpty()) map.put("Lore",lore);
 		if (item.getType() == Material.PLAYER_HEAD) try {
 			map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first());
 		} catch (Exception e) {}
@@ -262,14 +300,11 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		if (meta.hasCustomModelData() && (model = meta.getCustomModelData()) > 0) map.put("Model",model);
 		Color color;
 		if (Tags.LEATHER.contains(item.getType())) if ((color = ((LeatherArmorMeta) meta).getColor()) != DEFAULT_LEATHER_COLOR) map.put("Color",color.asRGB());
-		if (amount() > 1) map.put("Amount",amount());
-		int flags = 0;
-		for (ItemFlag flag : meta.getItemFlags()) flags += Math.pow(2,flag.ordinal());
-		if (flags > 0) map.put("HideFlags",(short) flags);
-		Map<String,Integer> enchantments = getEnchantments(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments()));
-		if (!enchantments.isEmpty()) map.put("Enchantments",enchantments);
-		List<String> restrictions = Restrictions.getRestrictions(meta).stream().map(Restrictions.Restriction::name).toList();
-		if (!restrictions.isEmpty()) map.put("Restrictions",restrictions);
+		if (item.getMaxStackSize() > 1 && amount() > 1) map.put("Amount",amount());
+		Utils.runNotNullIf(meta.getItemFlags().stream().map(flag -> Math.pow(2,flag.ordinal())).mapToInt(Double::intValue).sum(),sum -> map.put("HideFlags",sum.shortValue()),sum -> sum > 0);
+		Utils.runNotNullIf(getEnchantments(item.getEnchantments()),enchants -> map.put("Enchantments",enchants),enchants -> !enchants.isEmpty());
+		Utils.runNotNullIf(Utils.applyNotNull(Utils.getPatterns(item),ItemableStack::getPatterns),patterns -> map.put("Patterns",patterns),patterns -> !patterns.isEmpty());
+		Utils.runNotNullIf(Restrictions.getRestrictions(meta).stream().map(Restrictions.Restriction::name).toList(),restrict -> map.put("Restrictions",restrict),restrict -> !restrict.isEmpty());
 		return map;
 	}
 	

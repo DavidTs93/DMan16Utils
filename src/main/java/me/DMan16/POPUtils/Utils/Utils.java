@@ -29,6 +29,7 @@ import net.md_5.bungee.api.ChatColor;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.block.Banner;
 import org.bukkit.command.CommandSender;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
@@ -486,10 +487,10 @@ public class Utils {
 		if (isNull(item1) || isNull(item2)) return item1 == item2;
 		item1 = setRepairCost(Restrictions.Unstackable.remove(item1.clone()),0);
 		item2 = setRepairCost(Restrictions.Unstackable.remove(item2.clone()),0);
-		Component displayName1 = item1.getItemMeta().displayName();
-		Component displayName2 = item2.getItemMeta().displayName();
-		List<Component> lore1 = item1.getItemMeta().lore();
-		List<Component> lore2 = item2.getItemMeta().lore();
+		Component displayName1 = applyNotNullIf(item1.getItemMeta(),ItemMeta::displayName,ItemMeta::hasDisplayName);
+		Component displayName2 = applyNotNullIf(item2.getItemMeta(),ItemMeta::displayName,ItemMeta::hasDisplayName);
+		List<Component> lore1 = applyNotNullIf(item1.getItemMeta(),ItemMeta::lore,ItemMeta::hasLore);
+		List<Component> lore2 = applyNotNullIf(item2.getItemMeta(),ItemMeta::lore,ItemMeta::hasLore);
 		if ((displayName1 == null) != (displayName2 == null) || (lore1 == null) != (lore2 == null)) return false;
 		if (displayName1 != null) {
 			if (!Objects.equals(mapComponent(item1.getItemMeta().displayName()),mapComponent(item2.getItemMeta().displayName()))) return false;
@@ -560,7 +561,8 @@ public class Utils {
 	 * @return stored Enchantments in an Enchanted Book
 	 */
 	@Nullable
-	public static Map<Enchantment,Integer> getStoredEnchants(ItemStack item) {
+	@Unmodifiable
+	public static Map<@NotNull Enchantment,@NotNull Integer> getStoredEnchants(ItemStack item) {
 		if (isNull(item)) return null;
 		if (item.getType() != Material.ENCHANTED_BOOK) return null;
 		return ((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants();
@@ -897,8 +899,7 @@ public class Utils {
 	}
 	
 	public static boolean isInteract(@NotNull Material material, @NotNull Player player) {
-		if (isInteractable(material)) return !player.isSneaking();
-		return false;
+		return isInteractable(material) && !player.isSneaking();
 	}
 	
 	public static boolean isInteract(@NotNull PlayerInteractEvent event) {
@@ -1446,19 +1447,18 @@ public class Utils {
 	@Nullable
 	@Contract("null,_,_ -> null; !null,_,_ -> !null")
 	public static ItemStack addEnchantment(@Nullable ItemStack item, @NotNull Enchantment enchantment, int level) {
-		if (isNull(item)) return item;
-		item.addUnsafeEnchantment(enchantment,level);
+		if (!isNull(item)) if (item.getType() == Material.ENCHANTED_BOOK)
+			item.setItemMeta(runGetOriginal((EnchantmentStorageMeta) item.getItemMeta(),meta -> meta.addStoredEnchant(enchantment,level,true)));
+		else item.addUnsafeEnchantment(enchantment,level);
 		return item;
 	}
 	
 	@Nullable
 	@Contract("null,_ -> null; !null,_ -> !null")
 	public static ItemStack addEnchantments(@Nullable ItemStack item, @NotNull Map<@NotNull Enchantment,@NotNull Integer> enchantments) {
-		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK) {
-			EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
-			enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true));
-			item.setItemMeta(meta);
-		} else item.addUnsafeEnchantments(enchantments);
+		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK)
+			item.setItemMeta(runGetOriginal((EnchantmentStorageMeta) item.getItemMeta(),meta -> enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true))));
+		else item.addUnsafeEnchantments(enchantments);
 		return item;
 	}
 	
@@ -2139,8 +2139,26 @@ public class Utils {
 	}
 	
 	@Nullable
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply, boolean arg) {
+		return obj == null || !arg ? obj : apply.apply(obj);
+	}
+	
+	@Nullable
 	public static <V,T> T applyNotNullIf(@Nullable V obj, @NotNull Function<@NotNull V,T> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
 		return obj == null || !arg.apply(obj) ? null : apply.apply(obj);
+	}
+	
+	@Nullable
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
+		return obj == null || !arg.apply(obj) ? obj : apply.apply(obj);
+	}
+	
+	@NotNull
+	public static <V,T> V applyGetOriginal(@NotNull V obj, @NotNull Function<@NotNull V,T> apply) {
+		apply.apply(obj);
+		return obj;
 	}
 	
 	public static <V> void runNotNull(@Nullable V obj, @NotNull Consumer<@NotNull V> apply) {
@@ -2333,5 +2351,40 @@ public class Utils {
 		if (comp == null) return null;
 		for (TextDecoration decoration : TextDecoration.values()) comp = comp.decoration(decoration,TextDecoration.State.FALSE);
 		return comp;
+	}
+	
+	@Nullable
+	@Contract("null,_ -> null; !null,_ -> !null")
+	public static ItemMeta setPatterns(ItemMeta meta, List<org.bukkit.block.banner.Pattern> patterns) {
+		if (meta != null) try {
+			((BannerMeta) meta).setPatterns(patterns == null ? new ArrayList<>() : patterns);
+		} catch (Exception e1) {
+			try {
+				Utils.runNotNull((BlockStateMeta) meta,bannerMeta -> bannerMeta.setBlockState(Utils.runGetOriginal((Banner) bannerMeta.getBlockState(),
+						banner -> Utils.runGetOriginal(banner,b -> b.setPatterns(patterns == null ? new ArrayList<>() : patterns)).update())));
+			} catch (Exception e2) {}
+		}
+		return meta;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static List<org.bukkit.block.banner.Pattern> getPatterns(ItemStack item) {
+		if (!isNull(item)) try {
+			return ((BannerMeta) item.getItemMeta()).getPatterns();
+		} catch (Exception e1) {
+			try {
+				return ((Banner) ((BlockStateMeta) item.getItemMeta()).getBlockState()).getPatterns();
+			} catch (Exception e2) {}
+		}
+		return null;
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Enchantment getEnchantment(String name) {
+		if ((name = fixKey(name)) == null) return null;
+		for (Enchantment enchantment : Enchantment.values()) if (enchantment.getKey().getKey().equalsIgnoreCase(name)) return enchantment;
+		return null;
 	}
 }

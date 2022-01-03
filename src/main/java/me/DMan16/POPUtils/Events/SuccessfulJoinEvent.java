@@ -1,6 +1,5 @@
 package me.DMan16.POPUtils.Events;
 
-import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.event.Cancellable;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.jetbrains.annotations.NotNull;
@@ -18,13 +17,15 @@ public class SuccessfulJoinEvent extends Event implements Cancellable {
 		return cancelled;
 	}
 	
-	public void setCancelled(boolean cancel) {
-		cancelled = cancel;
-	}
+	/**
+	 * Can't be changed once it's disabled!
+	 * Use {@link #disallow(Exception)} instead
+	 */
+	@Deprecated
+	public void setCancelled(boolean cancel) {}
 	
 	public void disallow(@NotNull Exception exception) {
+		cancelled = true;
 		exception.printStackTrace();
-		event.getPlayer().kick(Utils.KICK_MESSAGE);
-		setCancelled(true);
 	}
 }

@@ -43,7 +43,7 @@ public class HologramsManager implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
 	public void onJoin(SuccessfulJoinEvent event) {
-		spawn(event.event.getPlayer(),event.event.getPlayer().getWorld());
+		event.delayedTasks().add(() -> spawn(event.event.getPlayer(),event.event.getPlayer().getWorld()));
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
