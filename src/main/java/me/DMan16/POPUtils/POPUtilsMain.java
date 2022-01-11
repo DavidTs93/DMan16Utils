@@ -118,7 +118,19 @@ public final class POPUtilsMain extends JavaPlugin {
 				(recipe instanceof SmithingRecipe)/* || (recipe instanceof StonecuttingRecipe)*/) {
 			recipes.remove();
 			removed.add(recipe);
-		}
+		}/* else if (recipe instanceof FurnaceRecipe furnace) {
+			Utils.chatColorsLogPlugin("&aFurnace recipe: &b" + furnace.getKey().getKey() + "&a, input: &b" + furnace.getInput().getType().name() + "&a, result: &b" +
+					furnace.getResult().getType().name() + "&a, time: &b" + furnace.getCookingTime() + "&a, XP: &b" + furnace.getExperience() + "&a, group: &b" + furnace.getGroup());
+		} else if (recipe instanceof BlastingRecipe blast) {
+			Utils.chatColorsLogPlugin("&aBlasting recipe: &b" + blast.getKey().getKey() + "&a, input: &b" + blast.getInput().getType().name() + "&a, result: &b" +
+					blast.getResult().getType().name() + "&a, time: &b" + blast.getCookingTime() + "&a, XP: &b" + blast.getExperience() + "&a, group: &b" + blast.getGroup());
+		} else if (recipe instanceof SmokingRecipe smoke) {
+			Utils.chatColorsLogPlugin("&aSmoking recipe: &b" + smoke.getKey().getKey() + "&a, input: &b" + smoke.getInput().getType().name() + "&a, result: &b" +
+					smoke.getResult().getType().name() + "&a, time: &b" + smoke.getCookingTime() + "&a, XP: &b" + smoke.getExperience() + "&a, group: &b" + smoke.getGroup());
+		} else if (recipe instanceof CampfireRecipe camp) {
+			Utils.chatColorsLogPlugin("&aCampfire recipe: &b" + camp.getKey().getKey() + "&a, input: &b" + camp.getInput().getType().name() + "&a, result: &b" +
+					camp.getResult().getType().name() + "&a, time: &b" + camp.getCookingTime() + "&a, XP: &b" + camp.getExperience() + "&a, group: &b" + camp.getGroup());
+		}*/
 		Utils.setRemovedRecipes(removed);
 	}
 	

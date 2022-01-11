@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Events.Callers;
 
+import me.DMan16.POPUtils.Enums.ArmorSlot;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Enums.EquipMethod;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
@@ -24,8 +25,7 @@ import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
-
-import java.util.Objects;
+import org.jetbrains.annotations.Nullable;
 
 public class ArmorEquipListener implements Listener {
 	public ArmorEquipListener() {
@@ -38,7 +38,7 @@ public class ArmorEquipListener implements Listener {
 				!(event.getWhoClicked() instanceof Player player)) return;
 		if (event.getSlotType() != SlotType.ARMOR && event.getSlotType() != SlotType.QUICKBAR && event.getSlotType() != SlotType.CONTAINER) return;
 		EquipMethod method = null;
-		EquipmentSlot equipSlot = null;
+		ArmorSlot equipSlot = null;
 		ItemStack oldArmor = null;
 		ItemStack newArmor = null;
 		int hotbar = -1;
@@ -78,7 +78,7 @@ public class ArmorEquipListener implements Listener {
 			}
 			case MOVE_TO_OTHER_INVENTORY -> {
 				method = EquipMethod.SHIFT_CLICK;
-				equipSlot = event.getSlotType() == SlotType.ARMOR ? fromSlot(event.getSlot()) : Objects.requireNonNull(event.getCurrentItem()).getType().getEquipmentSlot();
+				equipSlot = event.getSlotType() == SlotType.ARMOR ? fromSlot(event.getSlot()) : Utils.applyNotNull(event.getCurrentItem(),item -> ArmorSlot.get(item.getType().getEquipmentSlot()));
 				oldArmor = event.getSlotType() == SlotType.ARMOR ? event.getCurrentItem() : null;
 				newArmor = event.getSlotType() != SlotType.ARMOR ? event.getCurrentItem() : null;
 			}
@@ -87,11 +87,12 @@ public class ArmorEquipListener implements Listener {
 		if (!new ArmorEquipEvent(player,method,equipSlot,oldArmor,newArmor,hotbar).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	
-	private EquipmentSlot fromSlot(int slot) {
-		if (slot == 36) return EquipmentSlot.FEET;
-		else if (slot == 37) return EquipmentSlot.LEGS;
-		else if (slot == 38) return EquipmentSlot.CHEST;
-		else if (slot == 39) return EquipmentSlot.HEAD;
+	@Nullable
+	public static ArmorSlot fromSlot(int slot) {
+		if (slot == 36) return ArmorSlot.BOOTS;
+		else if (slot == 37) return ArmorSlot.LEGGINGS;
+		else if (slot == 38) return ArmorSlot.CHESTPLATE;
+		else if (slot == 39) return ArmorSlot.HELMET;
 		return null;
 	}
 	
@@ -153,38 +154,38 @@ public class ArmorEquipListener implements Listener {
 		ItemStack item = event.getItem();
 		if (!event.hasItem() || event.useItemInHand().equals(Result.DENY) || Utils.isInteract(event) || Utils.isNull(item)) return;
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
-		EquipmentSlot method = item.getType().getEquipmentSlot();
-		if (method != EquipmentSlot.HEAD && method != EquipmentSlot.CHEST && method != EquipmentSlot.LEGS && method != EquipmentSlot.FEET) return;
-		if (nonArmorHelmet(item.getType())) return;
-		if (!Utils.isNull(event.getPlayer().getInventory().getItem(method))) return;
-		if (!new ArmorEquipEvent(event.getPlayer(),EquipMethod.RIGHT_CLICK,method,null,item).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
+		ArmorSlot slot = ArmorSlot.get(item.getType().getEquipmentSlot());
+		if (slot == null || nonArmorHelmet(item.getType()) || !Utils.isNull(event.getPlayer().getInventory().getItem(slot.equipSlot))) return;
+		if (!new ArmorEquipEvent(event.getPlayer(),EquipMethod.RIGHT_CLICK,slot,null,item).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void inventoryDrag(InventoryDragEvent event) {
 		if (event.getRawSlots().isEmpty()) return;
-		int slot = event.getRawSlots().stream().findFirst().orElse(0);
-		EquipmentSlot method = event.getOldCursor().getType().getEquipmentSlot();
-		if (slot != getSlot(method)) return;
-		if (!new ArmorEquipEvent((Player) event.getWhoClicked(),EquipMethod.DRAG,method,null,event.getOldCursor()).callEventAndDoTasksIfNotCancelled()) {
-			event.setResult(Result.DENY);
-			event.setCancelled(true);
-		}
+		int slotNum = event.getRawSlots().stream().findFirst().orElse(0);
+		ArmorSlot slot = ArmorSlot.get(event.getOldCursor().getType().getEquipmentSlot());
+		if (slot == null || slotNum != getSlot(slot.equipSlot)) return;
+		if (new ArmorEquipEvent((Player) event.getWhoClicked(),EquipMethod.DRAG,slot,null,event.getOldCursor()).callEventAndDoTasksIfNotCancelled()) return;
+		event.setResult(Result.DENY);
+		event.setCancelled(true);
 	}
 	
-	private int getSlot(@NotNull EquipmentSlot method) {
-		if (method == EquipmentSlot.HEAD) return 5;
-		if (method == EquipmentSlot.CHEST) return 6;
-		if (method == EquipmentSlot.LEGS) return 7;
-		if (method == EquipmentSlot.FEET) return 8;
-		return -1;
+	public static int getSlot(@NotNull EquipmentSlot method) {
+		return switch (method) {
+			case HEAD -> 5;
+			case CHEST -> 6;
+			case LEGS -> 7;
+			case FEET -> 8;
+			default -> -1;
+		};
 	}
 
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void itemBreakEvent(PlayerItemBreakEvent event) {
-		EquipmentSlot method = event.getBrokenItem().getType().getEquipmentSlot();
+		ArmorSlot slot = ArmorSlot.get(event.getBrokenItem().getType().getEquipmentSlot());
+		if (slot == null) return;
 		Player player = event.getPlayer();
-		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.BROKE,method,event.getBrokenItem(),null);
+		ArmorEquipEvent armorEquipEvent = new ArmorEquipEvent(player,EquipMethod.BROKE,slot,event.getBrokenItem(),null);
 		armorEquipEvent.callEventAndDoTasks();
 	}
 	
@@ -197,18 +198,17 @@ public class ArmorEquipListener implements Listener {
 		ItemStack leggings = player.getInventory().getLeggings();
 		ItemStack boots = player.getInventory().getBoots();
 		ArmorEquipEvent armorEquipEvent;
-		if (!Utils.isNull(helmet)) new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.HEAD,helmet,null).callEventAndDoTasks();
-		if (!Utils.isNull(chestplate)) new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.CHEST,chestplate,null).callEventAndDoTasks();
-		if (!Utils.isNull(leggings)) new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.LEGS,leggings,null).callEventAndDoTasks();
-		if (!Utils.isNull(boots)) new ArmorEquipEvent(player,EquipMethod.DEATH,EquipmentSlot.FEET,boots,null).callEventAndDoTasks();
+		if (!Utils.isNull(helmet)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.HELMET,helmet,null).callEventAndDoTasks();
+		if (!Utils.isNull(chestplate)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.CHESTPLATE,chestplate,null).callEventAndDoTasks();
+		if (!Utils.isNull(leggings)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.LEGGINGS,leggings,null).callEventAndDoTasks();
+		if (!Utils.isNull(boots)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.BOOTS,boots,null).callEventAndDoTasks();
 	}
 	
 	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
 	public void onDispenseArmorEvent(BlockDispenseArmorEvent event) {
-		if (Utils.isNull(event.getItem())) return;
-		if (!(event.getTargetEntity() instanceof Player player)) return;
-		if (!new ArmorEquipEvent(player,EquipMethod.DISPENSER,event.getItem().getType().getEquipmentSlot(),event.getItem(),null).callEventAndDoTasksIfNotCancelled())
-			event.setCancelled(true);
+		ArmorSlot slot;
+		if (!Utils.isNull(event.getItem()) && (slot = ArmorSlot.get(event.getItem().getType().getEquipmentSlot())) != null && (event.getTargetEntity() instanceof Player player))
+			if (!new ArmorEquipEvent(player,EquipMethod.DISPENSER,slot,event.getItem(),null).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	
 	/*public static EquipmentSlot getEquipSlot(Material material) {

@@ -1,0 +1,147 @@
+package me.DMan16.POPUtils.Interfaces;
+
+import me.DMan16.POPUtils.Classes.AttributesInfo;
+import me.DMan16.POPUtils.Items.ItemableStack;
+import me.DMan16.POPUtils.POPUtilsMain;
+import me.DMan16.POPUtils.Utils.Utils;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.enchantments.Enchantment;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.Positive;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V> {
+	public static final NamespacedKey DAMAGE = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_item_damage");
+	public static int CUSTOM_FIX_DIVIDE = 10;
+	
+	protected final @NotNull HashMap<@NotNull Enchantment,@NotNull Integer> enchantments = new HashMap<>();
+	protected @NonNegative int damage = 0;
+	public final @NotNull AttributesInfo info;
+	protected final boolean isDefault;
+	
+	protected Enchantable(@NotNull AttributesInfo info, boolean isDefault) {
+		this.info = info;
+		this.isDefault = isDefault;
+	}
+	
+	@NotNull protected abstract Material material();
+	
+	protected abstract @Positive int model();
+	
+	public boolean canEnchant(@NotNull Enchantment enchantment) {
+		return enchantment.canEnchantItem(new ItemStack(material()));
+	}
+	
+	public boolean canEnchant(@NotNull Enchantment enchantment, int level) {
+		if (!canEnchant(enchantment) || level < enchantment.getStartLevel()) return false;
+		Integer existing = enchantments.get(enchantment);
+		return existing == null || level > existing || (level >= existing && level < enchantment.getMaxLevel());
+	}
+	
+	public boolean addEnchant(@NotNull Enchantment enchantment, int level) {
+		if (!canEnchant(enchantment,level)) return false;
+		enchantments.put(enchantment,enchantments.containsKey(enchantment) ? level + 1 : level);
+		return true;
+	}
+	
+	@MonotonicNonNull
+	public abstract ItemableStack repairItem();
+	
+	@NonNegative
+	public final int damage() {
+		return damage;
+	}
+	
+	/**
+	 * @return leftover amount
+	 */
+	@NonNegative
+	public final int fix(@NonNegative int amount) {
+		if (damage == 0) return amount;
+		int damage = this.damage, per = maxDurability() / CUSTOM_FIX_DIVIDE;
+		while (damage > 0 && amount > 0) {
+			damage -= per;
+			amount--;
+		}
+		if (damage < 0) damage = 0;
+		this.damage = damage;
+		return amount;
+	}
+	
+	@NotNull public abstract String key();
+	
+	@Positive public abstract int maxDurability();
+	
+	public final boolean shouldBreak() {
+		return damage >= maxDurability();
+	}
+	
+	@NotNull
+	@SuppressWarnings("unchecked")
+	public final V addDamage(int amount) {
+		damage += amount;
+		return (V) this;
+	}
+	
+	@Nullable
+	protected List<Component> getExtraLoreItemNoAttributes() {
+		return null;
+	}
+	
+	@NotNull
+	protected abstract ItemStack makeItemNoAttributes(@NotNull Material material, @NotNull List<Component> lore);
+	
+	@NotNull public abstract EquipmentSlot equipSlot();
+	
+	@NotNull protected abstract Component displayName();
+	
+	@NotNull
+	protected final ItemStack asItemNoAttributes() {
+		if (shouldBreak()) return new ItemStack(Material.AIR);
+		Material material = material();
+		List<Component> lore = info.lore();
+		lore.add(0,Utils.noItalic(Component.translatable("item.modifiers." + equipSlot().name().toLowerCase(),NamedTextColor.WHITE)));
+		lore.add(0,Component.empty());
+		Utils.applyNotNull(getExtraLoreItemNoAttributes(),lore::addAll);
+		if (!enchantments.isEmpty()) {
+			lore.add(0,Component.empty());
+			lore.addAll(0,ItemableStack.enchantmentsLore(enchantments));
+		}
+		ItemStack item = makeItemNoAttributes(material,lore);
+		if (damage > 0) item = Utils.setKeyPersistentDataContainer(Utils.setDamage(item,(int) Math.max(1,Math.floor(((float) damage) / maxDurability() * item.getType().getMaxDurability()))),
+				DAMAGE,PersistentDataType.INTEGER,damage);
+		return Utils.addEnchantments(item,enchantments);
+	}
+	
+	@NotNull
+	public final ItemStack asItem() {
+		return Utils.addDurabilityLore(info.addAttributes(asItemNoAttributes(),key(),equipSlot()),maxDurability(),damage,false);
+	}
+	
+	@NotNull
+	public final Component giveComponent() {
+		return displayName().hoverEvent(asItemNoAttributes().asHoverEvent());
+	}
+	
+	@NotNull
+	public Map<@NotNull String,Object> toMap() {
+		HashMap<String,Object> map = new HashMap<>();
+		if (!enchantments.isEmpty()) map.put("Enchantments",ItemableStack.getEnchantments(enchantments));
+		if (damage > 0) map.put("Damage",damage);
+		return map;
+	}
+	
+	public abstract int hashCode();
+}

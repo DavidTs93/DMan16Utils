@@ -72,12 +72,10 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@NotNull
 	public ItemStack asItem() {
-		if (material() == Material.ENCHANTED_BOOK) {
-			Map<Enchantment,Integer> enchantments = Utils.getStoredEnchants(item);
-			if (enchantments == null || enchantments.size() != 1) return new ItemStack(Material.BOOK);
-			return Utils.setEnchantments(Utils.makeItem(Material.ENCHANTED_BOOK,null,enchantmentsLore(enchantments),ItemFlag.values()),enchantments);
-		}
-		return Utils.addDurabilityLore(item.clone(),material().getMaxDurability(),0,true);
+		if (material() != Material.ENCHANTED_BOOK) return Utils.addDurabilityLore(item.clone(),material().getMaxDurability(),0,true);
+		Map<Enchantment,Integer> enchantments = Utils.getStoredEnchants(item);
+		if (enchantments == null || enchantments.size() != 1) return new ItemStack(Material.BOOK);
+		return Utils.setEnchantments(Utils.makeItem(Material.ENCHANTED_BOOK,null,enchantmentsLore(enchantments),ItemFlag.values()),enchantments);
 	}
 	
 	@NotNull
@@ -310,11 +308,15 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof ItemableStack other) && Utils.sameItem(item,other.item);
+		return (obj instanceof ItemableStack other) && material() == other.material() && Utils.sameItem(asItem(),other.asItem());
 	}
 	
 	public boolean similar(Object obj, boolean ignoreDurability, boolean ignoreFlags) {
-		return (obj instanceof ItemableStack other) && Utils.similarItem(item,other.item,ignoreDurability,ignoreFlags);
+		return (obj instanceof ItemableStack other) && material() == other.material() && Utils.similarItem(item,other.item,ignoreDurability,ignoreFlags);
+	}
+	
+	public boolean similar(Object obj) {
+		return similar(obj,true,true);
 	}
 	
 	@NotNull

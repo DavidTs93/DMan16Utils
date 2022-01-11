@@ -936,31 +936,35 @@ public class Utils {
 	
 	@NotNull
 	@SafeVarargs
-	public static <V> List<V> joinLists(List<? extends V> ... lists) {
+	@Contract(pure = true)
+	public static <V> List<V> joinLists(Collection<? extends V> ... lists) {
 		List<V> list = new ArrayList<>();
-		for (List<? extends V> l : lists) if (l != null) list.addAll(l);
+		for (Collection<? extends V> l : lists) if (l != null) list.addAll(l);
 		return list;
 	}
 	
 	@NotNull
-	public static <V> List<V> joinLists(Collection<? extends List<? extends V>> lists) {
+	@Contract(pure = true)
+	public static <V> List<V> joinLists(Collection<? extends Collection<? extends V>> lists) {
 		List<V> list = new ArrayList<>();
-		for (List<? extends V> l : lists) if (l != null) list.addAll(l);
+		for (Collection<? extends V> l : lists) if (l != null) list.addAll(l);
 		return list;
 	}
 	
 	@NotNull
 	@SafeVarargs
-	public static <V> Set<V> joinSets(Set<? extends V> ... sets) {
+	@Contract(pure = true)
+	public static <V> Set<V> joinSets(Collection<? extends V> ... sets) {
 		Set<V> set = new HashSet<>();
-		for (Set<? extends V> l : sets) if (l != null) set.addAll(l);
+		for (Collection<? extends V> l : sets) if (l != null) set.addAll(l);
 		return set;
 	}
 	
 	@NotNull
-	public static <V> Set<V> joinSets(Collection<? extends Set<? extends V>> sets) {
+	@Contract(pure = true)
+	public static <V> Set<V> joinSets(Collection<? extends Collection<? extends V>> sets) {
 		Set<V> set = new HashSet<>();
-		for (Set<? extends V> l : sets) if (l != null) set.addAll(l);
+		for (Collection<? extends V> l : sets) if (l != null) set.addAll(l);
 		return set;
 	}
 	
@@ -2112,13 +2116,11 @@ public class Utils {
 		return last;
 	}
 	
-	@Nullable
 	@Contract("null,_ -> null")
 	public static ItemStack add(ItemStack item, int amount) {
 		return isNull(item) ? null : item.add(amount);
 	}
 	
-	@Nullable
 	@Contract("null,_ -> null")
 	public static ItemStack subtract(ItemStack item, int amount) {
 		if (isNull(item)) return null;
@@ -2128,29 +2130,24 @@ public class Utils {
 		return item.getAmount() <= amount ? null : item.subtract(amount);
 	}
 	
-	@Nullable
 	public static <V,T> T applyNotNull(@Nullable V obj, @NotNull Function<@NotNull V,T> apply) {
 		return obj == null ? null : apply.apply(obj);
 	}
 	
-	@Nullable
 	public static <V,T> T applyNotNullIf(@Nullable V obj, @NotNull Function<@NotNull V,T> apply, boolean arg) {
 		return obj == null || !arg ? null : apply.apply(obj);
 	}
 	
-	@Nullable
-	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	@Contract("null,_,_ -> null")
 	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply, boolean arg) {
 		return obj == null || !arg ? obj : apply.apply(obj);
 	}
 	
-	@Nullable
 	public static <V,T> T applyNotNullIf(@Nullable V obj, @NotNull Function<@NotNull V,T> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
 		return obj == null || !arg.apply(obj) ? null : apply.apply(obj);
 	}
 	
-	@Nullable
-	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	@Contract("null,_,_ -> null")
 	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply, @NotNull Function<@NotNull V,@NotNull Boolean> arg) {
 		return obj == null || !arg.apply(obj) ? obj : apply.apply(obj);
 	}
@@ -2386,5 +2383,10 @@ public class Utils {
 		if ((name = fixKey(name)) == null) return null;
 		for (Enchantment enchantment : Enchantment.values()) if (enchantment.getKey().getKey().equalsIgnoreCase(name)) return enchantment;
 		return null;
+	}
+	
+	@NotNull
+	public static Component crossOut(@NotNull Component comp) {
+		return noDecorations(comp).color(NamedTextColor.GRAY).decorate(TextDecoration.STRIKETHROUGH).children(comp.children().stream().map(Utils::crossOut).toList());
 	}
 }

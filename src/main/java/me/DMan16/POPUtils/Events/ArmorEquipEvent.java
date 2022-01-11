@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Events;
 
+import me.DMan16.POPUtils.Enums.ArmorSlot;
 import me.DMan16.POPUtils.Enums.EquipMethod;
 import org.bukkit.entity.Player;
 import org.bukkit.event.Cancellable;
@@ -11,12 +12,12 @@ import org.jetbrains.annotations.Nullable;
 public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	private boolean cancel = false;
 	private final EquipMethod method;
-	private final EquipmentSlot slot;
+	private final ArmorSlot slot;
 	private final ItemStack oldArmor;
 	private final ItemStack newArmor;
 	private final int hotbar;
 	
-	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull EquipmentSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor) {
+	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull ArmorSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor) {
 		this(player,method,slot,oldArmor,newArmor,-1);
 	}
 	
@@ -26,7 +27,7 @@ public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	 * @param oldArmor old armor before the change
 	 * @param newArmor new armor after the change
 	 */
-	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull EquipmentSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor, int hotbar) {
+	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull ArmorSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor, int hotbar) {
 		super(player);
 		this.method = method;
 		this.slot = slot;
@@ -53,7 +54,7 @@ public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	}
 	
 	@NotNull
-	public EquipmentSlot getSlot() {
+	public ArmorSlot getSlot() {
 		return slot;
 	}
 	
