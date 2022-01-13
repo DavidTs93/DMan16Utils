@@ -1,23 +1,22 @@
 package me.DMan16.POPUtils.Enums;
 
-import net.minecraft.world.entity.EnumItemSlot;
 import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public enum EquipSlot {
-	MAIN_HAND(EquipmentSlot.HAND,EnumItemSlot.a),
-	OFF_HAND(EquipmentSlot.OFF_HAND,EnumItemSlot.b),
-	HELMET(EquipmentSlot.HEAD,EnumItemSlot.f),
-	CHESTPLATE(EquipmentSlot.CHEST,EnumItemSlot.e),
-	LEGGINGS(EquipmentSlot.LEGS,EnumItemSlot.d),
-	BOOTS(EquipmentSlot.FEET,EnumItemSlot.c);
+	MAIN_HAND(EquipmentSlot.HAND,net.minecraft.world.entity.EquipmentSlot.MAINHAND),
+	OFF_HAND(EquipmentSlot.OFF_HAND,net.minecraft.world.entity.EquipmentSlot.OFFHAND),
+	HELMET(EquipmentSlot.HEAD,net.minecraft.world.entity.EquipmentSlot.HEAD),
+	CHESTPLATE(EquipmentSlot.CHEST,net.minecraft.world.entity.EquipmentSlot.CHEST),
+	LEGGINGS(EquipmentSlot.LEGS,net.minecraft.world.entity.EquipmentSlot.LEGS),
+	BOOTS(EquipmentSlot.FEET,net.minecraft.world.entity.EquipmentSlot.FEET);
 	
 	public final @NotNull String key;
 	public final @NotNull EquipmentSlot equipSlot;
-	public final @NotNull EnumItemSlot enumSlot;
+	public final @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot;
 	
-	EquipSlot(@NotNull EquipmentSlot slot, @NotNull EnumItemSlot enumSlot) {
+	EquipSlot(@NotNull EquipmentSlot slot, @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot) {
 		this.key = name().toLowerCase();
 		this.equipSlot = slot;
 		this.enumSlot = enumSlot;

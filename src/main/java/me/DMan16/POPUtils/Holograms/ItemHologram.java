@@ -1,13 +1,11 @@
 package me.DMan16.POPUtils.Holograms;
 
 import me.DMan16.POPUtils.Classes.Equipment;
+import me.DMan16.POPUtils.NMSWrappers.PacketWrapper;
 import me.DMan16.POPUtils.Utils.PacketUtils;
-import net.minecraft.network.protocol.Packet;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityEquipment;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
-import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntityLiving;
-import net.minecraft.world.entity.decoration.EntityArmorStand;
+import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -21,10 +19,10 @@ public class ItemHologram implements Hologram<ItemHologram> {
 	protected ItemStack item;
 	protected Location location;
 	protected World world;
-	protected Packet<?> create;
-	protected PacketPlayOutEntityMetadata edit;
-	protected PacketPlayOutEntityEquipment armor;
-	protected PacketPlayOutEntityDestroy destroy;
+	protected PacketWrapper.Safe create;
+	protected PacketWrapper.Safe edit;
+	protected PacketWrapper.Safe armor;
+	protected PacketWrapper.Safe destroy;
 	
 	public ItemHologram(@NotNull ItemStack item) {
 		this.ID = 0;
@@ -39,12 +37,12 @@ public class ItemHologram implements Hologram<ItemHologram> {
 		if (isSpawned() || loc.getWorld() == null || (this.location != null && this.location.equals(loc = loc.clone().subtract(0,1,0)))) return false;
 		this.location = loc;
 		this.world = loc.getWorld();
-		EntityArmorStand stand = PacketUtils.createArmorStand(loc.clone().add(0,-1,0.25),null,true,true,true,false,
-				true, new Equipment(item,item,item,null,null,null));
+		ArmorStand stand = (ArmorStand) PacketUtils.createArmorStand(loc.clone().add(0,-1,0.25),null,true,true,true,false,
+				true,new Equipment(item,item,item,null,null,null)).armorStand();
 		ID = stand.getId();
-		create = new PacketPlayOutSpawnEntityLiving(stand);
-		edit = new PacketPlayOutEntityMetadata(ID,stand.getDataWatcher(),true);
-		armor = PacketUtils.packetArmorNotNulls(ID, new Equipment(item, item, item, null, null, null));
+		create = new PacketWrapper.Safe(new ClientboundAddMobPacket(stand));
+		edit = new PacketWrapper.Safe(new ClientboundSetEntityDataPacket(ID,stand.getEntityData(),true));
+		armor = PacketUtils.packetArmorNotNulls(ID, new Equipment(item,item,item,null,null,null));
 		destroy = PacketUtils.packetDestroyEntity(ID);
 		HologramsManager.register(this);
 		Bukkit.getOnlinePlayers().forEach(this::spawn);

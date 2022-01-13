@@ -1,6 +1,5 @@
 package me.DMan16.POPUtils.Enums;
 
-import net.minecraft.world.entity.EnumItemSlot;
 import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -13,7 +12,7 @@ public enum ArmorSlot {
 	
 	public final @NotNull String key;
 	public final @NotNull EquipmentSlot equipSlot;
-	public final @NotNull EnumItemSlot enumSlot;
+	public final @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot;
 	
 	ArmorSlot(@NotNull EquipSlot slot) {
 		this.key = slot.key;

@@ -3,32 +3,28 @@ package me.DMan16.POPUtils.Utils;
 import net.minecraft.world.level.block.Block;
 import org.bukkit.Material;
 import org.bukkit.World;
-import org.bukkit.craftbukkit.v1_17_R1.CraftWorld;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftEntity;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftHumanEntity;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftLivingEntity;
-import org.bukkit.craftbukkit.v1_17_R1.entity.CraftPlayer;
-import org.bukkit.craftbukkit.v1_17_R1.inventory.CraftItemStack;
-import org.bukkit.craftbukkit.v1_17_R1.scoreboard.CraftScoreboard;
-import org.bukkit.craftbukkit.v1_17_R1.util.CraftMagicNumbers;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.HumanEntity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.craftbukkit.v1_18_R1.CraftWorld;
+import org.bukkit.craftbukkit.v1_18_R1.entity.*;
+import org.bukkit.craftbukkit.v1_18_R1.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R1.scoreboard.CraftScoreboard;
+import org.bukkit.craftbukkit.v1_18_R1.util.CraftMagicNumbers;
+import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.function.Function;
+
 public class CraftUtils {
 	@NotNull
-	public static net.minecraft.world.item.ItemStack asNMSCopy(@NotNull ItemStack item) {
-		return CraftItemStack.asNMSCopy(item);
+	static Function<@NotNull ItemStack,net.minecraft.world.item.@NotNull ItemStack> asNMSCopy() {
+		return CraftItemStack::asNMSCopy;
 	}
 	
-	@NotNull
-	public static ItemStack asCraftMirror(@NotNull net.minecraft.world.item.ItemStack item) {
-		return CraftItemStack.asCraftMirror(item);
-	}
+//	@NotNull
+//	public static ItemStack asCraftMirror(@NotNull net.minecraft.world.item.ItemStack item) {
+//		return CraftItemStack.asCraftMirror(item);
+//	}
 	
 	@NotNull
 	public static CraftPlayer toCraft(@NotNull Player player) {
@@ -43,6 +39,11 @@ public class CraftUtils {
 	@NotNull
 	public static CraftLivingEntity toCraft(@NotNull LivingEntity entity) {
 		return (CraftLivingEntity) entity;
+	}
+	
+	@NotNull
+	public static CraftMob toCraft(@NotNull Mob entity) {
+		return ((CraftMob) entity);
 	}
 	
 	@NotNull

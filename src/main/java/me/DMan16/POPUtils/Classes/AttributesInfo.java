@@ -2,11 +2,12 @@ package me.DMan16.POPUtils.Classes;
 
 import com.google.common.collect.LinkedHashMultimap;
 import me.DMan16.POPUtils.Enums.ArmorSlot;
+import me.DMan16.POPUtils.NMSWrappers.ArmorMaterialWrapper;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.minecraft.world.item.EnumArmorMaterial;
+import net.minecraft.world.item.ArmorMaterial;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
@@ -61,8 +62,10 @@ public final class AttributesInfo {
 	}
 	
 	@NotNull
-	public static AttributesInfo of(@NotNull EnumArmorMaterial armorEnum, @NotNull ArmorSlot slot) {
-		return new AttributesInfo(0,armorEnum.b(slot.enumSlot),armorEnum.e(),0,armorEnum.f() * 100,0,0);
+	public static AttributesInfo of(ArmorMaterialWrapper.@NotNull Safe armorMaterial,@NotNull ArmorSlot slot) {
+		ArmorMaterial material = (ArmorMaterial) armorMaterial.armorMaterial();
+		return new AttributesInfo(0,material.getDefenseForSlot(slot.enumSlot),material.getToughness(),0,
+				material.getKnockbackResistance() * 100,0,0);
 	}
 	
 	@Nullable

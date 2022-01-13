@@ -1,13 +1,13 @@
 package me.DMan16.POPUtils.Holograms;
 
+import me.DMan16.POPUtils.NMSWrappers.ComponentWrapper;
+import me.DMan16.POPUtils.NMSWrappers.PacketWrapper;
 import me.DMan16.POPUtils.Utils.NMSUtils;
 import me.DMan16.POPUtils.Utils.PacketUtils;
 import net.kyori.adventure.text.Component;
-import net.minecraft.network.chat.ChatBaseComponent;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityDestroy;
-import net.minecraft.network.protocol.game.PacketPlayOutEntityMetadata;
-import net.minecraft.network.protocol.game.PacketPlayOutSpawnEntityLiving;
-import net.minecraft.world.entity.decoration.EntityArmorStand;
+import net.minecraft.network.protocol.game.ClientboundAddMobPacket;
+import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -19,14 +19,14 @@ public class TextHologram implements Hologram<TextHologram> {
 	public static final double LINE_HEIGHT = 0.25;
 	
 	protected int ID;
-	protected final ChatBaseComponent line;
+	protected final ComponentWrapper line;
 	protected Location location;
 	protected World world;
-	protected PacketPlayOutSpawnEntityLiving create;
-	protected PacketPlayOutEntityMetadata edit;
-	protected PacketPlayOutEntityDestroy destroy;
+	protected PacketWrapper.Safe create;
+	protected PacketWrapper.Safe edit;
+	protected PacketWrapper.Safe destroy;
 	
-	public TextHologram(@NotNull ChatBaseComponent line) {
+	public TextHologram(@NotNull ComponentWrapper line) {
 		this.ID = 0;
 		this.line = line;
 		this.location = null;
@@ -37,7 +37,7 @@ public class TextHologram implements Hologram<TextHologram> {
 	
 	@Nullable
 	public static TextHologram of(@NotNull Component component) {
-		ChatBaseComponent line = NMSUtils.componentToIChatBaseComponent(component);
+		ComponentWrapper line = NMSUtils.componentToNMSComponent(component);
 		return line == null ? null : new TextHologram(line);
 	}
 	
@@ -45,10 +45,10 @@ public class TextHologram implements Hologram<TextHologram> {
 		if (isSpawned() || location.getWorld() == null || (this.location != null && this.location.equals(location = location.clone().subtract(0,1,0)))) return false;
 		this.location = location;
 		this.world = location.getWorld();
-		EntityArmorStand stand = PacketUtils.createArmorStand(location,line,true,true,false,false,true);
+		ArmorStand stand = (ArmorStand) PacketUtils.createArmorStand(location,line,true,true,false,false,true).armorStand();
 		ID = stand.getId();
-		create = new PacketPlayOutSpawnEntityLiving(stand);
-		edit = new PacketPlayOutEntityMetadata(ID,stand.getDataWatcher(),true);
+		create = new PacketWrapper.Safe(new ClientboundAddMobPacket(stand));
+		edit = new PacketWrapper.Safe(new ClientboundSetEntityDataPacket(ID,stand.getEntityData(),true));
 		destroy = PacketUtils.packetDestroyEntity(ID);
 		HologramsManager.register(this);
 		Bukkit.getOnlinePlayers().forEach(this::spawn);
