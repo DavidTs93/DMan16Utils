@@ -79,6 +79,9 @@ public final class POPUtilsMain extends JavaPlugin {
 		new ItemCommandListener();
 		new BookCommandListener();
 		new EnchantCommandListener();
+		new DamageCommandListener();
+		new RepairCommandListener();
+		new FixCommandListener();
 		new MiscListeners();
 		CancelPlayers = new CancelPlayers();
 		new HologramsManager();

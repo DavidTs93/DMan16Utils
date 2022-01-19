@@ -311,7 +311,7 @@ public class Utils {
 	public static String splitCapitalize(@Nullable String str, @Nullable String splitReg, @Nullable Character colorCode) {
 		if (str == null) return null;
 		String[] splitName;
-		if (splitReg == null || splitReg.trim().isEmpty()) splitName = new String[]{str};
+		if (splitReg == null || splitReg.isEmpty()) splitName = new String[]{str};
 		else splitName = str.split(splitReg);
 		StringBuilder newStr = new StringBuilder();
 		char[] arr;
@@ -405,53 +405,59 @@ public class Utils {
 	
 	public static int getSlot(@NotNull Player player, EquipmentSlot slot) {
 		if (slot == null) return -1;
-		else if (slot == EquipmentSlot.HEAD) return 103;
-		else if (slot == EquipmentSlot.CHEST) return 102;
-		else if (slot == EquipmentSlot.LEGS) return 101;
-		else if (slot == EquipmentSlot.FEET) return 100;
-		else if (slot == EquipmentSlot.OFF_HAND) return -106;
-		return player.getInventory().getHeldItemSlot();
+		return switch (slot) {
+			case HEAD -> 103;
+			case CHEST -> 102;
+			case LEGS -> 101;
+			case FEET -> 100;
+			case OFF_HAND -> -106;
+			default -> player.getInventory().getHeldItemSlot();
+		};
+	}
+	
+	public static int getSlot(EquipmentSlot slot) {
+		return switch (slot) {
+			case HEAD -> 103;
+			case CHEST -> 102;
+			case LEGS -> 101;
+			case FEET -> 100;
+			case OFF_HAND -> -106;
+			default -> -1;
+		};
+	}
+	
+	@Nullable
+	public static EquipmentSlot getEquipSlot(int slot) {
+		return switch (slot) {
+			case 103 -> EquipmentSlot.HEAD;
+			case 102 -> EquipmentSlot.CHEST;
+			case 101 -> EquipmentSlot.LEGS;
+			case 100 -> EquipmentSlot.FEET;
+			case -106 -> EquipmentSlot.OFF_HAND;
+			default -> null;
+		};
 	}
 	
 	@Nullable
 	public static ItemStack getFromSlot(@NotNull Player player, int slot) {
 		if (!PLAYER_INVENTORY_SLOTS.contains(slot)) return null;
-		ItemStack item;
-		if (slot == -106) item = player.getInventory().getItemInOffHand();
-		else if (slot == 100) item = player.getInventory().getBoots();
-		else if (slot == 101) item = player.getInventory().getLeggings();
-		else if (slot == 102) item = player.getInventory().getChestplate();
-		else if (slot == 103) item = player.getInventory().getHelmet();
-		else item = player.getInventory().getItem(slot);
-		return item;
+		EquipmentSlot equipSlot = getEquipSlot(slot);
+		return equipSlot == null ? player.getInventory().getItem(slot) : player.getInventory().getItem(equipSlot);
 	}
 	
 	@Nullable
 	public static ItemStack getFromSlot(@NotNull Player player, @NotNull EquipmentSlot slot) {
-		if (slot == EquipmentSlot.HEAD) return player.getInventory().getHelmet();
-		else if (slot == EquipmentSlot.CHEST) return player.getInventory().getChestplate();
-		else if (slot == EquipmentSlot.LEGS) return player.getInventory().getLeggings();
-		else if (slot == EquipmentSlot.FEET) return player.getInventory().getBoots();
-		else if (slot == EquipmentSlot.OFF_HAND) return player.getInventory().getItemInOffHand();
-		return player.getInventory().getItemInMainHand();
+		return player.getInventory().getItem(slot);
 	}
 	
 	public static void setSlot(@NotNull Player player, @Nullable ItemStack item, int slot) {
-		if (slot == -106) player.getInventory().setItemInOffHand(item);
-		else if (slot == 100) player.getInventory().setBoots(item);
-		else if (slot == 101) player.getInventory().setLeggings(item);
-		else if (slot == 102) player.getInventory().setChestplate(item);
-		else if (slot == 103) player.getInventory().setHelmet(item);
+		EquipmentSlot equipSlot = getEquipSlot(slot);
+		if (equipSlot != null) player.getInventory().setItem(equipSlot,item);
 		else if (slot >= 0) player.getInventory().setItem(slot,item);
 	}
 	
 	public static void setSlot(@NotNull Player player, @Nullable ItemStack item, EquipmentSlot slot) {
-		if (slot == EquipmentSlot.HEAD) player.getInventory().setHelmet(item);
-		else if (slot == EquipmentSlot.CHEST) player.getInventory().setChestplate(item);
-		else if (slot == EquipmentSlot.LEGS) player.getInventory().setLeggings(item);
-		else if (slot == EquipmentSlot.FEET) player.getInventory().setBoots(item);
-		else if (slot == EquipmentSlot.OFF_HAND) player.getInventory().setItemInOffHand(item);
-		else if (slot == EquipmentSlot.HAND) player.getInventory().setItemInMainHand(item);
+		player.getInventory().setItem(slot,item);
 	}
 	
 	@Nullable
@@ -2138,6 +2144,11 @@ public class Utils {
 		return obj == null || !arg ? null : apply.apply(obj);
 	}
 	
+	@Contract("null,_ -> null")
+	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply) {
+		return obj == null ? null : apply.apply(obj);
+	}
+	
 	@Contract("null,_,_ -> null")
 	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply, boolean arg) {
 		return obj == null || !arg ? obj : apply.apply(obj);
@@ -2388,5 +2399,10 @@ public class Utils {
 	@NotNull
 	public static Component crossOut(@NotNull Component comp) {
 		return noDecorations(comp).color(NamedTextColor.GRAY).decorate(TextDecoration.STRIKETHROUGH).children(comp.children().stream().map(Utils::crossOut).toList());
+	}
+	
+	public static boolean conflictsNotEquals(@NotNull Enchantment ench1, @NotNull Enchantment ench2) {
+		if (ench1.equals(ench2)) return false;
+		return ench1.conflictsWith(ench2) || ench2.conflictsWith(ench1);
 	}
 }

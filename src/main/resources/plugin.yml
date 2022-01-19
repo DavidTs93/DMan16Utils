@@ -3,7 +3,7 @@ version: 1.0
 description: Utilities for PrisonPOP
 main: me.DMan16.POPUtils.POPUtilsMain
 depend: [POPUpdater]
-softdepend: [Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion,Essentials]
+softdepend: [Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion]
 author: DMan16
 api-version: 1.18
 
@@ -18,6 +18,12 @@ commands:
     permission: prisonpop.command.book
   enchant:
     permission: prisonpop.command.enchant
+  damage:
+    permission: prisonpop.command.damage
+  repair:
+    permission: prisonpop.command.repair
+  fix:
+    permission: prisonpop.command.fix
   test_effect:
     permission: prisonpop.command.test_effect
 permissions:
@@ -30,6 +36,12 @@ permissions:
   prisonpop.command.book:
     default: op
   prisonpop.command.enchant:
+    default: op
+  prisonpop.command.damage:
+    default: op
+  prisonpop.command.repair:
+    default: op
+  prisonpop.command.fix:
     default: op
   prisonpop.command.test_effect:
     default: op

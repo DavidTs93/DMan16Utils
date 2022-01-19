@@ -12,5 +12,6 @@ public enum EquipMethod {
 	DISPENSER,
 	BROKE,
 	DROP,
+	RESPAWN,
 	DEATH
 }

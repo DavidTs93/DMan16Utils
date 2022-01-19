@@ -1,6 +1,7 @@
 package me.DMan16.POPUtils.Interfaces;
 
 import me.DMan16.POPUtils.Classes.AttributesInfo;
+import me.DMan16.POPUtils.Enums.Tags;
 import me.DMan16.POPUtils.Items.ItemableStack;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
@@ -40,19 +41,22 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	
 	protected abstract @Positive int model();
 	
-	public boolean canEnchant(@NotNull Enchantment enchantment) {
-		return enchantment.canEnchantItem(new ItemStack(material()));
-	}
-	
 	public boolean canEnchant(@NotNull Enchantment enchantment, int level) {
-		if (!canEnchant(enchantment) || level < enchantment.getStartLevel()) return false;
+		if (level < enchantment.getStartLevel()) return false;
 		Integer existing = enchantments.get(enchantment);
-		return existing == null || level > existing || (level >= existing && level < enchantment.getMaxLevel());
+		if (existing != null) return level > existing || (level == existing && level < enchantment.getMaxLevel());
+		if (Tags.AXES.contains(material())) {
+			if (enchantment == Enchantment.DIG_SPEED || enchantment == Enchantment.LOOT_BONUS_BLOCKS || enchantment == Enchantment.SILK_TOUCH) return false;
+			if (enchantment != Enchantment.LOOT_BONUS_MOBS && enchantment != Enchantment.KNOCKBACK && enchantment != Enchantment.FIRE_ASPECT &&
+					!enchantment.canEnchantItem(new ItemStack(material()))) return false;
+		} else if (!enchantment.canEnchantItem(new ItemStack(material()))) return false;
+		return enchantments.keySet().stream().noneMatch(ench -> Utils.conflictsNotEquals(ench,enchantment));
 	}
 	
 	public boolean addEnchant(@NotNull Enchantment enchantment, int level) {
 		if (!canEnchant(enchantment,level)) return false;
-		enchantments.put(enchantment,enchantments.containsKey(enchantment) ? level + 1 : level);
+		Integer existing = enchantments.get(enchantment);
+		enchantments.put(enchantment,existing != null && existing == level ? level + 1 : level);
 		return true;
 	}
 	
@@ -90,8 +94,15 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	
 	@NotNull
 	@SuppressWarnings("unchecked")
-	public final V addDamage(int amount) {
+	public final V addDamage(@NonNegative int amount) {
 		damage += amount;
+		return (V) this;
+	}
+	
+	@NotNull
+	@SuppressWarnings("unchecked")
+	public final V reduceDamage(@NonNegative int amount) {
+		damage = Math.max(damage - amount,0);
 		return (V) this;
 	}
 	

@@ -155,7 +155,7 @@ public class ArmorEquipListener implements Listener {
 		if (!event.hasItem() || event.useItemInHand().equals(Result.DENY) || Utils.isInteract(event) || Utils.isNull(item)) return;
 		if (event.getAction() != Action.RIGHT_CLICK_BLOCK && event.getAction() != Action.RIGHT_CLICK_AIR) return;
 		ArmorSlot slot = ArmorSlot.get(item.getType().getEquipmentSlot());
-		if (slot == null || nonArmorHelmet(item.getType()) || !Utils.isNull(event.getPlayer().getInventory().getItem(slot.equipSlot))) return;
+		if (slot == null || nonArmorHelmet(item.getType()) || !Utils.isNull(event.getPlayer().getInventory().getItem(slot.equipSlot.equipSlot))) return;
 		if (!new ArmorEquipEvent(event.getPlayer(),EquipMethod.RIGHT_CLICK,slot,null,item).callEventAndDoTasksIfNotCancelled()) event.setCancelled(true);
 	}
 	
@@ -164,7 +164,7 @@ public class ArmorEquipListener implements Listener {
 		if (event.getRawSlots().isEmpty()) return;
 		int slotNum = event.getRawSlots().stream().findFirst().orElse(0);
 		ArmorSlot slot = ArmorSlot.get(event.getOldCursor().getType().getEquipmentSlot());
-		if (slot == null || slotNum != getSlot(slot.equipSlot)) return;
+		if (slot == null || slotNum != getSlot(slot.equipSlot.equipSlot)) return;
 		if (new ArmorEquipEvent((Player) event.getWhoClicked(),EquipMethod.DRAG,slot,null,event.getOldCursor()).callEventAndDoTasksIfNotCancelled()) return;
 		event.setResult(Result.DENY);
 		event.setCancelled(true);
@@ -197,7 +197,6 @@ public class ArmorEquipListener implements Listener {
 		ItemStack chestplate = player.getInventory().getChestplate();
 		ItemStack leggings = player.getInventory().getLeggings();
 		ItemStack boots = player.getInventory().getBoots();
-		ArmorEquipEvent armorEquipEvent;
 		if (!Utils.isNull(helmet)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.HELMET,helmet,null).callEventAndDoTasks();
 		if (!Utils.isNull(chestplate)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.CHESTPLATE,chestplate,null).callEventAndDoTasks();
 		if (!Utils.isNull(leggings)) new ArmorEquipEvent(player,EquipMethod.DEATH,ArmorSlot.LEGGINGS,leggings,null).callEventAndDoTasks();

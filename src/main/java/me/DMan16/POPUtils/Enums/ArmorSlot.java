@@ -10,14 +10,10 @@ public enum ArmorSlot {
 	LEGGINGS(EquipSlot.LEGGINGS),
 	BOOTS(EquipSlot.BOOTS);
 	
-	public final @NotNull String key;
-	public final @NotNull EquipmentSlot equipSlot;
-	public final @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot;
+	public final @NotNull EquipSlot equipSlot;
 	
 	ArmorSlot(@NotNull EquipSlot slot) {
-		this.key = slot.key;
-		this.equipSlot = slot.equipSlot;
-		this.enumSlot = slot.enumSlot;
+		this.equipSlot = slot;
 	}
 	
 	@Nullable
