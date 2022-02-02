@@ -2,6 +2,7 @@ package me.DMan16.POPUtils.Interfaces;
 
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
@@ -16,9 +17,11 @@ public interface Itemable<V extends Itemable<V>> extends Copyable<V> {
 		return !Utils.addFully(player,asItem(),toRemove,toEmpty).isEmpty();
 	}
 	
+	@NotNull Material material();
+	
 	@NotNull Component giveComponent();
 	
-	@NotNull Map<@NotNull String,?> toMap();
+	@NotNull Map<@NotNull String,Object> toMap();
 	
 	@NotNull String ItemableKey();
 	

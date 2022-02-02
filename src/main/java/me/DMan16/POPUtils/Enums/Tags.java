@@ -3,6 +3,7 @@ package me.DMan16.POPUtils.Enums;
 import org.bukkit.Material;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -45,10 +46,12 @@ public enum Tags {
 		this.slot = slot;
 	}
 	
-	public boolean contains(@NotNull Material material) {
-		return materials.contains(material);
+	@Contract("null -> false")
+	public boolean contains(@Nullable Material material) {
+		return material != null && materials.contains(material);
 	}
 	
+	@Contract("null -> false")
 	public boolean contains(@Nullable ItemStack item) {
 		return item != null && contains(item.getType());
 	}

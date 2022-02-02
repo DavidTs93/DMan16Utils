@@ -226,7 +226,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		List<Component> lore = Utils.mapToListComponent(arguments.get("Lore"));
 		if (lore != null) meta.lore(lore);
 		meta.setUnbreakable(Utils.thisOrThatOrNull(Utils.getBoolean(arguments.get("Unbreakable")),false));
-		meta.setCustomModelData(Utils.getInteger(arguments.get("Model")));
+		meta.setCustomModelData(Utils.applyOrOriginalIf(Utils.getInteger(arguments.get("Model")),Utils::Null,num -> num <= 0));
 		String skin = Utils.getString(arguments.get("Skin"));
 		if (skin != null && material == Material.PLAYER_HEAD) Utils.setSkin((SkullMeta) meta,skin,null);
 		meta.addItemFlags(getFlags(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("HideFlags")),0)));
@@ -257,8 +257,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@Override
-	@NotNull
-	public Map<@NotNull String,?> toMap() {
+	public @NotNull Map<@NotNull String,Object> toMap() {
 		HashMap<String,Object> map = new HashMap<>();
 		map.put("Material",item.getType().name());
 		if (item.getType() == Material.ENCHANTED_BOOK) {

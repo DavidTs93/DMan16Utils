@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Enums;
 
+import me.DMan16.POPUtils.NMSWrappers.EquipmentSlotWrapper;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.inventory.EquipmentSlot;
 import org.jetbrains.annotations.NotNull;
@@ -16,13 +17,13 @@ public enum EquipSlot {
 	public final @NotNull String key;
 	public final @NotNull String name;
 	public final @NotNull EquipmentSlot equipSlot;
-	public final @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot;
+	public final EquipmentSlotWrapper.@NotNull Safe enumSlot;
 	
 	EquipSlot(@NotNull EquipmentSlot slot, @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot) {
 		this.key = name().toLowerCase();
 		this.name = Utils.splitCapitalize(this.key,"_",null);
 		this.equipSlot = slot;
-		this.enumSlot = enumSlot;
+		this.enumSlot = new EquipmentSlotWrapper.Safe(enumSlot);
 	}
 	
 	@NotNull

@@ -810,6 +810,11 @@ public class Utils {
 		return null;
 	}
 	
+	@Contract(pure = true)
+	public static <V> V Null(V obj) {
+		return null;
+	}
+	
 	/**
 	 * @return online player from name, null if not found
 	 */
@@ -1242,9 +1247,27 @@ public class Utils {
 	}
 	
 	@Nullable
+	@Contract("null,null -> null; !null,_ -> !null; _,!null -> !null")
+	public static Material thisOrThatOrNullOneNotEmpty(@Nullable Material material1, @Nullable Material material2) {
+		if (material1 == null && material2 == null) return null;
+		if (!isNull(material1)) return material1;
+		if (isNull(material2)) throw new IllegalArgumentException();
+		return material2;
+	}
+	
+	@Nullable
 	@Contract("null,null -> null")
 	public static ItemStack thisOrThatOrNull(@Nullable ItemStack item1, @Nullable ItemStack item2) {
 		return !isNull(item1) ? item1 : (isNull(item2) ? null : item2);
+	}
+	
+	@Nullable
+	@Contract("null,null -> null; !null,_ -> !null; _,!null -> !null")
+	public static ItemStack thisOrThatOrNullOneNotNull(@Nullable ItemStack item1, @Nullable ItemStack item2) {
+		if (item1 == null && item2 == null) return null;
+		if (!isNull(item1)) return item1;
+		if (isNull(item2)) throw new IllegalArgumentException();
+		return item2;
 	}
 	
 	@Nullable
@@ -2145,7 +2168,7 @@ public class Utils {
 	}
 	
 	@Contract("null,_ -> null")
-	public static <V> V applyOrOriginalIf(@Nullable V obj, @NotNull Function<@NotNull V,V> apply) {
+	public static <V> V applyOrOriginal(@Nullable V obj,@NotNull Function<@NotNull V,V> apply) {
 		return obj == null ? null : apply.apply(obj);
 	}
 	

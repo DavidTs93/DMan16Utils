@@ -21,7 +21,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V> {
 	public static final NamespacedKey DAMAGE = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_item_damage");
@@ -32,14 +31,12 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	public final @NotNull AttributesInfo info;
 	protected final boolean isDefault;
 	
-	protected Enchantable(@NotNull AttributesInfo info, boolean isDefault) {
+	protected Enchantable(@NotNull AttributesInfo info,boolean isDefault) {
 		this.info = info;
 		this.isDefault = isDefault;
 	}
 	
-	@NotNull protected abstract Material material();
-	
-	protected abstract @Positive int model();
+	public abstract @Positive int model();
 	
 	public boolean canEnchant(@NotNull Enchantment enchantment, int level) {
 		if (level < enchantment.getStartLevel()) return false;
@@ -131,9 +128,14 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 			lore.addAll(0,ItemableStack.enchantmentsLore(enchantments));
 		}
 		ItemStack item = makeItemNoAttributes(material,lore);
-		if (damage > 0) item = Utils.setKeyPersistentDataContainer(Utils.setDamage(item,(int) Math.max(1,Math.floor(((float) damage) / maxDurability() * item.getType().getMaxDurability()))),
-				DAMAGE,PersistentDataType.INTEGER,damage);
+		int damageItemStack = damageItemStack(item.getType());
+		if (damageItemStack > 0) item = Utils.setKeyPersistentDataContainer(Utils.setDamage(item,damageItemStack),DAMAGE,PersistentDataType.INTEGER,damage);
 		return Utils.addEnchantments(item,enchantments);
+	}
+	
+	@NonNegative
+	public int damageItemStack(@NotNull Material material) {
+		return damage <= 0 ? 0 : (int) Math.max(1,Math.floor(((float) damage) / maxDurability() * material.getMaxDurability()));
 	}
 	
 	@NotNull
@@ -147,7 +149,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	}
 	
 	@NotNull
-	public Map<@NotNull String,Object> toMap() {
+	protected final HashMap<@NotNull String,Object> baseMap() {
 		HashMap<String,Object> map = new HashMap<>();
 		if (!enchantments.isEmpty()) map.put("Enchantments",ItemableStack.getEnchantments(enchantments));
 		if (damage > 0) map.put("Damage",damage);

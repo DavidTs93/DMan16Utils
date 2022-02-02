@@ -6,6 +6,7 @@ import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.Events.SuccessfulPrepareAnvilEvent;
 import me.DMan16.POPUtils.Events.SuccessfulPrepareSmithingEvent;
+import me.DMan16.POPUtils.Interfaces.Enchantable;
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.ItemUtils;
@@ -23,9 +24,13 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareSmithingEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.GrindstoneInventory;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.SmithingInventory;
+import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -68,6 +73,30 @@ public class MiscListeners implements Listener {
 		if (material == null || !DISABLED_GIVE_MATERIALS.contains(material)) return;
 		event.setCancelled(true);
 		Utils.chatColors(event.getPlayer(),"&cMaterial disabled for giving!");
+	}
+	
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	public void onItemDamage(PlayerItemDamageEvent event) {
+		if (event.getDamage() <= 0) return;
+		ItemStack item = event.getItem();
+		short max = item.getType().getMaxDurability();
+		if (ItemUtils.of(event.getItem()) instanceof Enchantable enchantable) {
+			int dmg = enchantable.damageItemStack(enchantable.material());
+			if (enchantable.addDamage(event.getDamage()).shouldBreak()) event.setDamage(max);
+			else {
+				event.setDamage(enchantable.damageItemStack(enchantable.material()) - dmg);
+				event.getItem().setItemMeta(Utils.setKeyPersistentDataContainer(event.getItem().getItemMeta(),Enchantable.DAMAGE,PersistentDataType.INTEGER,enchantable.damage(),true));
+//				new BukkitRunnable() {
+//					public void run() {
+//						ArmorUtils.updateEntity(event.getPlayer());
+//					}
+//				}.runTaskLater(POPCombatMain.getInstance(),1);
+			}
+		} else if (item.getType().getMaxDurability() > 0) try {		// !!!!
+			item = Utils.addDurabilityLore((((Damageable) item.getItemMeta()).getDamage() <= 0) ? Utils.setLore(item,null) : item,max,event.getDamage(),true);
+			if (Utils.isNull(item)) event.setDamage(max);
+			else event.getItem().setItemMeta(item.getItemMeta());
+		} catch (Exception e) {}
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)

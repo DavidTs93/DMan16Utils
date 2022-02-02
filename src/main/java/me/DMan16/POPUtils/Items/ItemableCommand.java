@@ -4,6 +4,7 @@ import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
@@ -23,6 +24,11 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 		this.command = command;
 		this.executeAs = executeAs;
 		this.displayName = displayName;
+	}
+	
+	@NotNull
+	public Material material() {
+		return item.material();
 	}
 	
 	@NotNull
@@ -68,8 +74,7 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	}
 	
 	@Override
-	@NotNull
-	public Map<@NotNull String,?> toMap() {
+	public @NotNull Map<@NotNull String,Object> toMap() {
 		Map<String,Object> map = new HashMap<>(item.toMap());
 		map.put("Command",command);
 		map.put("ExecuteAs",executeAs.name());

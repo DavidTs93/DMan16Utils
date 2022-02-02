@@ -1,26 +1,25 @@
 package me.DMan16.POPUtils.Classes;
 
 import com.google.common.collect.LinkedHashMultimap;
-import me.DMan16.POPUtils.Enums.ArmorSlot;
-import me.DMan16.POPUtils.NMSWrappers.ArmorMaterialWrapper;
+import com.google.common.collect.Multimap;
+import me.DMan16.POPUtils.Enums.EquipSlot;
+import me.DMan16.POPUtils.NMSWrappers.ItemWrapper;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
-import net.minecraft.world.item.ArmorMaterial;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.ProjectileWeaponItem;
+import net.minecraft.world.item.TridentItem;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
+import org.checkerframework.checker.index.qual.Positive;
+import org.jetbrains.annotations.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 public final class AttributesInfo {
 	private static final Component EMPTY = Component.text("  ");
@@ -33,47 +32,90 @@ public final class AttributesInfo {
 	public final float armor;
 	public final float armorToughness;
 	public final float knockbackResistance;
-	public final float movementSpeed;
 	public final float attackDamage;
+	public final @Nullable Float rangedMult;
+	private final @Nullable @Positive @Range(from = 1,to = 100) Integer attackSpeed;
 	public final float luck;
+	public final float movementSpeed;
 	
-	private AttributesInfo(Number health, Number armor, Number armorToughness, Number attackDamage, Number knockbackResistance, Number luck, Number movementSpeed) {
+	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+						   @Nullable Number rangedMult,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		this.health = f(health);
 		this.armor = f(armor);
 		this.armorToughness = f(armorToughness);
 		this.attackDamage = f(attackDamage);
+		this.rangedMult = rangedMult == null ? null : f(rangedMult);
+		this.attackSpeed = attackSpeed == null ? null : Utils.clamp(attackSpeed.intValue(),0,99) + 1;
 		this.knockbackResistance = f(knockbackResistance);
 		this.luck = f(luck);
 		this.movementSpeed = f(movementSpeed);
-		if (this.health == 0 && this.armor == 0 && this.armorToughness == 0 && this.attackDamage == 0 && this.knockbackResistance == 0 && this.luck == 0 && this.movementSpeed == 0)
-			throw new IllegalArgumentException();
+		if (this.health == 0 && this.armor == 0 && this.armorToughness == 0 && this.attackDamage == 0 && this.rangedMult == null && this.knockbackResistance == 0 && this.luck == 0 &&
+				this.movementSpeed == 0) throw new IllegalArgumentException();
 	}
 	
-	private static float f(Number f) {
+	private static float f(@Nullable Number f) {
 		return f == null ? 0 : Utils.roundAfterDot(f.floatValue(),2);
 	}
 	
 	@Nullable
-	public static AttributesInfo of(Number health, Number armor, Number armorToughness, Number attackDamage, Number knockbackResistance, Number luck, Number movementSpeed) {
+	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+									@Nullable Number rangedMult,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		try {
-			return new AttributesInfo(health,armor,armorToughness,attackDamage,knockbackResistance,luck,movementSpeed);
+			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
 		} catch (Exception e) {}
 		return null;
 	}
 	
+	@Nullable
+	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,
+									@Nullable Number attackDamage,@Nullable Number luck,@Nullable Number movementSpeed) {
+		try {
+			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,null,null,luck,movementSpeed);
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	private static Double d(@NotNull Multimap<net.minecraft.world.entity.ai.attributes.Attribute,net.minecraft.world.entity.ai.attributes.AttributeModifier> map,
+							@NotNull net.minecraft.world.entity.ai.attributes.Attribute attribute) {
+		return Utils.applyOrOriginalIf(Utils.applyNotNullIf(map.get(attribute),c -> Utils.roundAfterDot(c.iterator().next().getAmount(),2),c -> !c.isEmpty()),a -> a * 100,
+				attribute == Attributes.KNOCKBACK_RESISTANCE);
+	}
+	
 	@NotNull
-	public static AttributesInfo of(ArmorMaterialWrapper.@NotNull Safe armorMaterial,@NotNull ArmorSlot slot) {
-		ArmorMaterial material = (ArmorMaterial) armorMaterial.armorMaterial();
-		return new AttributesInfo(0,material.getDefenseForSlot(slot.enumSlot),material.getToughness(),0,
-				material.getKnockbackResistance() * 100,0,0);
+	public static AttributesInfo of(ItemWrapper.@NotNull Safe itemWrapper,@NotNull EquipSlot slot) {
+		Multimap<net.minecraft.world.entity.ai.attributes.Attribute,net.minecraft.world.entity.ai.attributes.AttributeModifier> map =
+				((Item) itemWrapper.item()).getDefaultAttributeModifiers((net.minecraft.world.entity.EquipmentSlot) slot.enumSlot.slot());
+		boolean projectile = (itemWrapper.item() instanceof ProjectileWeaponItem) || (itemWrapper.item() instanceof TridentItem);
+		if (map.isEmpty() && !projectile) throw new IllegalArgumentException("Attributes map is empty!");
+		return new AttributesInfo(0,d(map,Attributes.ARMOR),d(map,Attributes.ARMOR_TOUGHNESS),d(map,Attributes.KNOCKBACK_RESISTANCE),d(map,Attributes.ATTACK_DAMAGE),
+				projectile ? 1 : null,d(map,Attributes.ATTACK_SPEED),0,0);
+	}
+	
+	@Nullable
+	private static Number join(@Nullable Number f1, @Nullable Number f2) {
+		if (f1 == null) return f2;
+		if (f2 == null) return f1;
+		return f1.floatValue() + f2.floatValue();
+	}
+	
+	@Nullable
+	@Positive
+	public Float attackSpeed() {
+		return attackSpeed == null ? null : attackSpeed(attackSpeed);
+	}
+	
+	private static float attackSpeed(@Positive @Range(from = 1,to = 100) int attackSpeed) {
+		return 4 * attackSpeed / 100f;
 	}
 	
 	@Nullable
 	@Contract(pure = true)
 	public AttributesInfo join(AttributesInfo info) {
 		return info == null ? this : of(this.health + info.health,this.armor + info.armor,this.armorToughness + info.armorToughness,
-				this.attackDamage + info.attackDamage,this.knockbackResistance + info.knockbackResistance,this.luck + info.luck,
-				this.movementSpeed + info.movementSpeed);
+				this.knockbackResistance + info.knockbackResistance,this.attackDamage + info.attackDamage,
+				join(this.rangedMult,info.rangedMult),join(this.attackSpeed,info.attackSpeed),
+				this.luck + info.luck,this.movementSpeed + info.movementSpeed);
 	}
 	
 	@NotNull
@@ -82,8 +124,10 @@ public final class AttributesInfo {
 		stringAttribute(health,false,lore,Attribute.GENERIC_MAX_HEALTH.translationKey(),NamedTextColor.RED);
 		stringAttribute(armor,false,lore,Attribute.GENERIC_ARMOR.translationKey(),NamedTextColor.GRAY);
 		stringAttribute(armorToughness,false,lore,Attribute.GENERIC_ARMOR_TOUGHNESS.translationKey(),NamedTextColor.GRAY);
-		stringAttribute(attackDamage,false,lore,Attribute.GENERIC_ATTACK_DAMAGE.translationKey(),NamedTextColor.BLUE);
 		stringAttribute(knockbackResistance,true,lore,Attribute.GENERIC_KNOCKBACK_RESISTANCE.translationKey(),NamedTextColor.DARK_PURPLE);
+		stringAttribute(attackDamage,false,lore,Attribute.GENERIC_ATTACK_DAMAGE.translationKey(),NamedTextColor.BLUE);
+		if (rangedMult != null) stringAttribute(rangedMult,true,lore,"attribute.name.prisonpop.projectile_damage",NamedTextColor.GOLD);
+		Utils.runNotNull(attackSpeed(),speed -> stringAttribute(speed,true,lore,Attribute.GENERIC_ATTACK_SPEED.translationKey(),NamedTextColor.LIGHT_PURPLE));
 		stringAttribute(luck,false,lore,Attribute.GENERIC_LUCK.translationKey(),NamedTextColor.GREEN);
 		stringAttribute(movementSpeed,true,lore,Attribute.GENERIC_MOVEMENT_SPEED.translationKey(),NamedTextColor.YELLOW);
 		return lore;
@@ -95,8 +139,9 @@ public final class AttributesInfo {
 		if (health != 0) map.put(Attribute.GENERIC_MAX_HEALTH,getAttribute(health,false,key,slot));
 		if (armor != 0) map.put(Attribute.GENERIC_ARMOR,getAttribute(armor,false,key,slot));
 		if (armorToughness != 0) map.put(Attribute.GENERIC_ARMOR_TOUGHNESS,getAttribute(armorToughness,false,key,slot));
-		if (attackDamage != 0) map.put(Attribute.GENERIC_ATTACK_DAMAGE,getAttribute(attackDamage,false,key,slot));
 		if (knockbackResistance != 0) map.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,getAttribute(knockbackResistance,true,key,slot));
+		if (attackDamage != 0) map.put(Attribute.GENERIC_ATTACK_DAMAGE,getAttribute(attackDamage,false,key,slot));
+		Utils.runNotNull(attackSpeed(),speed -> map.put(Attribute.GENERIC_ATTACK_SPEED,getAttribute(4 - speed,false,key,slot)));
 		if (luck != 0) map.put(Attribute.GENERIC_LUCK,getAttribute(luck,false,key,slot));
 		if (movementSpeed != 0) map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(movementSpeed,true,key,slot));
 		item.setItemMeta(Utils.runGetOriginal(item.getItemMeta(),meta -> meta.setAttributeModifiers(map)));
@@ -106,12 +151,12 @@ public final class AttributesInfo {
 	@Override
 	public boolean equals(Object obj) {
 		return (obj instanceof AttributesInfo info) && health == info.health && armor == info.armor && armorToughness == info.armorToughness && knockbackResistance == info.knockbackResistance &&
-				movementSpeed == info.movementSpeed && attackDamage == info.attackDamage && luck == info.luck;
+				attackDamage == info.attackDamage && Objects.equals(rangedMult,info.rangedMult) && Objects.equals(attackSpeed,info.attackSpeed) && luck == info.luck && movementSpeed == info.movementSpeed;
 	}
 	
 	@NotNull
 	private AttributeModifier getAttribute(float amount, boolean percent, @NotNull String key, @NotNull EquipmentSlot slot) {
-		return new AttributeModifier(SLOT_UUID_MAP.get(slot),key,percent ? amount / 100 : amount,AttributeModifier.Operation.ADD_NUMBER,slot);
+		return new AttributeModifier(SLOT_UUID_MAP.get(slot),key,percent ? amount / 100f : amount,AttributeModifier.Operation.ADD_NUMBER,slot);
 	}
 	
 	private void stringAttribute(float amount, boolean percent, @NotNull List<Component> lore, @NotNull String translate, @NotNull TextColor color) {
@@ -122,5 +167,53 @@ public final class AttributesInfo {
 		if (percent) str.append("%");
 		lore.add(Utils.noItalic(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).
 				append(Component.translatable(translate,color))));
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withHealth(@Nullable Number health) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withArmor(@Nullable Number armor) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withKnockbackResistance(@Nullable Number knockbackResistance) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withAttackDamage(@Nullable Number attackDamage) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withRangedMult(@Nullable Number rangedMult) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withAttackSpeed(@Nullable Number attackSpeed) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withLuck(@Nullable Number luck) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withMovementSpeed(@Nullable Number movementSpeed) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 }
