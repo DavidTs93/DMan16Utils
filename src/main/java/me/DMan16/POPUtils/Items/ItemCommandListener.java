@@ -4,11 +4,13 @@ import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.*;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
@@ -29,7 +31,18 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 	}
 	
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
-		if (args.length < 3) return true;
+		if (args.length < 3) {
+			if (args.length <= 0 && (sender instanceof Player player)) {
+				ItemStack item = player.getInventory().getItemInMainHand();
+				if (!Utils.isNull(item)) {
+					Itemable<?> itemable = ItemUtils.ofOrHolder(item);
+					player.sendMessage(Component.text("Item class: ",NamedTextColor.GREEN).append(Component.text(itemable.getClass().getName(),NamedTextColor.AQUA)).
+							append(Component.newline()).append(Component.text("Item string: ",NamedTextColor.GREEN)).
+							append(Component.text(itemable.ItemableString(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.ItemableString()))));
+				}
+			}
+			return true;
+		}
 		if (!args[0].equalsIgnoreCase("give")) return true;
 		Player player;
 		player = Bukkit.getPlayer(args[1]);

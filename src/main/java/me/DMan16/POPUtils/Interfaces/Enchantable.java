@@ -120,13 +120,14 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		if (shouldBreak()) return new ItemStack(Material.AIR);
 		Material material = material();
 		List<Component> lore = info.lore();
-		lore.add(0,Utils.noItalic(Component.translatable("item.modifiers." + equipSlot().name().toLowerCase(),NamedTextColor.WHITE)));
-		lore.add(0,Component.empty());
+		lore.add(0,Utils.noItalic(Component.translatable("item.modifiers." +
+				((equipSlot() == EquipmentSlot.HAND ? "main_" : "") + equipSlot().name().toLowerCase()).replace("_",""),NamedTextColor.WHITE)));
 		Utils.applyNotNull(getExtraLoreItemNoAttributes(),lore::addAll);
 		if (!enchantments.isEmpty()) {
 			lore.add(0,Component.empty());
 			lore.addAll(0,ItemableStack.enchantmentsLore(enchantments));
 		}
+		lore.add(0,Component.empty());
 		ItemStack item = makeItemNoAttributes(material,lore);
 		int damageItemStack = damageItemStack(item.getType());
 		if (damageItemStack > 0) item = Utils.setKeyPersistentDataContainer(Utils.setDamage(item,damageItemStack),DAMAGE,PersistentDataType.INTEGER,damage);

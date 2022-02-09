@@ -222,7 +222,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 			} catch (Exception e) {}
 		}
 		Component name = Utils.mapToComponent(arguments.get("Name"));
-		if (name != null) meta.displayName(name);
+		if (name != null) meta.displayName(Utils.noItalic(name));
 		List<Component> lore = Utils.mapToListComponent(arguments.get("Lore"));
 		if (lore != null) meta.lore(lore);
 		meta.setUnbreakable(Utils.thisOrThatOrNull(Utils.getBoolean(arguments.get("Unbreakable")),false));

@@ -1466,15 +1466,21 @@ public class Utils {
 	}
 	
 	@Nullable
-	@Contract("null -> null; !null -> !null")
+	@Contract(value = "null -> null; !null -> !null", pure = true)
 	public static Component noItalic(@Nullable Component comp) {
 		return comp == null || comp.equals(Component.empty()) || comp.hasDecoration(TextDecoration.ITALIC) ? comp : comp.decoration(TextDecoration.ITALIC,false);
 	}
 	
 	@Nullable
-	@Contract("null -> null; !null -> !null")
+	@Contract(value = "null -> null; !null -> !null", pure = true)
 	public static <V extends ScopedComponent<V>> V noItalic(@Nullable V comp) {
 		return comp == null || comp.hasDecoration(TextDecoration.ITALIC) ? comp : comp.decoration(TextDecoration.ITALIC,false);
+	}
+	
+	@Nullable
+	@Contract(value = "null -> null; !null -> !null", pure = true)
+	public static List<Component> noItalic(@Nullable List<Component> comps) {
+		return comps == null || comps.isEmpty() ? comps : comps.stream().map(Utils::noItalic).collect(Collectors.toList());
 	}
 	
 	@Nullable
