@@ -16,6 +16,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -23,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V> {
-	public static final NamespacedKey DAMAGE = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_item_damage");
+	protected static final NamespacedKey DAMAGE_KEY = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_item_damage");
 	public static int CUSTOM_FIX_DIVIDE = 10;
 	
 	protected final @NotNull HashMap<@NotNull Enchantment,@NotNull Integer> enchantments = new HashMap<>();
@@ -36,7 +37,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		this.isDefault = isDefault;
 	}
 	
-	public abstract @Positive int model();
+	public abstract @NonNegative int model();
 	
 	public boolean canEnchant(@NotNull Enchantment enchantment, int level) {
 		if (level < enchantment.getStartLevel()) return false;
@@ -71,13 +72,12 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	@NonNegative
 	public final int fix(@NonNegative int amount) {
 		if (damage == 0) return amount;
-		int damage = this.damage, per = maxDurability() / CUSTOM_FIX_DIVIDE;
+		int damage = shouldBreak() ? maxDurability() : this.damage, per = maxDurability() / CUSTOM_FIX_DIVIDE;
 		while (damage > 0 && amount > 0) {
 			damage -= per;
 			amount--;
 		}
-		if (damage < 0) damage = 0;
-		this.damage = damage;
+		this.damage = Math.max(damage,0);
 		return amount;
 	}
 	
@@ -115,9 +115,17 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	
 	@NotNull protected abstract Component displayName();
 	
+	public boolean canRevive() {
+		return false;
+	}
+	
+//	@NotNull
+//	public ItemStack brokenItem() {
+//		return new ItemStack(Material.AIR);
+//	}
+	
 	@NotNull
 	protected final ItemStack asItemNoAttributes() {
-		if (shouldBreak()) return new ItemStack(Material.AIR);
 		Material material = material();
 		List<Component> lore = info.lore();
 		lore.add(0,Utils.noItalic(Component.translatable("item.modifiers." +
@@ -128,20 +136,48 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 			lore.addAll(0,ItemableStack.enchantmentsLore(enchantments));
 		}
 		lore.add(0,Component.empty());
-		ItemStack item = makeItemNoAttributes(material,lore);
-		int damageItemStack = damageItemStack(item.getType());
-		if (damageItemStack > 0) item = Utils.setKeyPersistentDataContainer(Utils.setDamage(item,damageItemStack),DAMAGE,PersistentDataType.INTEGER,damage);
-		return Utils.addEnchantments(item,enchantments);
+		if (shouldBreak()) lore.add(0,Utils.noItalic(Component.translatable("menu.prisonpop.broken",NamedTextColor.RED)));
+		return damageItem(makeItemNoAttributes(material,lore),damageItemStack(material),shouldBreak());
+	}
+	
+	@Nullable
+	@Contract("null,_,_ -> null; !null,_,_ -> !null")
+	public static ItemStack damageItem(ItemStack item, int damage, boolean shouldBreak) {
+		return damage > 0 ? Utils.setKeyPersistentDataContainer(!shouldBreak ? Utils.setDamage(item,damage) : item,DAMAGE_KEY,PersistentDataType.INTEGER,damage,true) : item;
+	}
+	
+	@NotNull
+	protected final ItemStack finalizeItem(@NotNull ItemStack item) {
+		return finalizeItem(item,info);
+	}
+	
+	@NotNull
+	protected final ItemStack finalizeItem(@NotNull ItemStack item, @Nullable AttributesInfo info) {
+		return finalizeItem(item,info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage());
+	}
+	
+	@NotNull
+	protected static ItemStack finalizeItem(@NotNull ItemStack item, @Nullable AttributesInfo info, @NotNull String key, @NotNull EquipmentSlot slot, @Nullable HashMap<Enchantment,Integer> enchantments, boolean shouldBreak, @Positive int maxDurability, @NonNegative int damage) {
+		if (!shouldBreak) {
+			if (enchantments != null) item = Utils.addEnchantments(item,enchantments);
+			item = info == null ? AttributesInfo.addAttributesNull(item,key,slot) : info.addAttributes(item,key,slot);
+		}
+		return Utils.addDurabilityLore(item,maxDurability,damage,false);
+	}
+	
+	@NotNull
+	public final ItemStack asItem() {
+		return finalizeItem(asItemNoAttributes(),info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage());
+	}
+	
+	@NonNegative
+	public int damageItemStack() {
+		return damageItemStack(material());
 	}
 	
 	@NonNegative
 	public int damageItemStack(@NotNull Material material) {
 		return damage <= 0 ? 0 : (int) Math.max(1,Math.floor(((float) damage) / maxDurability() * material.getMaxDurability()));
-	}
-	
-	@NotNull
-	public final ItemStack asItem() {
-		return Utils.addDurabilityLore(info.addAttributes(asItemNoAttributes(),key(),equipSlot()),maxDurability(),damage,false);
 	}
 	
 	@NotNull

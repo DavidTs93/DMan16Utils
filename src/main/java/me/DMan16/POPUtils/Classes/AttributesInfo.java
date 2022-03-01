@@ -33,17 +33,19 @@ public final class AttributesInfo {
 	public final float armorToughness;
 	public final float knockbackResistance;
 	public final float attackDamage;
+	public final float attackDamagePercent;
 	public final @Nullable Float rangedMult;
 	private final @Nullable @Positive @Range(from = 1,to = 100) Integer attackSpeed;
 	public final float luck;
 	public final float movementSpeed;
 	
-	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,
 						   @Nullable Number rangedMult,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		this.health = f(health);
 		this.armor = f(armor);
 		this.armorToughness = f(armorToughness);
 		this.attackDamage = f(attackDamage);
+		this.attackDamagePercent = f(attackDamagePercent);
 		this.rangedMult = rangedMult == null ? null : f(rangedMult);
 		this.attackSpeed = attackSpeed == null ? null : Utils.clamp(attackSpeed.intValue(),0,99) + 1;
 		this.knockbackResistance = f(knockbackResistance);
@@ -58,10 +60,10 @@ public final class AttributesInfo {
 	}
 	
 	@Nullable
-	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,
 									@Nullable Number rangedMult,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		try {
-			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 		} catch (Exception e) {}
 		return null;
 	}
@@ -70,7 +72,7 @@ public final class AttributesInfo {
 	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,
 									@Nullable Number attackDamage,@Nullable Number luck,@Nullable Number movementSpeed) {
 		try {
-			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,null,null,luck,movementSpeed);
+			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,null,null,null,luck,movementSpeed);
 		} catch (Exception e) {}
 		return null;
 	}
@@ -88,7 +90,7 @@ public final class AttributesInfo {
 				((Item) itemWrapper.item()).getDefaultAttributeModifiers((net.minecraft.world.entity.EquipmentSlot) slot.enumSlot.slot());
 		boolean projectile = (itemWrapper.item() instanceof ProjectileWeaponItem) || (itemWrapper.item() instanceof TridentItem);
 		if (map.isEmpty() && !projectile) throw new IllegalArgumentException("Attributes map is empty!");
-		return new AttributesInfo(0,d(map,Attributes.ARMOR),d(map,Attributes.ARMOR_TOUGHNESS),d(map,Attributes.KNOCKBACK_RESISTANCE),d(map,Attributes.ATTACK_DAMAGE),
+		return new AttributesInfo(0,d(map,Attributes.ARMOR),d(map,Attributes.ARMOR_TOUGHNESS),d(map,Attributes.KNOCKBACK_RESISTANCE),d(map,Attributes.ATTACK_DAMAGE),0,
 				projectile ? 1 : null,d(map,Attributes.ATTACK_SPEED),0,0);
 	}
 	
@@ -113,7 +115,7 @@ public final class AttributesInfo {
 	@Contract(pure = true)
 	public AttributesInfo join(AttributesInfo info) {
 		return info == null ? this : of(this.health + info.health,this.armor + info.armor,this.armorToughness + info.armorToughness,
-				this.knockbackResistance + info.knockbackResistance,this.attackDamage + info.attackDamage,
+				this.knockbackResistance + info.knockbackResistance,this.attackDamage + info.attackDamage,this.attackDamagePercent + info.attackDamagePercent,
 				join(this.rangedMult,info.rangedMult),join(this.attackSpeed,info.attackSpeed),
 				this.luck + info.luck,this.movementSpeed + info.movementSpeed);
 	}
@@ -134,16 +136,25 @@ public final class AttributesInfo {
 	}
 	
 	@NotNull
+	public static ItemStack addAttributesNull(@NotNull ItemStack item, @NotNull String key, @NotNull EquipmentSlot slot) {
+		LinkedHashMultimap<Attribute,AttributeModifier> map = LinkedHashMultimap.create();
+		map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(0.00000000000000001f,false,key,false,slot == EquipmentSlot.CHEST ? EquipmentSlot.FEET : slot));
+		item.setItemMeta(Utils.runGetOriginal(item.getItemMeta(),meta -> meta.setAttributeModifiers(map)));
+		return item;
+	}
+	
+	@NotNull
 	public ItemStack addAttributes(@NotNull ItemStack item, @NotNull String key, @NotNull EquipmentSlot slot) {
 		LinkedHashMultimap<Attribute,AttributeModifier> map = LinkedHashMultimap.create();
-		if (health != 0) map.put(Attribute.GENERIC_MAX_HEALTH,getAttribute(health,false,key,slot));
-		if (armor != 0) map.put(Attribute.GENERIC_ARMOR,getAttribute(armor,false,key,slot));
-		if (armorToughness != 0) map.put(Attribute.GENERIC_ARMOR_TOUGHNESS,getAttribute(armorToughness,false,key,slot));
-		if (knockbackResistance != 0) map.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,getAttribute(knockbackResistance,true,key,slot));
-		if (attackDamage != 0) map.put(Attribute.GENERIC_ATTACK_DAMAGE,getAttribute(attackDamage,false,key,slot));
-		Utils.runNotNull(attackSpeed(),speed -> map.put(Attribute.GENERIC_ATTACK_SPEED,getAttribute(4 - speed,false,key,slot)));
-		if (luck != 0) map.put(Attribute.GENERIC_LUCK,getAttribute(luck,false,key,slot));
-		if (movementSpeed != 0) map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(movementSpeed,true,key,slot));
+		if (health != 0) map.put(Attribute.GENERIC_MAX_HEALTH,getAttribute(health,false,key,false,slot));
+		if (armor != 0) map.put(Attribute.GENERIC_ARMOR,getAttribute(armor,false,key,false,slot));
+		if (armorToughness != 0) map.put(Attribute.GENERIC_ARMOR_TOUGHNESS,getAttribute(armorToughness,false,key,false,slot));
+		if (knockbackResistance != 0) map.put(Attribute.GENERIC_KNOCKBACK_RESISTANCE,getAttribute(knockbackResistance,true,key,false,slot));
+		if (attackDamage != 0) map.put(Attribute.GENERIC_ATTACK_DAMAGE,getAttribute(attackDamage,false,key,false,slot));
+		if (attackDamagePercent != 0) map.put(Attribute.GENERIC_ATTACK_DAMAGE,getAttribute(attackDamagePercent,true,key,true,slot));
+		Utils.runNotNull(attackSpeed(),speed -> map.put(Attribute.GENERIC_ATTACK_SPEED,getAttribute(4 - speed,false,key,false,slot)));
+		if (luck != 0) map.put(Attribute.GENERIC_LUCK,getAttribute(luck,false,key,false,slot));
+		if (movementSpeed != 0) map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(movementSpeed,true,key,true,slot));
 		item.setItemMeta(Utils.runGetOriginal(item.getItemMeta(),meta -> meta.setAttributeModifiers(map)));
 		return item;
 	}
@@ -155,8 +166,8 @@ public final class AttributesInfo {
 	}
 	
 	@NotNull
-	private AttributeModifier getAttribute(float amount, boolean percent, @NotNull String key, @NotNull EquipmentSlot slot) {
-		return new AttributeModifier(SLOT_UUID_MAP.get(slot),key,percent ? amount / 100f : amount,AttributeModifier.Operation.ADD_NUMBER,slot);
+	private static AttributeModifier getAttribute(float amount, boolean percent, @NotNull String key, boolean multiply, @NotNull EquipmentSlot slot) {
+		return new AttributeModifier(SLOT_UUID_MAP.get(slot),key,percent ? amount / 100f : amount,multiply ? AttributeModifier.Operation.MULTIPLY_SCALAR_1 : AttributeModifier.Operation.ADD_NUMBER,slot);
 	}
 	
 	private void stringAttribute(float amount, boolean percent, @NotNull List<Component> lore, @NotNull String translate, @NotNull TextColor color) {
@@ -172,48 +183,54 @@ public final class AttributesInfo {
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withHealth(@Nullable Number health) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withArmor(@Nullable Number armor) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withKnockbackResistance(@Nullable Number knockbackResistance) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withAttackDamage(@Nullable Number attackDamage) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withAttackDamagePercent(@Nullable Number attackDamagePercent) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withRangedMult(@Nullable Number rangedMult) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withAttackSpeed(@Nullable Number attackSpeed) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withLuck(@Nullable Number luck) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withMovementSpeed(@Nullable Number movementSpeed) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
 	}
 }

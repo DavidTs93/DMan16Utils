@@ -6,6 +6,7 @@ import com.google.gson.reflect.TypeToken;
 import com.mojang.authlib.GameProfile;
 import com.mojang.authlib.properties.Property;
 import me.DMan16.POPUpdater.POPUpdaterMain;
+import me.DMan16.POPUtils.Classes.Engraving;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.Enums.Rarity;
@@ -1495,9 +1496,25 @@ public class Utils {
 	@Nullable
 	@Contract("null,_ -> null; !null,_ -> !null")
 	public static ItemStack addEnchantments(@Nullable ItemStack item, @NotNull Map<@NotNull Enchantment,@NotNull Integer> enchantments) {
-		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK)
-			item.setItemMeta(runGetOriginal((EnchantmentStorageMeta) item.getItemMeta(),meta -> enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true))));
-		else item.addUnsafeEnchantments(enchantments);
+		if (!isNull(item) && !enchantments.isEmpty()) {
+			if (item.getType() == Material.ENCHANTED_BOOK) {
+				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
+				if (meta.getStoredEnchants().isEmpty()) {
+					Entry<Enchantment,Integer> ench = enchantments.entrySet().iterator().next();
+					meta.addStoredEnchant(ench.getKey(),ench.getValue(),true);
+					item.setItemMeta(meta);
+				}
+			} else {
+				boolean engraved = false;
+				for (Entry<Enchantment,Integer> ench : enchantments.entrySet()) {
+					if (ench.getKey() instanceof Engraving) {
+						if (engraved) continue;
+						engraved = true;
+					}
+					item.addUnsafeEnchantment(ench.getKey(),ench.getValue());
+				}
+			}
+		}
 		return item;
 	}
 	
@@ -2361,13 +2378,14 @@ public class Utils {
 			oldDamage = ((Damageable) item.getItemMeta()).getDamage();
 		} catch (Exception e) {}
 		if (oldDamage == null) return item;
-		int durability = maxDurability - oldDamage - addDamage;
-		if (durability <= 0) return new ItemStack(Material.AIR);
+		int durability = Math.max(maxDurability - oldDamage - addDamage,0);
+//		if (durability <= 0) return new ItemStack(Material.AIR);
 		TextColor color;
-		int ratio = (int) Math.ceil(((double) maxDurability) / durability);
+		int ratio = durability == 0 ? 0 : (int) Math.ceil(((double) maxDurability) / durability);
 		if (ratio >= 100) color = NamedTextColor.RED;
 		else if (ratio >= 20) color = NamedTextColor.GOLD;
 		else if (ratio >= 2) color = NamedTextColor.YELLOW;
+		else if (ratio == 0) color = NamedTextColor.GRAY;
 		else color = NamedTextColor.GREEN;
 		List<Component> lore = List.of(Component.empty(),
 				Utils.noItalic(Component.translatable("item.durability",NamedTextColor.WHITE,Component.text(durability,color),Component.text(maxDurability,NamedTextColor.GRAY))));

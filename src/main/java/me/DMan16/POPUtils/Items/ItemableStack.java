@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Items;
 
+import me.DMan16.POPUtils.Classes.Engraving;
 import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Enums.Tags;
 import me.DMan16.POPUtils.Interfaces.Amountable;
@@ -26,7 +27,6 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 public class ItemableStack implements Itemable<ItemableStack>,Amountable<ItemableStack> {
 	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
@@ -65,9 +65,30 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@NotNull
 	public static List<Component> enchantmentsLore(@NotNull Map<Enchantment,Integer> enchantments) {
-		return new ArrayList<>(enchantments.entrySet()).stream().sorted(Comparator.comparing(entry -> entry.getKey().getKey().getKey())).
-				map(entry -> Utils.applyOrOriginalIf(Utils.noItalic(Component.translatable(entry.getKey().translationKey(),NamedTextColor.GRAY)),line -> line.append(Component.space()).
-						append(Component.translatable("enchantment.level." + entry.getValue())),entry.getKey().getMaxLevel() > 1)).collect(Collectors.toList());
+		List<Component> lore = new ArrayList<>();
+		Engraving engraving = null;
+		for (Map.Entry<Enchantment,Integer> ench : enchantments.entrySet()) {
+			if (ench.getKey() instanceof Engraving e) {
+				if (engraving != null) continue;
+				engraving = e;
+			} else lore.add(enchantmentsLoreLine(ench.getKey(),ench.getValue()));
+		}
+		if (engraving != null) {
+			lore.add(0,Component.empty());
+			lore.add(enchantmentsLoreLine(engraving,1));
+		}
+		return lore;
+	}
+	
+	@NotNull
+	private static Component enchantmentsLoreLine(@NotNull Enchantment enchantment, int lvl) {
+		Component line = Utils.noItalic(Component.translatable(enchantment.translationKey()));
+		if (enchantment instanceof Engraving engraving) line = Component.text(engraving.symbol,NamedTextColor.GOLD).append(line);
+		else {
+			line = line.color(NamedTextColor.GRAY);
+			if (enchantment.getMaxLevel() > 1) line = line.append(Component.space()).append(Component.translatable("enchantment.level." + lvl));
+		}
+		return line;
 	}
 	
 	@NotNull

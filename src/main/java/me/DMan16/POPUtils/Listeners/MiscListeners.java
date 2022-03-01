@@ -15,7 +15,10 @@ import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.bukkit.event.Cancellable;
+import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -25,12 +28,12 @@ import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.PrepareSmithingEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
+import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.inventory.meta.Damageable;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -61,7 +64,15 @@ public class MiscListeners implements Listener {
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
 	public void onCommand(PlayerCommandPreprocessEvent event) {
-		String cmd = event.getMessage();
+		onCommand(event,event.getMessage(),event.getPlayer());
+	}
+	
+	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	public void onCommand(ServerCommandEvent event) {
+		onCommand(event,event.getCommand(),event.getSender());
+	}
+	
+	private <V extends Event & Cancellable> void onCommand(V event, String cmd, CommandSender sender) {
 		if (cmd.startsWith("/")) cmd = cmd.replaceFirst("/","");
 		String[] split = cmd.split(" ",3);
 		if (split.length < 2) return;
@@ -72,7 +83,7 @@ public class MiscListeners implements Listener {
 		Material material = Utils.getMaterial(split[1].split("\\{",2)[0]);
 		if (material == null || !DISABLED_GIVE_MATERIALS.contains(material)) return;
 		event.setCancelled(true);
-		Utils.chatColors(event.getPlayer(),"&cMaterial disabled for giving!");
+		Utils.chatColors(sender,"&cMaterial disabled for giving!");
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -81,16 +92,16 @@ public class MiscListeners implements Listener {
 		ItemStack item = event.getItem();
 		short max = item.getType().getMaxDurability();
 		if (ItemUtils.of(event.getItem()) instanceof Enchantable enchantable) {
-			int dmg = enchantable.damageItemStack(enchantable.material());
-			if (enchantable.addDamage(event.getDamage()).shouldBreak()) event.setDamage(max);
+			if (enchantable.shouldBreak()) {
+				event.setDamage(0);
+				event.setCancelled(true);
+				return;
+			}
+			int dmg = enchantable.damageItemStack();
+			if (enchantable.addDamage(event.getDamage()).shouldBreak() && !enchantable.canRevive()) event.setDamage(max);
 			else {
-				event.setDamage(enchantable.damageItemStack(enchantable.material()) - dmg);
-				event.getItem().setItemMeta(Utils.setKeyPersistentDataContainer(event.getItem().getItemMeta(),Enchantable.DAMAGE,PersistentDataType.INTEGER,enchantable.damage(),true));
-//				new BukkitRunnable() {
-//					public void run() {
-//						ArmorUtils.updateEntity(event.getPlayer());
-//					}
-//				}.runTaskLater(POPCombatMain.getInstance(),1);
+				event.setDamage(enchantable.shouldBreak() ? 0 :enchantable.damageItemStack() - dmg);
+				event.getItem().setItemMeta((enchantable.shouldBreak() ? enchantable.asItem() : Enchantable.damageItem(event.getItem(),enchantable.damage(),false)).getItemMeta());
 			}
 		} else if (item.getType().getMaxDurability() > 0) try {		// !!!!
 			item = Utils.addDurabilityLore((((Damageable) item.getItemMeta()).getDamage() <= 0) ? Utils.setLore(item,null) : item,max,event.getDamage(),true);
