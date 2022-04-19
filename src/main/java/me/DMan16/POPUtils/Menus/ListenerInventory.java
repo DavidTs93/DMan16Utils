@@ -1,6 +1,7 @@
 package me.DMan16.POPUtils.Menus;
 
 import me.DMan16.POPUtils.Classes.BasicItemable;
+import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
@@ -70,6 +71,10 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected void setItem(int slot, @Nullable ItemStack item) {
 		if (legalSlot(slot)) inventory.setItem(slot,item);
+	}
+	
+	protected void setItemable(int slot, @NotNull Itemable<?> item) {
+		if (legalSlot(slot)) inventory.setItem(slot,item.asItem());
 	}
 	
 	public boolean legalSlot(int slot) {
