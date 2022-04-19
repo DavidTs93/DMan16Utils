@@ -1,8 +1,9 @@
-package me.DMan16.POPUtils.Interfaces;
+package me.DMan16.POPUtils.Items;
 
 import me.DMan16.POPUtils.Classes.AttributesInfo;
+import me.DMan16.POPUtils.Classes.Engraving;
 import me.DMan16.POPUtils.Enums.Tags;
-import me.DMan16.POPUtils.Items.ItemableStack;
+import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -20,14 +21,17 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V> {
 	protected static final NamespacedKey DAMAGE_KEY = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_item_damage");
-	public static int CUSTOM_FIX_DIVIDE = 10;
+	protected static final NamespacedKey MAX_ENCHANTMENTS_KEY = new NamespacedKey(POPUtilsMain.getInstance(),"prisonpop_max_enchantments");
+	public static final int CUSTOM_FIX_DIVIDE = 10;
+	private static final int MAX_ENCHANTMENTS = 20;
 	
-	protected final @NotNull HashMap<@NotNull Enchantment,@NotNull Integer> enchantments = new HashMap<>();
+	protected @Nullable Engraving engraving = null;
+	protected final @NotNull HashMap<@NotNull Enchantment,@NotNull @Positive Integer> enchantments = new HashMap<>();
+	protected @Positive int maxEnchantments;
 	protected @NonNegative int damage = 0;
 	public final @NotNull AttributesInfo info;
 	protected final boolean isDefault;
@@ -35,27 +39,116 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	protected Enchantable(@NotNull AttributesInfo info,boolean isDefault) {
 		this.info = info;
 		this.isDefault = isDefault;
+		this.maxEnchantments = initialMaxEnchantments();
+	}
+	
+	@Positive
+	protected int initialMaxEnchantments() {
+		return 1;
+	}
+	
+	@Positive
+	public int maxEnchantments() {
+		return maxEnchantments;
 	}
 	
 	public abstract @NonNegative int model();
 	
+	@Nullable
+	@Positive
+	public Integer getEnchant(@NotNull Enchantment enchantment) {
+		if (!(enchantment instanceof Engraving)) return enchantments.get(enchantment);
+		return null;
+	}
+	
+	public boolean hasEnchant(@NotNull Enchantment enchantment) {
+		return getEnchant(enchantment) != null;
+	}
+	
+	public boolean hasEngraving(@NotNull Engraving engraving) {
+		return Objects.equals(engraving,this.engraving);
+	}
+	
+	@NonNegative
+	public int emptyEnchantmentSlots() {
+		return maxEnchantments - enchantments.size();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected V setMaxEnchantmentSlots(@Positive int maxEnchantments) {
+		if (maxEnchantments == this.maxEnchantments) return (V) this;
+		this.maxEnchantments = Math.min(maxEnchantments,MAX_ENCHANTMENTS);
+		Set<Enchantment> keys = enchantments.keySet();
+		if (keys.size() > maxEnchantments) {
+			List<Enchantment> keysList = new ArrayList<>(keys);
+			while (keys.size() > maxEnchantments) keys.remove(keysList.remove(keysList.size() - 1));
+		}
+		return (V) this;
+	}
+	
+	protected V setEnchantments(@NotNull Map<@NotNull Enchantment,@NotNull @Positive Integer> enchantments) {
+		Engraving engraving = null;
+		for (Enchantment enchantment : enchantments.keySet()) if (enchantment instanceof Engraving e) {
+			engraving = e;
+			break;
+		}
+		return setEnchantmentsEngraving(enchantments,engraving);
+	}
+	
+	protected V setEnchantmentsEngraving(@NotNull Map<@NotNull Enchantment,@NotNull @Positive Integer> enchantments, @Nullable Engraving engraving) {
+		this.engraving = engraving;
+		this.enchantments.clear();
+		for (Map.Entry<Enchantment,Integer> entry : enchantments.entrySet()) if (!(entry.getKey() instanceof Engraving)) this.enchantments.put(entry.getKey(),entry.getValue());
+		return setMaxEnchantmentSlots(maxEnchantments);
+	}
+	
 	public boolean canEnchant(@NotNull Enchantment enchantment, int level) {
-		if (level < enchantment.getStartLevel()) return false;
-		Integer existing = enchantments.get(enchantment);
+		if (level <= 0 || level < enchantment.getStartLevel()) return false;
+		if (enchantment instanceof Engraving engraving) {
+			if (this.engraving != null) return false;
+			this.engraving = engraving;
+			return true;
+		}
+		Integer existing = getEnchant(enchantment);
 		if (existing != null) return level > existing || (level == existing && level < enchantment.getMaxLevel());
+		if (emptyEnchantmentSlots() <= 0) return false;
 		if (Tags.AXES.contains(material())) {
 			if (enchantment == Enchantment.DIG_SPEED || enchantment == Enchantment.LOOT_BONUS_BLOCKS || enchantment == Enchantment.SILK_TOUCH) return false;
-			if (enchantment != Enchantment.LOOT_BONUS_MOBS && enchantment != Enchantment.KNOCKBACK && enchantment != Enchantment.FIRE_ASPECT &&
-					!enchantment.canEnchantItem(new ItemStack(material()))) return false;
+			if (enchantment != Enchantment.LOOT_BONUS_MOBS && enchantment != Enchantment.KNOCKBACK && enchantment != Enchantment.FIRE_ASPECT && !enchantment.canEnchantItem(new ItemStack(material()))) return false;
 		} else if (!enchantment.canEnchantItem(new ItemStack(material()))) return false;
 		return enchantments.keySet().stream().noneMatch(ench -> Utils.conflictsNotEquals(ench,enchantment));
 	}
 	
+	@Nullable
+	public Engraving getEngraving() {
+		return engraving;
+	}
+	
 	public boolean addEnchant(@NotNull Enchantment enchantment, int level) {
 		if (!canEnchant(enchantment,level)) return false;
-		Integer existing = enchantments.get(enchantment);
-		enchantments.put(enchantment,existing != null && existing == level ? level + 1 : level);
+		if (enchantment instanceof Engraving engraving) this.engraving = engraving;
+		else {
+			Integer existing = getEnchant(enchantment);
+			enchantments.put(enchantment,existing != null && existing == level ? level + 1 : level);
+		}
 		return true;
+	}
+	
+	@Nullable
+	public Integer removeEnchantment(@NotNull Enchantment enchantment) {
+		return (enchantment instanceof Engraving) ? null : enchantments.remove(enchantment);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public V clearEnchantments() {
+		enchantments.clear();
+		return (V) this;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public V removeEngraving() {
+		engraving = null;
+		return (V) this;
 	}
 	
 	@MonotonicNonNull
@@ -92,7 +185,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	@NotNull
 	@SuppressWarnings("unchecked")
 	public final V addDamage(@NonNegative int amount) {
-		damage += amount;
+		damage = (int) Math.min(((long) damage) + amount,maxDurability());
 		return (V) this;
 	}
 	
@@ -125,6 +218,11 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 //	}
 	
 	@NotNull
+	protected List<Component> enchantmentsLore(@NotNull HashMap<@NotNull Enchantment,@NotNull @Positive Integer> enchantmentsMap) {
+		return Utils.enchantmentsLore(enchantmentsMap,engraving);
+	}
+	
+	@NotNull
 	protected final ItemStack asItemNoAttributes() {
 		Material material = material();
 		List<Component> lore = info.lore();
@@ -133,11 +231,11 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		Utils.applyNotNull(getExtraLoreItemNoAttributes(),lore::addAll);
 		if (!enchantments.isEmpty()) {
 			lore.add(0,Component.empty());
-			lore.addAll(0,ItemableStack.enchantmentsLore(enchantments));
+			lore.addAll(0,enchantmentsLore(enchantments));
 		}
 		lore.add(0,Component.empty());
 		if (shouldBreak()) lore.add(0,Utils.noItalic(Component.translatable("menu.prisonpop.broken",NamedTextColor.RED)));
-		return damageItem(makeItemNoAttributes(material,lore),damageItemStack(material),shouldBreak());
+		return Utils.setKeyPersistentDataContainer(damageItem(makeItemNoAttributes(material,lore),damageItemStack(material),shouldBreak()),MAX_ENCHANTMENTS_KEY,PersistentDataType.INTEGER,maxEnchantments);
 	}
 	
 	@Nullable
@@ -161,7 +259,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		if (!shouldBreak) {
 			if (enchantments != null) item = Utils.addEnchantments(item,enchantments);
 			item = info == null ? AttributesInfo.addAttributesNull(item,key,slot) : info.addAttributes(item,key,slot);
-		}
+		} else item = AttributesInfo.addAttributesNull(item,key,slot);
 		return Utils.addDurabilityLore(item,maxDurability,damage,false);
 	}
 	
@@ -189,6 +287,8 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	protected final HashMap<@NotNull String,Object> baseMap() {
 		HashMap<String,Object> map = new HashMap<>();
 		if (!enchantments.isEmpty()) map.put("Enchantments",ItemableStack.getEnchantments(enchantments));
+		if (engraving != null) map.put("Engraving",engraving.name());
+		map.put("MaxEnchantments",maxEnchantments);
 		if (damage > 0) map.put("Damage",damage);
 		return map;
 	}

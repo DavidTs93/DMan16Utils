@@ -6,11 +6,10 @@ import me.DMan16.POPUtils.Classes.Pair;
 import me.DMan16.POPUtils.Classes.Trio;
 import me.DMan16.POPUtils.Events.SuccessfulPrepareAnvilEvent;
 import me.DMan16.POPUtils.Events.SuccessfulPrepareSmithingEvent;
-import me.DMan16.POPUtils.Interfaces.Enchantable;
+import me.DMan16.POPUtils.Items.Enchantable;
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.ItemUtils;
-import me.DMan16.POPUtils.Items.ItemableStack;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
@@ -98,10 +97,16 @@ public class MiscListeners implements Listener {
 				return;
 			}
 			int dmg = enchantable.damageItemStack();
-			if (enchantable.addDamage(event.getDamage()).shouldBreak() && !enchantable.canRevive()) event.setDamage(max);
-			else {
-				event.setDamage(enchantable.shouldBreak() ? 0 :enchantable.damageItemStack() - dmg);
-				event.getItem().setItemMeta((enchantable.shouldBreak() ? enchantable.asItem() : Enchantable.damageItem(event.getItem(),enchantable.damage(),false)).getItemMeta());
+			if (enchantable.addDamage(event.getDamage()).shouldBreak()) {
+				if (!enchantable.canRevive()) event.setDamage(max);
+				else {
+					event.setDamage(0);
+					event.getItem().setItemMeta(enchantable.asItem().getItemMeta());
+					event.getPlayer().playSound(event.getPlayer().getLocation(),enchantable.material() == Material.SHIELD ? Sound.ITEM_SHIELD_BREAK : Sound.ENTITY_ITEM_BREAK,1,1);
+				}
+			} else {
+				event.setDamage(enchantable.damageItemStack() - dmg);
+				event.getItem().setItemMeta(Enchantable.damageItem(event.getItem(),enchantable.damage(),false).getItemMeta());
 			}
 		} else if (item.getType().getMaxDurability() > 0) try {		// !!!!
 			item = Utils.addDurabilityLore((((Damageable) item.getItemMeta()).getDamage() <= 0) ? Utils.setLore(item,null) : item,max,event.getDamage(),true);
@@ -113,10 +118,9 @@ public class MiscListeners implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR)
 	public void onPrepare(PrepareResultEvent event) {
 		if (!(event.getInventory() instanceof GrindstoneInventory grindstone) || Utils.isNull(event.getResult())) return;
-		if (Utils.isNull(grindstone.getUpperItem()) || Utils.isNull(grindstone.getLowerItem())) {
-			Itemable<?> result = ItemUtils.of(event.getResult());
-			if (result != null) event.setResult(result.asItem());
-		} else if (grindstone.getUpperItem().getType() == grindstone.getLowerItem().getType()) event.setResult(null);
+		Itemable<?> item = ItemUtils.of(Utils.thisOrThatOrNullOnlyOne(grindstone.getUpperItem(),grindstone.getLowerItem()));
+		if (item instanceof Enchantable enchantable) event.setResult(enchantable.clearEnchantments().asItem());
+		else event.setResult(null);
 	}
 	
 	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
@@ -166,21 +170,19 @@ public class MiscListeners implements Listener {
 	public void onPrepareAnvil(PrepareAnvilEvent event) {
 		ANVIL_RECIPE_EVENTS.remove(event.getInventory());
 		event.getInventory().setRepairCost(0);
-		if (!Utils.isNull(event.getInventory().getFirstItem()) && event.getInventory().getFirstItem().getType() == Material.NAME_TAG && Utils.isNull(event.getInventory().getSecondItem()))
-			return;
+		if (!Utils.isNull(event.getInventory().getFirstItem()) && event.getInventory().getFirstItem().getType() == Material.NAME_TAG && Utils.isNull(event.getInventory().getSecondItem())) return;
 		Itemable<?> first = ItemUtils.of(event.getInventory().getFirstItem());
-		ItemableStack second = ItemUtils.of(ItemableStack.class,event.getInventory().getSecondItem());
+		Itemable<?> second = ItemUtils.of(event.getInventory().getSecondItem());
 		Itemable<?> originalResult = ItemUtils.of(event.getResult());
-		Pair<@NotNull AdvancedRecipe<AnvilInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>> result =
-				Utils.getAdvancedAnvilRecipes().getResult(first,second,originalResult);
+		Pair<@NotNull AdvancedRecipe<AnvilInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result =
+				Utils.advancedAnvilRecipes().getResult(first,second,originalResult);
 		SuccessfulPrepareAnvilEvent newEvent = new SuccessfulPrepareAnvilEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,
 				result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
 		if (result == null) newEvent.setCancelled(true);
 		event.setResult(result == null ? null : result.second.third.asItem());
 		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
 		else {
-			ANVIL_RECIPE_EVENTS.put(event.getInventory(),
-					new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
+			ANVIL_RECIPE_EVENTS.put(event.getInventory(), new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
 			event.setResult(newEvent.result().asItem());
 		}
 	}
@@ -189,10 +191,10 @@ public class MiscListeners implements Listener {
 	public void onPrepareSmithing(PrepareSmithingEvent event) {
 		SMITHING_RECIPE_EVENTS.remove(event.getInventory());
 		Itemable<?> first = ItemUtils.of(event.getInventory().getInputEquipment());
-		ItemableStack second = ItemUtils.of(ItemableStack.class,event.getInventory().getInputMineral());
+		Itemable<?> second = ItemUtils.of(event.getInventory().getInputMineral());
 		Itemable<?> originalResult = ItemUtils.of(event.getResult());
-		Pair<@NotNull AdvancedRecipe<SmithingInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>> result =
-				Utils.getAdvancedSmithingRecipes().getResult(first,second,originalResult);
+		Pair<@NotNull AdvancedRecipe<SmithingInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result =
+				Utils.advancedSmithingRecipes().getResult(first,second,originalResult);
 		SuccessfulPrepareSmithingEvent newEvent = new SuccessfulPrepareSmithingEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,
 				result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
 		if (result == null) newEvent.setCancelled(true);

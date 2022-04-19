@@ -189,7 +189,7 @@ public class ArmorEquipListener implements Listener {
 		armorEquipEvent.callEventAndDoTasks();
 	}
 	
-	@EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
+	@EventHandler(priority = EventPriority.LOW, ignoreCancelled = true)
 	public void playerDeathEvent(PlayerDeathEvent event) {
 		Player player = event.getEntity();
 		if (event.getKeepInventory()) return;

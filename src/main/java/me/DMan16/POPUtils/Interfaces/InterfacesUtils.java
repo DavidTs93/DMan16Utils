@@ -1,5 +1,7 @@
 package me.DMan16.POPUtils.Interfaces;
 
+import me.DMan16.POPUtils.Classes.BasicItemable;
+import me.DMan16.POPUtils.Classes.PluginItemInitializerInfo;
 import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -14,7 +16,7 @@ import java.util.List;
 
 public class InterfacesUtils {
 	public static final String TRANSLATABLE = "translatable: ";
-	public static final Component CHOSEN = Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
+	public static final Component CHOSEN = Utils.noItalic(Component.translatable("menu.prisonpop.chosen",NamedTextColor.GREEN));
 	
 	@NotNull
 	@Unmodifiable
@@ -54,13 +56,12 @@ public class InterfacesUtils {
 	@NotNull
 	@Unmodifiable
 	private static List<@NotNull ItemStack> createItems(@NotNull List<List<Component>> lores) {
-		ItemStack sort = PluginsItems.getItem("sort");
-		return lores.stream().map(lore -> Utils.setLore(sort.clone(),lore)).toList();
+		PluginItemInitializerInfo sort = PluginsItems.getItem("sort");
+		return lores.stream().map(BasicItemable::setLoreFunction).map(sort::copyAddAlterItem).map(Itemable::asItem).toList();
 	}
 	
 	@NotNull
 	public static Component line(@NotNull String name, boolean selected) {
-		if (selected) return Component.text("► ").append(Component.translatable(name)).color(NamedTextColor.AQUA).decoration(TextDecoration.ITALIC,false);
-		return Component.translatable(name).color(NamedTextColor.WHITE).decoration(TextDecoration.ITALIC,false);
+		return selected ? Utils.noItalic(Component.text("► ").append(Component.translatable(name)).color(NamedTextColor.AQUA)) : Utils.noItalic(Component.translatable(name).color(NamedTextColor.WHITE));
 	}
 }

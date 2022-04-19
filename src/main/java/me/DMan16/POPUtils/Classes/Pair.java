@@ -9,26 +9,26 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
-public class Pair<F,S> implements Copyable<Pair<F,S>> {
-	public final F first;
-	public final S second;
+public class Pair<V,T> implements Copyable<Pair<V,T>> {
+	public final V first;
+	public final T second;
 	
-	protected Pair(F first, S second) {
+	public Pair(V first,T second) {
 		this.first = first;
 		this.second = second;
 	}
 	
-	public F first() {
+	public V first() {
 		return this.first;
 	}
 	
-	public S second() {
+	public T second() {
 		return this.second;
 	}
 	
 	@NotNull
 	@Contract(value = " -> new", pure = true)
-	public Pair<S,F> swapped() {
+	public Pair<T,V> swapped() {
 		return of(this.second,this.first);
 	}
 	
@@ -50,40 +50,47 @@ public class Pair<F,S> implements Copyable<Pair<F,S>> {
 	
 	@NotNull
 	@Contract("_ -> new")
-	public <F2> Pair<F2,S> mapFirst(@NotNull Function<? super F,? extends F2> function) {
+	public <V2> Pair<V2,T> mapFirst(@NotNull Function<? super V,? extends V2> function) {
 		return of(function.apply(this.first),this.second);
 	}
 	
 	@NotNull
 	@Contract("_ -> new")
-	public <S2> Pair<F,S2> mapSecond(@NotNull Function<? super S,? extends S2> function) {
+	public <T2> Pair<V,T2> mapSecond(@NotNull Function<? super T,? extends T2> function) {
 		return of(this.first,function.apply(this.second));
 	}
 	
 	@NotNull
-	public Pair<F,S> copy() {
+	@Contract(pure = true)
+	public Pair<V,T> copy() {
 		return Pair.of(first,second);
 	}
 	
+	@NotNull
+	@Contract(pure = true)
+	public MapEntry<V,T> toEntry() {
+		return MapEntry.of(first,second);
+	}
+	
 	@Contract(value = "_,_ -> new", pure = true)
-	public static <F,S> @NotNull Pair<F,S> of(F first, S second) {
+	public static <V,T> @NotNull Pair<V,T> of(V first, T second) {
 		return new Pair<>(first,second);
 	}
 	
 	@NotNull
 	@SafeVarargs
-	public static <F,S> Map<F,S> toMap(Pair<F,S> ... pairs) {
-		Map<F,S> map = new HashMap<>();
-		for (Pair<F,S> pair : pairs) if (pair != null) map.put(pair.first,pair.second);
+	public static <V,T> Map<V,T> toHashMap(Pair<V,T> ... pairs) {
+		Map<V,T> map = new HashMap<>();
+		for (Pair<V,T> pair : pairs) if (pair != null && pair.first != null) map.put(pair.first,pair.second);
 		return map;
 	}
 	
 	@Nullable
 	@Contract("null -> null; !null -> !null")
-	public static <F,S> List<Pair<F,S>> fromMap(Map<F,S> map) {
+	public static <V,T> List<Pair<V,T>> fromMap(Map<V,T> map) {
 		if (map == null) return null;
-		List<Pair<F,S>> list = new ArrayList<>();
-		for (Entry<F,S> entry : map.entrySet()) list.add(of(entry.getKey(),entry.getValue()));
+		List<Pair<V,T>> list = new ArrayList<>();
+		for (Entry<V,T> entry : map.entrySet()) list.add(of(entry.getKey(),entry.getValue()));
 		return list;
 	}
 }

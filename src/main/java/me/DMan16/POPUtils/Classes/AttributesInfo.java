@@ -39,6 +39,21 @@ public final class AttributesInfo {
 	public final float luck;
 	public final float movementSpeed;
 	
+	public int score() {
+		int score = 0;
+		score += health / 2;
+		score += armor / 2;
+		score += (armorToughness + 2) / 4;
+		score += knockbackResistance / 10;
+		score += attackDamage * 2;
+		score += attackDamagePercent / 5;
+		if (rangedMult != null) score += rangedMult / 5;
+		if (attackSpeed != null) score += attackSpeed / 20;
+		score += luck;
+		score += movementSpeed / 10;
+		return score;
+	}
+	
 	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,
 						   @Nullable Number rangedMult,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		this.health = f(health);
@@ -129,16 +144,19 @@ public final class AttributesInfo {
 		stringAttribute(knockbackResistance,true,lore,Attribute.GENERIC_KNOCKBACK_RESISTANCE.translationKey(),NamedTextColor.DARK_PURPLE);
 		stringAttribute(attackDamage,false,lore,Attribute.GENERIC_ATTACK_DAMAGE.translationKey(),NamedTextColor.BLUE);
 		if (rangedMult != null) stringAttribute(rangedMult,true,lore,"attribute.name.prisonpop.projectile_damage",NamedTextColor.GOLD);
-		Utils.runNotNull(attackSpeed(),speed -> stringAttribute(speed,true,lore,Attribute.GENERIC_ATTACK_SPEED.translationKey(),NamedTextColor.LIGHT_PURPLE));
 		stringAttribute(luck,false,lore,Attribute.GENERIC_LUCK.translationKey(),NamedTextColor.GREEN);
 		stringAttribute(movementSpeed,true,lore,Attribute.GENERIC_MOVEMENT_SPEED.translationKey(),NamedTextColor.YELLOW);
+		if (attackSpeed != null) {
+			lore.add(Component.empty());
+			EMPTY.append(Component.translatable(Attribute.GENERIC_ATTACK_SPEED.translationKey(),NamedTextColor.LIGHT_PURPLE)).append(Component.text(": ",NamedTextColor.WHITE)).append(Component.text(attackSpeed,Utils.getTextColorHSL((attackSpeed / 20) * 20,100,50)));
+		}
 		return lore;
 	}
 	
 	@NotNull
 	public static ItemStack addAttributesNull(@NotNull ItemStack item, @NotNull String key, @NotNull EquipmentSlot slot) {
 		LinkedHashMultimap<Attribute,AttributeModifier> map = LinkedHashMultimap.create();
-		map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(0.00000000000000001f,false,key,false,slot == EquipmentSlot.CHEST ? EquipmentSlot.FEET : slot));
+		map.put(Attribute.GENERIC_MOVEMENT_SPEED,getAttribute(-0.00000000000000001f,false,key,false,slot == EquipmentSlot.CHEST ? EquipmentSlot.FEET : EquipmentSlot.CHEST));
 		item.setItemMeta(Utils.runGetOriginal(item.getItemMeta(),meta -> meta.setAttributeModifiers(map)));
 		return item;
 	}
@@ -176,8 +194,7 @@ public final class AttributesInfo {
 		if (amount > 0) str.append("+");
 		str.append(Utils.toString(amount,2));
 		if (percent) str.append("%");
-		lore.add(Utils.noItalic(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).
-				append(Component.translatable(translate,color))));
+		lore.add(Utils.noItalic(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).append(Component.translatable(translate,color))));
 	}
 	
 	@NotNull

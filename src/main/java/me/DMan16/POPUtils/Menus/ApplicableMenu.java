@@ -21,7 +21,7 @@ import java.util.*;
 import java.util.function.Function;
 
 public abstract class ApplicableMenu<V extends Applicable<?,?>> extends ListenerInventoryPages implements Sortable {
-	private static final Component RESET_NAME = Component.translatable("controls.reset",NamedTextColor.GREEN).decoration(TextDecoration.ITALIC,false);
+	private static final Component RESET_NAME = Utils.noItalic(Component.translatable("controls.reset",NamedTextColor.GREEN));
 	private static final ItemStack DEFAULT_ITEM_RESET = Utils.makeItem(Material.PAPER,RESET_NAME,ItemFlag.values());
 	
 	protected int slotSort;

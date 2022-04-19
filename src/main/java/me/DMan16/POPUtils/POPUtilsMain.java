@@ -2,13 +2,14 @@ package me.DMan16.POPUtils;
 
 import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
-import me.DMan16.POPUtils.Classes.ItemInitializerInfo;
+import me.DMan16.POPUtils.Classes.PluginItemInitializerInfo;
 import me.DMan16.POPUtils.Effects.CommandTestEffects;
 import me.DMan16.POPUtils.Holograms.HologramsManager;
 import me.DMan16.POPUtils.Items.*;
 import me.DMan16.POPUtils.Events.Callers.EventCallers;
 import me.DMan16.POPUtils.Listeners.CancelPlayers;
 import me.DMan16.POPUtils.Listeners.MiscListeners;
+import me.DMan16.POPUtils.Listeners.PlayerPlayTimeLogger;
 import me.DMan16.POPUtils.Listeners.PlayerVersionLogger;
 import me.DMan16.POPUtils.Classes.AdvancedRecipes;
 import me.DMan16.POPUtils.Restrictions.RestrictionsCommandListener;
@@ -35,6 +36,7 @@ public final class POPUtilsMain extends JavaPlugin {
 	private ProtocolManager ProtocolManager = null;
 	private CancelPlayers CancelPlayers = null;
 	private PlayerVersionLogger PlayerVersionLogger = null;
+	private PlayerPlayTimeLogger PlayerPlayTimeLogger = null;
 	private final AdvancedRecipes<AnvilInventory> advancedAnvilRecipes = new AdvancedRecipes<>();
 	private final AdvancedRecipes<SmithingInventory> advancedSmithingRecipes = new AdvancedRecipes<>();
 	
@@ -92,25 +94,26 @@ public final class POPUtilsMain extends JavaPlugin {
 		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) try {
 			PlayerVersionLogger = new PlayerVersionLogger();
 		} catch (Exception e) {e.printStackTrace();}
+		PlayerPlayTimeLogger = new PlayerPlayTimeLogger();
 	}
 	
 	private void initiateMenuItems() {
-		PluginsItems.add(new ItemInitializerInfo("sort",Material.PAPER,Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD)));
-		PluginsItems.add(new ItemInitializerInfo("menu_close",Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED)));
-		PluginsItems.add(new ItemInitializerInfo("menu_next",Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA)));
-		PluginsItems.add(new ItemInitializerInfo("menu_previous",Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW)));
-		PluginsItems.add(new ItemInitializerInfo("menu_done",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN)));
-		PluginsItems.add(new ItemInitializerInfo("menu_ok",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN)));
-		PluginsItems.add(new ItemInitializerInfo("menu_ok_no",Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN,TextDecoration.STRIKETHROUGH)));
-		PluginsItems.add(new ItemInitializerInfo("menu_cancel",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED)));
-		PluginsItems.add(new ItemInitializerInfo("menu_back",Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD)));
-		PluginsItems.add(new ItemInitializerInfo("menu_up",Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN)));
-		PluginsItems.add(new ItemInitializerInfo("menu_down",Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED)));
-		PluginsItems.add(new ItemInitializerInfo("menu_yes",Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN)));
-		PluginsItems.add(new ItemInitializerInfo("menu_no",Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED)));
-		PluginsItems.add(new ItemInitializerInfo("menu_border",Material.BLACK_STAINED_GLASS_PANE,Component.empty()));
-		PluginsItems.add(new ItemInitializerInfo("menu_inside",Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty()));
-		PluginsItems.add(new ItemInitializerInfo("menu_inside_dark",Material.GRAY_STAINED_GLASS_PANE,Component.empty()));
+		PluginsItems.add("sort",new PluginItemInitializerInfo(Material.PAPER,Component.translatable("menu.prisonpop.sort_by",NamedTextColor.GOLD)));
+		PluginsItems.add("menu_close",new PluginItemInitializerInfo(Material.BARRIER,Component.translatable("spectatorMenu.close",NamedTextColor.RED)));
+		PluginsItems.add("menu_next",new PluginItemInitializerInfo(Material.ARROW,Component.translatable("spectatorMenu.next_page",NamedTextColor.AQUA)));
+		PluginsItems.add("menu_previous",new PluginItemInitializerInfo(Material.ARROW,Component.translatable("spectatorMenu.previous_page",NamedTextColor.YELLOW)));
+		PluginsItems.add("menu_done",new PluginItemInitializerInfo(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.done",NamedTextColor.GREEN)));
+		PluginsItems.add("menu_ok",new PluginItemInitializerInfo(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN)));
+		PluginsItems.add("menu_ok_no",new PluginItemInitializerInfo(Material.GRAY_STAINED_GLASS_PANE,Component.translatable("gui.ok",NamedTextColor.GREEN,TextDecoration.STRIKETHROUGH)));
+		PluginsItems.add("menu_cancel",new PluginItemInitializerInfo(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.cancel",NamedTextColor.RED)));
+		PluginsItems.add("menu_back",new PluginItemInitializerInfo(Material.ARROW,Component.translatable("gui.back",NamedTextColor.GOLD)));
+		PluginsItems.add("menu_up",new PluginItemInitializerInfo(Material.BARRIER,Component.translatable("gui.up",NamedTextColor.DARK_GREEN)));
+		PluginsItems.add("menu_down",new PluginItemInitializerInfo(Material.BARRIER,Component.translatable("gui.down",NamedTextColor.DARK_RED)));
+		PluginsItems.add("menu_yes",new PluginItemInitializerInfo(Material.GREEN_STAINED_GLASS_PANE,Component.translatable("gui.yes",NamedTextColor.GREEN)));
+		PluginsItems.add("menu_no",new PluginItemInitializerInfo(Material.RED_STAINED_GLASS_PANE,Component.translatable("gui.no",NamedTextColor.RED)));
+		PluginsItems.add("menu_border",new PluginItemInitializerInfo(Material.BLACK_STAINED_GLASS_PANE,Component.empty()));
+		PluginsItems.add("menu_inside",new PluginItemInitializerInfo(Material.LIGHT_GRAY_STAINED_GLASS_PANE,Component.empty()));
+		PluginsItems.add("menu_inside_dark",new PluginItemInitializerInfo(Material.GRAY_STAINED_GLASS_PANE,Component.empty()));
 	}
 	
 	private void removeRecipes() {
@@ -165,13 +168,17 @@ public final class POPUtilsMain extends JavaPlugin {
 		return PlayerVersionLogger;
 	}
 	
+	public PlayerPlayTimeLogger getPlayerPlayTimeLogger() {
+		return PlayerPlayTimeLogger;
+	}
+	
 	@NotNull
-	public AdvancedRecipes<AnvilInventory> getAdvancedAnvilRecipes() {
+	public AdvancedRecipes<AnvilInventory> advancedAnvilRecipes() {
 		return advancedAnvilRecipes;
 	}
 	
 	@NotNull
-	public AdvancedRecipes<SmithingInventory> getAdvancedSmithingRecipes() {
+	public AdvancedRecipes<SmithingInventory> advancedSmithingRecipes() {
 		return advancedSmithingRecipes;
 	}
 }

@@ -38,7 +38,7 @@ public class ItemHolder implements Itemable<ItemHolder> {
 	
 	@NotNull
 	public ItemHolder copy() {
-		return new ItemHolder(item.clone());
+		return new ItemHolder(item);
 	}
 	
 	@NotNull

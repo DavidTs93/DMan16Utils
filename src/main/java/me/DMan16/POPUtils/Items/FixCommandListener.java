@@ -1,6 +1,5 @@
 package me.DMan16.POPUtils.Items;
 
-import me.DMan16.POPUtils.Interfaces.Enchantable;
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;

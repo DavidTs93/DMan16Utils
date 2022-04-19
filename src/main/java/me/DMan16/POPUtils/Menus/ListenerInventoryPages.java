@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Menus;
 
+import me.DMan16.POPUtils.Classes.BasicItemable;
 import me.DMan16.POPUtils.Interfaces.Backable;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
@@ -16,6 +17,7 @@ import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -158,8 +160,8 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	protected void reset() {
 		clear();
-		if (border == null) for (int i = size - 9; i < size; i++) setItem(i,itemBorder());
-		else if (border) for (int i = 0; i < size; i++) if (isBorder(i)) setItem(i,itemBorder());
+		if (border == null) for (int i = size - 9; i < size; i++) setItem(i,itemBorder().asItem());
+		else if (border) for (int i = 0; i < size; i++) if (isBorder(i)) setItem(i,itemBorder().asItem());
 	}
 	
 	public void setPage(int newPage) {
@@ -168,10 +170,10 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		currentPage = newPage;
 		reset();
 		setPageContents();
-		if (shouldSetClose()) setItem(slotClose,itemClose());
-		if (shouldSetNext()) setItem(slotNext,next());
-		if (shouldSetPrevious()) setItem(slotPrevious,previous());
-		if (this instanceof Backable) setItem(slotBack,itemBack());
+		if (shouldSetClose()) setItem(slotClose,itemClose().asItem());
+		if (shouldSetNext()) setItem(slotNext,next().asItem());
+		if (shouldSetPrevious()) setItem(slotPrevious,previous().asItem());
+		if (this instanceof Backable) setItem(slotBack,itemBack().asItem());
 		if (reopenInventory()) {
 			boolean old = cancelCloseUnregister;
 			cancelCloseUnregister = true;
@@ -211,21 +213,18 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	@NotNull
-	protected ItemStack next() {
-		if (!fancyButtons) return super.itemNext();
-		ItemStack next = super.itemNext();
-		return Utils.setDisplayName(next,next.getItemMeta().displayName().append(Component.text(" (" + (currentPage + 1) + ")").decoration(TextDecoration.ITALIC,false)));
+	protected BasicItemable next() {
+		return !fancyButtons ? super.itemNext() : super.itemNext().copyChangeNameIf(name -> name.append(Component.text(" (" + (currentPage - 1) + ")")),Objects::nonNull);
 	}
 	
 	@NotNull
-	protected ItemStack previous() {
-		if (!fancyButtons) return super.itemPevious();
-		ItemStack previous = super.itemPevious();
-		return Utils.setDisplayName(previous,previous.getItemMeta().displayName().append(Component.text(" (" + (currentPage - 1) + ")").decoration(TextDecoration.ITALIC,false)));
+	protected BasicItemable previous() {
+		return !fancyButtons ? super.itemPevious() : super.itemPevious().copyChangeNameIf(name -> name.append(Component.text(" (" + (currentPage - 1) + ")")),Objects::nonNull);
 	}
 	
+	@Contract("null -> true")
 	protected boolean isEmpty(@Nullable ItemStack item) {
-		return Utils.isNull(item) || Utils.sameItem(itemBorder(),item) || Utils.sameItem(itemInside(),item) || Utils.sameItem(itemInsideDark(),item);
+		return Utils.isNull(item) || Utils.sameItem(itemBorder().asItem(),item) || Utils.sameItem(itemInside().asItem(),item) || Utils.sameItem(itemInsideDark().asItem(),item);
 	}
 	
 	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {

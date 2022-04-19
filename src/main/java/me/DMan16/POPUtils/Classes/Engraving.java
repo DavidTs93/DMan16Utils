@@ -1,7 +1,9 @@
 package me.DMan16.POPUtils.Classes;
 
 import java.util.*;
+import java.util.function.Function;
 
+import me.DMan16.POPUtils.Items.Socketable;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -13,6 +15,8 @@ import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
 
 public final class Engraving extends CustomEnchantment {
+	private static final @NotNull HashMap<@NotNull Engraving,@NotNull List<@NotNull Function<@NotNull Socketable<?>,@Nullable Integer>>> EXTRA_SCORES = new HashMap<>();
+	
 	public final char symbol;
 	private final @NotNull @Unmodifiable Set<@NotNull EnchantmentTarget> targets;
 	private final @NotNull @Unmodifiable Set<@NotNull Material> materials;
@@ -22,6 +26,18 @@ public final class Engraving extends CustomEnchantment {
 		this.symbol = symbol;
 		this.targets = targets == null ? Set.of() : Set.copyOf(targets);
 		this.materials = materials == null ? Set.of() : Set.copyOf(materials);
+	}
+	
+	public static void registerExtraEngravingScore(@NotNull Engraving engraving,@NotNull Function<@NotNull Socketable<?>,@Nullable Integer> scoreFunction) {
+		EXTRA_SCORES.computeIfAbsent(engraving,l -> new ArrayList<>()).add(scoreFunction);
+	}
+	
+	@Nullable
+	public static Integer getEngravingExtraScore(@NotNull Socketable<?> socketable) {
+		List<@NotNull Function<@NotNull Socketable<?>,@Nullable Integer>> list = Utils.applyNotNull(socketable.getEngraving(),EXTRA_SCORES::get);
+		if (list == null || list.isEmpty()) return null;
+		List<Integer> scores = list.stream().map(function -> function.apply(socketable)).filter(Objects::nonNull).toList();
+		return scores.isEmpty() ? null : scores.stream().reduce(0,Integer::sum);
 	}
 	
 	@NotNull

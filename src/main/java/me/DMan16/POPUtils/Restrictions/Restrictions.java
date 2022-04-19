@@ -2,7 +2,7 @@ package me.DMan16.POPUtils.Restrictions;
 
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
 import me.DMan16.POPUtils.Events.ArmorEquipEvent;
-import me.DMan16.POPUtils.Listeners.Listener;
+import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.POPUtilsMain;
 import me.DMan16.POPUtils.Utils.Utils;
 import org.bukkit.GameMode;
@@ -363,7 +363,7 @@ public class Restrictions {
 		}
 	}
 	
-	public static abstract class Restriction extends Listener {
+	public static abstract class Restriction implements Listener {
 		private final String name;
 		
 		private Restriction(@NotNull String name) {

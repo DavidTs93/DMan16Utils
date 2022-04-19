@@ -48,10 +48,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.io.BukkitObjectInputStream;
 import org.bukkit.util.io.BukkitObjectOutputStream;
 import org.checkerframework.checker.index.qual.NonNegative;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
-import org.jetbrains.annotations.Unmodifiable;
+import org.checkerframework.checker.index.qual.Positive;
+import org.jetbrains.annotations.*;
 import org.yaml.snakeyaml.external.biz.base64Coder.Base64Coder;
 
 import java.io.ByteArrayInputStream;
@@ -570,8 +568,7 @@ public class Utils {
 	@Nullable
 	@Unmodifiable
 	public static Map<@NotNull Enchantment,@NotNull Integer> getStoredEnchants(ItemStack item) {
-		if (isNull(item)) return null;
-		if (item.getType() != Material.ENCHANTED_BOOK) return null;
+		if (isNull(item) || item.getType() != Material.ENCHANTED_BOOK) return null;
 		return ((EnchantmentStorageMeta) item.getItemMeta()).getStoredEnchants();
 	}
 	
@@ -832,7 +829,7 @@ public class Utils {
 	@NotNull
 	public static List<Component> listStringToListComponent(@NotNull List<String> strs) {
 		List<Component> list = new ArrayList<>();
-		for (String str : strs) list.add(Component.text(str).decoration(TextDecoration.ITALIC,false));
+		for (String str : strs) list.add(Utils.noItalic(Component.text(str)));
 		return list;
 	}
 	
@@ -857,23 +854,23 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static ItemStack makeItem(@NotNull Material material, @Nullable Component name, int model, ItemFlag ... itemflag) {
+	public static ItemStack makeItem(@NotNull Material material, @Nullable Component name, @Nullable Integer model, ItemFlag ... itemflag) {
 		return makeItem(material,name,null,model,itemflag);
 	}
 	
 	@NotNull
 	public static ItemStack makeItem(@NotNull Material material, @Nullable Component name, @Nullable List<Component> lore, ItemFlag ... itemflag) {
-		return makeItem(material,name,lore,0,itemflag);
+		return makeItem(material,name,lore,null,itemflag);
 	}
 	
 	@NotNull
-	public static ItemStack makeItem(@NotNull Material material, @Nullable Component name, @Nullable List<Component> lore, int model, ItemFlag ... itemflag) {
+	public static ItemStack makeItem(@NotNull Material material, @Nullable Component name, @Nullable List<Component> lore, @Nullable Integer model, ItemFlag ... itemflag) {
 		ItemStack item = new ItemStack(material);
 		ItemMeta meta = item.getItemMeta();
 		if (name != null) meta.displayName(name);
 		if (lore != null) meta.lore(lore);
 		for (ItemFlag flag : itemflag) meta.addItemFlags(flag);
-		if (model > 0) meta.setCustomModelData(model);
+		if (model != null && model > 0) meta.setCustomModelData(model);
 		item.setItemMeta(meta);
 		return item;
 	}
@@ -1222,13 +1219,13 @@ public class Utils {
 	}
 	
 	@NotNull
-	public static AdvancedRecipes<AnvilInventory> getAdvancedAnvilRecipes() {
-		return POPUtilsMain.getInstance().getAdvancedAnvilRecipes();
+	public static AdvancedRecipes<AnvilInventory> advancedAnvilRecipes() {
+		return POPUtilsMain.getInstance().advancedAnvilRecipes();
 	}
 	
 	@NotNull
-	public static AdvancedRecipes<SmithingInventory> getAdvancedSmithingRecipes() {
-		return POPUtilsMain.getInstance().getAdvancedSmithingRecipes();
+	public static AdvancedRecipes<SmithingInventory> advancedSmithingRecipes() {
+		return POPUtilsMain.getInstance().advancedSmithingRecipes();
 	}
 	
 	public static boolean containsTabComplete(String arg1, String arg2) {
@@ -1242,9 +1239,21 @@ public class Utils {
 	}
 	
 	@Nullable
+	@Contract("null,null -> null; !null,null -> !null; null,!null -> !null; !null,!null -> null")
+	public static <V> V thisOrThatOrNullOnlyOne(@Nullable V obj1, @Nullable V obj2) {
+		return obj1 != null ? (obj2 == null ? obj1 : null) : obj2;
+	}
+	
+	@Nullable
 	@Contract("null,null -> null")
 	public static Material thisOrThatOrNull(@Nullable Material material1, @Nullable Material material2) {
 		return !isNull(material1) ? material1 : (isNull(material2) ? null : material2);
+	}
+	
+	@Nullable
+	@Contract("null,null -> null")
+	public static Material thisOrThatOrNullOnlyOne(@Nullable Material material1, @Nullable Material material2) {
+		return !isNull(material1) ? (isNull(material2) ? material1 : null) : (isNull(material2) ? null : material2);
 	}
 	
 	@Nullable
@@ -1263,9 +1272,14 @@ public class Utils {
 	}
 	
 	@Nullable
-	@Contract("null,null -> null; !null,_ -> !null; _,!null -> !null")
-	public static ItemStack thisOrThatOrNullOneNotNull(@Nullable ItemStack item1, @Nullable ItemStack item2) {
-		if (item1 == null && item2 == null) return null;
+	@Contract("null,null -> null")
+	public static ItemStack thisOrThatOrNullOnlyOne(@Nullable ItemStack item1, @Nullable ItemStack item2) {
+		return !isNull(item1) ? (isNull(item2) ? item1 : null) : (isNull(item2) ? null : item2);
+	}
+	
+	@NotNull
+	@Contract("!null,_ -> !null; _,!null -> !null")
+	public static ItemStack thisOrThatOrNullOneNotEmpty(@Nullable ItemStack item1,@Nullable ItemStack item2) {
 		if (!isNull(item1)) return item1;
 		if (isNull(item2)) throw new IllegalArgumentException();
 		return item2;
@@ -2177,7 +2191,6 @@ public class Utils {
 	public static ItemStack subtract(ItemStack item, int amount) {
 		if (isNull(item)) return null;
 		if (item.getAmount() > item.getMaxStackSize()) item.setAmount(item.getMaxStackSize());
-		else if (item.getAmount() <= 0) return null;
 		if (amount <= 0) return item;
 		return item.getAmount() <= amount ? null : item.subtract(amount);
 	}
@@ -2451,5 +2464,82 @@ public class Utils {
 	public static boolean conflictsNotEquals(@NotNull Enchantment ench1, @NotNull Enchantment ench2) {
 		if (ench1.equals(ench2)) return false;
 		return ench1.conflictsWith(ench2) || ench2.conflictsWith(ench1);
+	}
+	
+	@NotNull
+	public static List<Component> enchantmentsLore(@NotNull Map<@NotNull Enchantment,@NotNull @Positive Integer> enchantments,@Nullable Engraving engraving) {
+		List<Component> lore = new ArrayList<>();
+		for (Map.Entry<Enchantment,Integer> ench : enchantments.entrySet()) if (!(ench.getKey() instanceof Engraving)) lore.add(enchantmentsLoreLine(ench.getKey(),ench.getValue()));
+		if (engraving != null) {
+			lore.add(0,Component.empty());
+			lore.add(enchantmentsLoreLine(engraving,1));
+		}
+		return lore;
+	}
+	
+	@NotNull
+	public static Component enchantmentsLoreLine(@NotNull Enchantment enchantment,@Positive int level) {
+		return (enchantment instanceof Engraving engraving) ? noItalic(Component.text(engraving.symbol,NamedTextColor.GOLD).append(Component.translatable(engraving.translationKey()))) :
+				applyOrOriginalIf(Utils.noItalic(Component.translatable(enchantment.translationKey(),NamedTextColor.GRAY)),line -> line.append(Component.space()).append(Component.translatable("enchantment.level." + level)),enchantment.getMaxLevel() > 1);
+	}
+	
+//	@NotNull
+//	public static <V> V[] copyArray(V[] @NotNull array) {
+//		return listToArray(Arrays.asList(array));
+//	}
+	
+	@NotNull
+	public static TextColor colorToTextColor(@NotNull Color color) {
+		return TextColor.color(color.getRed(),color.getGreen(),color.getBlue());
+	}
+	
+	@NotNull
+	public static Color textColorToColor(@NotNull TextColor color) {
+		return Color.fromRGB(color.red(),color.green(),color.blue());
+	}
+	
+	@NotNull
+	public static Color getColorHSL(int hue,@Range(from = 0,to = 100) int saturation,@Range(from = 0,to = 100) int lightness) {
+		float h = modulo(hue,360) / 360f, s = saturation / 100f, l = lightness / 100f,r = l,g = l,b = l;
+		if (s != 0) {
+			float q = l < 0.5f ? l * (1 + s) : l + s - l * s;
+			float p = 2 * l - q;
+			r = hueToRgb(p,q,h + 1/3f);
+			g = hueToRgb(p,q,h);
+			b = hueToRgb(p,q,h - 1/3f);
+		}
+		java.awt.Color color = new java.awt.Color(r,g,b);
+		return Color.fromRGB(color.getRed(),color.getGreen(),color.getBlue());
+	}
+	
+	private static float hueToRgb(float p, float q, float t) {
+		if (t < 0f) t += 1f;
+		if (t > 1f) t -= 1f;
+		if (t < 1f/6f) return p + (q - p) * 6f * t;
+		if (t < 1f/2f) return q;
+		if (t < 2f/3f) return p + (q - p) * (2f/3f - t) * 6f;
+		return p;
+	}
+	
+	@NotNull
+	public static TextColor getTextColorHSL(int hue,@Range(from = 0,to = 100) int saturation,@Range(from = 0,to = 100) int lightness) {
+		return colorToTextColor(getColorHSL(hue,saturation,lightness));
+	}
+	
+	public static int intSqrt(int num) {
+		return (int) Math.floor(Math.sqrt(num));
+	}
+	
+	public static long intSqrt(long num) {
+		return (long) Math.floor(Math.sqrt(num));
+	}
+	
+	@NonNegative
+	public static long totalPlayTimeMillis(@NotNull UUID ID) throws SQLException {
+		try (Statement statement = Utils.getConnection().createStatement()) {
+			ResultSet result = statement.executeQuery("SELECT TotalPlayTimeMillis FROM PrisonPOP_Players WHERE ID='" + ID + "';");
+			if (!result.next()) throw new SQLException("Player with the UUID \"" + ID + "\" not found in database!");
+			return thisOrThatOrNull(POPUtilsMain.getInstance().getPlayerPlayTimeLogger().currentPlayTime(ID),0L) + result.getLong("TotalPlayTimeMillis");
+		}
 	}
 }

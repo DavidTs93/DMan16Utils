@@ -40,5 +40,11 @@ public class LoginEventsListener implements Listener {
 			joinEvent.disallow(e);
 		}
 		if (!joinEvent.callEventAndDoTasksIfNotCancelled()) event.getPlayer().kick(Utils.KICK_MESSAGE);
+		else {
+			try (Statement statement = Utils.getConnection().createStatement()) {
+				statement.executeUpdate("UPDATE PrisonPOP_Players SET LastJoin = CURRENT_TIMESTAMP;");
+			} catch (Exception e) {e.printStackTrace();}
+			POPUtilsMain.getInstance().getPlayerPlayTimeLogger().justJoined(event.getPlayer());
+		}
 	}
 }

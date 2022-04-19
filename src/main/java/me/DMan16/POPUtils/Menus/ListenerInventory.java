@@ -1,10 +1,12 @@
 package me.DMan16.POPUtils.Menus;
 
+import me.DMan16.POPUtils.Classes.BasicItemable;
 import me.DMan16.POPUtils.Interfaces.Listener;
 import me.DMan16.POPUtils.Items.PluginsItems;
 import me.DMan16.POPUtils.Interfaces.Menu;
 import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.TranslatableComponent;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import org.bukkit.OfflinePlayer;
@@ -67,7 +69,11 @@ public abstract class ListenerInventory implements Listener,Menu {
 	}
 	
 	protected void setItem(int slot, @Nullable ItemStack item) {
-		if (slot >= 0 && slot < size) inventory.setItem(slot,item);
+		if (legalSlot(slot)) inventory.setItem(slot,item);
+	}
+	
+	public boolean legalSlot(int slot) {
+		return slot >= 0 && slot < size;
 	}
 	
 	@Nullable
@@ -168,53 +174,53 @@ public abstract class ListenerInventory implements Listener,Menu {
 		}
 	}
 	
-	protected ItemStack itemClose() {
+	protected BasicItemable itemClose() {
 		return PluginsItems.getItem("menu_close");
 	}
 	
-	protected ItemStack itemNext() {
+	protected BasicItemable itemNext() {
 		return PluginsItems.getItem("menu_next");
 	}
 	
-	protected ItemStack itemPevious() {
+	protected BasicItemable itemPevious() {
 		return PluginsItems.getItem("menu_previous");
 	}
 	
-	protected ItemStack itemOk() {
+	protected BasicItemable itemOk() {
 		return PluginsItems.getItem("menu_ok");
 	}
 	
-	protected ItemStack itemOkNo() {
+	protected BasicItemable itemOkNo() {
 		return PluginsItems.getItem("menu_ok_no");
 	}
 	
-	protected ItemStack itemCancel() {
+	protected BasicItemable itemCancel() {
 		return PluginsItems.getItem("menu_cancel");
 	}
 	
-	protected ItemStack itemBack() {
+	protected BasicItemable itemBack() {
 		return PluginsItems.getItem("menu_back");
 	}
 	
-	protected ItemStack itemBorder() {
+	protected BasicItemable itemBorder() {
 		return PluginsItems.getItem("menu_border");
 	}
 	
-	protected ItemStack itemInside() {
+	protected BasicItemable itemInside() {
 		return PluginsItems.getItem("menu_inside");
 	}
 	
-	protected ItemStack itemInsideDark() {
+	protected BasicItemable itemInsideDark() {
 		return PluginsItems.getItem("menu_inside_dark");
 	}
 	
 	@NotNull
-	public static Component defaultMenuName(@NotNull String name, boolean bold) {
+	public static TranslatableComponent defaultMenuName(@NotNull String name,boolean bold) {
 		return Utils.noItalic(bold ? Component.translatable(name,NamedTextColor.DARK_GREEN,TextDecoration.BOLD) : Component.translatable(name,NamedTextColor.DARK_GREEN));
 	}
 	
 	@NotNull
-	public static Component defaultMenuName(@NotNull String name) {
+	public static TranslatableComponent defaultMenuName(@NotNull String name) {
 		return defaultMenuName(name,true);
 	}
 }

@@ -64,31 +64,13 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@NotNull
-	public static List<Component> enchantmentsLore(@NotNull Map<Enchantment,Integer> enchantments) {
-		List<Component> lore = new ArrayList<>();
+	public static List<Component> enchantmentsLore(@NotNull Map<@NotNull Enchantment,@NotNull @Positive Integer> enchantments) {
 		Engraving engraving = null;
-		for (Map.Entry<Enchantment,Integer> ench : enchantments.entrySet()) {
-			if (ench.getKey() instanceof Engraving e) {
-				if (engraving != null) continue;
-				engraving = e;
-			} else lore.add(enchantmentsLoreLine(ench.getKey(),ench.getValue()));
+		for (Map.Entry<Enchantment,Integer> ench : enchantments.entrySet()) if (ench.getKey() instanceof Engraving e) {
+			engraving = e;
+			break;
 		}
-		if (engraving != null) {
-			lore.add(0,Component.empty());
-			lore.add(enchantmentsLoreLine(engraving,1));
-		}
-		return lore;
-	}
-	
-	@NotNull
-	private static Component enchantmentsLoreLine(@NotNull Enchantment enchantment, int lvl) {
-		Component line = Utils.noItalic(Component.translatable(enchantment.translationKey()));
-		if (enchantment instanceof Engraving engraving) line = Component.text(engraving.symbol,NamedTextColor.GOLD).append(line);
-		else {
-			line = line.color(NamedTextColor.GRAY);
-			if (enchantment.getMaxLevel() > 1) line = line.append(Component.space()).append(Component.translatable("enchantment.level." + lvl));
-		}
-		return line;
+		return Utils.enchantmentsLore(enchantments,engraving);
 	}
 	
 	@NotNull
@@ -350,6 +332,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@NotNull
+	@Contract(pure = true)
 	public ItemableStack copy(@Positive int amount) {
 		return Utils.runGetOriginal(new ItemableStack(item),item -> item.item.setAmount(amount));
 	}

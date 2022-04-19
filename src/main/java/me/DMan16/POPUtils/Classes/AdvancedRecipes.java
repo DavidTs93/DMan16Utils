@@ -2,7 +2,6 @@ package me.DMan16.POPUtils.Classes;
 
 import me.DMan16.POPUtils.Interfaces.Itemable;
 import me.DMan16.POPUtils.Items.ItemUtils;
-import me.DMan16.POPUtils.Items.ItemableStack;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
@@ -24,9 +23,9 @@ public class AdvancedRecipes<V extends Inventory> {
 	
 	@Nullable
 	@Contract("null,_,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>>
-	getResult(Itemable<?> first, ItemableStack second, Itemable<?> originalResult) {
-		Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>> result;
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>>
+	getResult(Itemable<?> first, Itemable<?> second, Itemable<?> originalResult) {
+		Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>> result;
 		if (first != null) for (AdvancedRecipe<V> recipe : RECIPES.values()) {
 			result = recipe.getResult(first,second,originalResult);
 			if (result != null) return Pair.of(recipe,result);
@@ -36,8 +35,8 @@ public class AdvancedRecipes<V extends Inventory> {
 	
 	@Nullable
 	@Contract("null,_,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable ItemableStack,@NotNull Itemable<?>>>
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>>
 	getResult(ItemStack first, ItemStack second, ItemStack originalResult) {
-		return getResult(ItemUtils.of(first),ItemUtils.of(ItemableStack.class,second),ItemUtils.of(originalResult));
+		return getResult(ItemUtils.of(first),ItemUtils.of(second),ItemUtils.of(originalResult));
 	}
 }

@@ -5,28 +5,29 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public class Trio<F,S,T> implements Copyable<Trio<F,S,T>> {
-	public final F first;
-	public final S second;
-	public final T third;
+public class Trio<V,T,U> implements Copyable<Trio<V,T,U>> {
+	public final V first;
+	public final T second;
+	public final U third;
 	
-	protected Trio(F first, S second, T third) {
+	public Trio(V first, T second, U third) {
 		this.first = first;
 		this.second = second;
 		this.third = third;
 	}
 	
-	public F first() {
+	public V first() {
 		return this.first;
 	}
 	
-	public S second() {
+	public T second() {
 		return this.second;
 	}
 	
-	public T third() {
+	public U third() {
 		return this.third;
 	}
 	
@@ -48,29 +49,35 @@ public class Trio<F,S,T> implements Copyable<Trio<F,S,T>> {
 	
 	@NotNull
 	@Contract("_ -> new")
-	public <F2> Trio<F2,S,T> mapFirst(@NotNull Function<? super F,? extends F2> function) {
+	public <F2> Trio<F2,T,U> mapFirst(@NotNull Function<? super V,? extends F2> function) {
 		return of(function.apply(this.first),this.second,this.third);
 	}
 	
 	@NotNull
 	@Contract("_ -> new")
-	public <S2> Trio<F,S2,T> mapSecond(@NotNull Function<? super S,? extends S2> function) {
+	public <S2> Trio<V,S2,U> mapSecond(@NotNull Function<? super T,? extends S2> function) {
 		return of(this.first,function.apply(this.second),this.third);
 	}
 	
 	@NotNull
 	@Contract("_ -> new")
-	public <T2> Trio<F,S,T2> mapThird(@NotNull Function<? super T,? extends T2> function) {
+	public <T2> Trio<V,T,T2> mapThird(@NotNull Function<? super U,? extends T2> function) {
 		return of(this.first,this.second,function.apply(this.third));
 	}
 	
 	@NotNull
-	public Trio<F,S,T> copy() {
+	public Trio<V,T,U> copy() {
 		return Trio.of(first,second,third);
 	}
 	
+	@NotNull
+	@Contract(pure = true)
+	public <E> MapEntry<V,E> toEntry(@NotNull BiFunction<T,U,E> valueFunction) {
+		return MapEntry.of(first,valueFunction.apply(second,third));
+	}
+	
 	@Contract(value = "_,_,_ -> new", pure = true)
-	public static <F,S,T> @NotNull Trio<F,S,T> of(F first, S second, T third) {
+	public static <V,T,U> @NotNull Trio<V,T,U> of(V first, T second, U third) {
 		return new Trio<>(first,second,third);
 	}
 }

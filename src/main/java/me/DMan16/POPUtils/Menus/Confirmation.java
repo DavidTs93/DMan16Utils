@@ -32,8 +32,8 @@ public abstract class Confirmation extends ListenerInventory {
 		this.slotConfirm = 0;
 		this.slotCancel = 4;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
-		setItem(slotCancel,itemCancel());
-		setItem(slotConfirm,canConfirm() ? itemOk() : (noConfirmLore == null ? itemOkNo() : Utils.addAfterLore(itemOkNo(),noConfirmLore)));
+		setItem(slotCancel,itemCancel().asItem());
+		setItem(slotConfirm,canConfirm() ? itemOk().asItem() : (noConfirmLore == null ? itemOkNo().asItem() : Utils.addAfterLore(itemOkNo().asItem(),noConfirmLore)));
 		open(plugin,player);
 	}
 	

@@ -1,5 +1,6 @@
 package me.DMan16.POPUtils.Interfaces;
 
+import me.DMan16.POPUtils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -19,10 +20,6 @@ public interface PurchasableUpgrade<V,T> extends Purchasable<V,T> {
 	@Override
 	@NotNull
 	default ItemStack itemCantPurchase(@NotNull Player player, T val) {
-		ItemStack item = itemCanPurchaseAndAfford(player,val);
-		ItemMeta meta = item.getItemMeta();
-		meta.displayName(Component.translatable("menu.prisonpop.max_level_reached",NamedTextColor.GOLD).decoration(TextDecoration.ITALIC,false));
-		item.setItemMeta(meta);
-		return item;
+		return Utils.setDisplayName(itemCanPurchaseAndAfford(player,val),Utils.noItalic(Component.translatable("menu.prisonpop.max_level_reached",NamedTextColor.GOLD)));
 	}
 }

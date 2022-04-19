@@ -77,10 +77,12 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 		return false;
 	}
 	
+	@Positive
 	public final int getStartLevel() {
 		return 1;
 	}
 	
+	@Positive
 	public int getMaxLevel() {
 		return 1;
 	}
