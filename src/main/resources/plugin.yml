@@ -1,47 +1,51 @@
-name: POPUtils
+name: DMan16Utils
 version: 1.0
-description: Utilities for PrisonPOP
-main: me.DMan16.POPUtils.POPUtilsMain
-depend: [POPUpdater]
-softdepend: [Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,POPEconomy,ProtocolLib,ViaVersion]
+description: Utilities by DMan16
+main: me.DMan16.DMan16Utils.DMan16UtilsMain
+depend: [DMan16Updater]
+softdepend: [Vault,WorldEdit,WorldGuard,PlaceholderAPI,Citizens,ProtocolLib,ViaVersion]
 author: DMan16
-api-version: 1.18
+api-version: 1.17
 
 commands:
   versions:
-    permission: prisonpop.command.versions
+    permission: dman16.command.versions
   restrictions:
-    permission: prisonpop.command.restrictions
+    permission: dman16.command.restrictions
   item:
-    permission: prisonpop.command.item
+    permission: dman16.command.item
   book:
-    permission: prisonpop.command.book
+    permission: dman16.command.book
   enchant:
-    permission: prisonpop.command.enchant
+    permission: dman16.command.enchant
   damage:
-    permission: prisonpop.command.damage
+    permission: dman16.command.damage
   repair:
-    permission: prisonpop.command.repair
+    permission: dman16.command.repair
   fix:
-    permission: prisonpop.command.fix
+    permission: dman16.command.fix
+  uuid:
+    permission: dman16.command.uuid
   test_effect:
-    permission: prisonpop.command.test_effect
+    permission: dman16.command.test_effect
 permissions:
-  prisonpop.command.versions:
+  dman16.command.versions:
     default: op
-  prisonpop.command.restrictions:
+  dman16.command.restrictions:
     default: op
-  prisonpop.command.item:
+  dman16.command.item:
     default: op
-  prisonpop.command.book:
+  dman16.command.book:
     default: op
-  prisonpop.command.enchant:
+  dman16.command.enchant:
     default: op
-  prisonpop.command.damage:
+  dman16.command.damage:
     default: op
-  prisonpop.command.repair:
+  dman16.command.repair:
     default: op
-  prisonpop.command.fix:
+  dman16.command.fix:
     default: op
-  prisonpop.command.test_effect:
+  dman16.command.uuid:
+    default: op
+  dman16.command.test_effect:
     default: op

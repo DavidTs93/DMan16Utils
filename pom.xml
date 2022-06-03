@@ -1,12 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>POPUtils</artifactId>
-    <description>Utilities for PrisonPOP</description>
+    <artifactId>DMan16Utils</artifactId>
+    <description>Utilities by DMan16</description>
     <packaging>jar</packaging>
     <parent>
-        <artifactId>PrisonPOP</artifactId>
-        <groupId>PrisonPOP</groupId>
+        <artifactId>DMan16</artifactId>
+        <groupId>DMan16</groupId>
         <version>1.0</version>
     </parent>
     <build>
@@ -19,14 +19,20 @@
     </build>
     <dependencies>
         <dependency>
+            <groupId>co.aikar</groupId>
+            <artifactId>taskchain-bukkit</artifactId>
+            <version>3.7.2</version>
+            <scope>compile</scope>
+        </dependency>
+        <dependency>
             <groupId>com.elmakers.mine.bukkit</groupId>
             <artifactId>EffectLib</artifactId>
             <version>9.4</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>PrisonPOP</groupId>
-            <artifactId>POPUpdater</artifactId>
+            <groupId>DMan16</groupId>
+            <artifactId>DMan16Updater</artifactId>
             <version>1.0</version>
             <scope>provided</scope>
         </dependency>
