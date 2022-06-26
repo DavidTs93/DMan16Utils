@@ -33,7 +33,7 @@ public class ItemHolder implements Itemable<ItemHolder> {
 	}
 	
 	@NotNull
-	public String ItemableKey() {
+	public String mappableKey() {
 		return "item_holder";
 	}
 	
@@ -48,7 +48,7 @@ public class ItemHolder implements Itemable<ItemHolder> {
 	}
 	
 	@NotNull
-	public String stringItemable() {
+	public String stringMappable() {
 		return Utils.thisOrThatOrNull(Utils.ObjectToBase64(item),"");
 	}
 }

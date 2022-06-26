@@ -31,7 +31,7 @@ public final class BookCommandListener implements CommandExecutor,TabCompleter {
 		}
 		int lvl = 1;
 		try {
-			lvl = Utils.clamp(Integer.parseInt(args[1]),1,ench.getMaxLevel());
+			lvl = Utils.clamp(Integer.parseInt(args[1]),1,Enchantable.getMaxLevel(ench));
 		} catch (Exception e) {}
 		Utils.runNotNull(ItemableStack.of(Utils.addEnchantment(new ItemStack(Material.ENCHANTED_BOOK),ench,lvl)),item -> player.getInventory().addItem(item.asItem()));
 		return true;
@@ -44,7 +44,7 @@ public final class BookCommandListener implements CommandExecutor,TabCompleter {
 		}
 		Enchantment ench = Utils.getEnchantment(args[0]);
 		if (ench == null) return new ArrayList<>();
-		if (args.length == 2) return IntStream.range(ench.getStartLevel(),ench.getMaxLevel() + 1).mapToObj(Integer::toString).toList();
+		if (args.length == 2) return IntStream.range(ench.getStartLevel(),Enchantable.getMaxLevel(ench) + 1).mapToObj(Integer::toString).toList();
 		return new ArrayList<>();
 	}
 }

@@ -22,7 +22,7 @@ import org.jetbrains.annotations.*;
 import java.util.*;
 
 public final class AttributesInfo {
-	private static final Component EMPTY = Component.text("  ");
+	private static final Component EMPTY = Utils.noItalic(Component.text("  "));
 	private static final @Unmodifiable Map<@NotNull EquipmentSlot,@NotNull UUID> SLOT_UUID_MAP = Map.of(EquipmentSlot.HEAD,UUID.fromString("2AD3F246-FEE1-4E67-B886-69FD380BB151"),
 			EquipmentSlot.CHEST,UUID.fromString("9F3D476D-C118-4544-8365-64846904B482"),EquipmentSlot.LEGS,UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E03"),
 			EquipmentSlot.FEET,UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B64"),EquipmentSlot.HAND,UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5C5"),
@@ -92,13 +92,18 @@ public final class AttributesInfo {
 	
 	@Nullable
 	private static Double d(@NotNull Multimap<net.minecraft.world.entity.ai.attributes.Attribute,net.minecraft.world.entity.ai.attributes.AttributeModifier> map,@NotNull net.minecraft.world.entity.ai.attributes.Attribute attribute) {
-		return Utils.applyOrOriginalIf(Utils.applyNotNullIf(map.get(attribute),c -> Utils.roundAfterDot(c.iterator().next().getAmount(),2),c -> !c.isEmpty()),a -> a * 100,attribute == Attributes.KNOCKBACK_RESISTANCE);
+		Collection<net.minecraft.world.entity.ai.attributes.AttributeModifier> attributes = map.get(attribute);
+		if (attributes.isEmpty()) return null;
+		Double amount = Utils.roundAfterDot(attributes.iterator().next().getAmount(),2);
+		if (amount == null) return null;
+		if (attribute == Attributes.KNOCKBACK_RESISTANCE) amount *= 100;
+		else if (attribute == Attributes.ATTACK_SPEED) amount = (amount + 4) * 25;
+		return amount;
 	}
 	
 	@NotNull
 	public static AttributesInfo of(ItemWrapper.@NotNull Safe itemWrapper,@NotNull EquipSlot slot) {
-		Multimap<net.minecraft.world.entity.ai.attributes.Attribute,net.minecraft.world.entity.ai.attributes.AttributeModifier> map =
-				((Item) itemWrapper.item()).getDefaultAttributeModifiers((net.minecraft.world.entity.EquipmentSlot) slot.enumSlot.slot());
+		Multimap<net.minecraft.world.entity.ai.attributes.Attribute,net.minecraft.world.entity.ai.attributes.AttributeModifier> map = ((Item) itemWrapper.item()).getDefaultAttributeModifiers((net.minecraft.world.entity.EquipmentSlot) slot.enumSlot.slot());
 		boolean projectile = (itemWrapper.item() instanceof ProjectileWeaponItem) || (itemWrapper.item() instanceof TridentItem);
 		if (map.isEmpty() && !projectile) throw new IllegalArgumentException("Attributes map is empty!");
 		return new AttributesInfo(0,d(map,Attributes.ARMOR),d(map,Attributes.ARMOR_TOUGHNESS),d(map,Attributes.KNOCKBACK_RESISTANCE),d(map,Attributes.ATTACK_DAMAGE),0,projectile ? 1 : null,d(map,Attributes.ATTACK_SPEED),0,0);
@@ -187,7 +192,7 @@ public final class AttributesInfo {
 		if (amount > 0) str.append("+");
 		str.append(Utils.toString(amount,2));
 		if (percent) str.append("%");
-		lore.add(Utils.noItalic(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).append(Component.translatable(translate,color))));
+		lore.add(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).append(Component.translatable(translate,color)));
 	}
 	
 	@NotNull

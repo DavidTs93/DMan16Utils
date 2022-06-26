@@ -85,7 +85,7 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	}
 	
 	@NotNull
-	public String ItemableKey() {
+	public String mappableKey() {
 		return "command";
 	}
 	

@@ -1,17 +1,18 @@
 package me.DMan16.DMan16Utils.Listeners;
 
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
-import me.DMan16.DMan16Utils.Classes.AdvancedRecipe;
-import me.DMan16.DMan16Utils.Classes.Pair;
-import me.DMan16.DMan16Utils.Classes.Trio;
+import me.DMan16.DMan16Utils.Classes.*;
+import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Events.SuccessfulPrepareAnvilEvent;
 import me.DMan16.DMan16Utils.Events.SuccessfulPrepareSmithingEvent;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.Listener;
+import me.DMan16.DMan16Utils.Interfaces.NullItemable;
+import me.DMan16.DMan16Utils.Interfaces.Reviveable;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
-import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Utils.Utils;
+import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.command.CommandSender;
@@ -21,13 +22,12 @@ import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryCloseEvent;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
-import org.bukkit.event.inventory.PrepareSmithingEvent;
+import org.bukkit.event.inventory.*;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.server.ServerCommandEvent;
+import org.bukkit.event.world.LootGenerateEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.ItemStack;
@@ -38,6 +38,8 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
+import java.util.function.BiFunction;
+import java.util.function.Function;
 
 public class MiscListeners implements Listener {
 	private static final HashMap<@NotNull AnvilInventory,@NotNull SuccessfulPrepareInfo<AdvancedRecipe<AnvilInventory>>> ANVIL_RECIPE_EVENTS = new HashMap<>();
@@ -98,7 +100,7 @@ public class MiscListeners implements Listener {
 			}
 			int dmg = enchantable.damageItemStack();
 			if (enchantable.addDamage(event.getDamage()).shouldBreak()) {
-				if (!enchantable.canRevive()) event.setDamage(max);
+				if (!(enchantable instanceof Reviveable)) event.setDamage(max);
 				else {
 					event.setDamage(0);
 					event.getItem().setItemMeta(enchantable.asItem().getItemMeta());
@@ -171,13 +173,14 @@ public class MiscListeners implements Listener {
 		ANVIL_RECIPE_EVENTS.remove(event.getInventory());
 		event.getInventory().setRepairCost(0);
 		if (Utils.notNull(event.getInventory().getFirstItem()) && event.getInventory().getFirstItem().getType() == Material.NAME_TAG && Utils.isNull(event.getInventory().getSecondItem())) return;
-		Itemable<?> first = ItemUtils.of(event.getInventory().getFirstItem());
-		Itemable<?> second = ItemUtils.of(event.getInventory().getSecondItem());
-		Itemable<?> originalResult = ItemUtils.of(event.getResult());
-		Pair<@NotNull AdvancedRecipe<AnvilInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result =
-				Utils.advancedAnvilRecipes().getResult(first,second,originalResult);
-		SuccessfulPrepareAnvilEvent newEvent = new SuccessfulPrepareAnvilEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,
-				result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
+		ItemStack firstItem = event.getInventory().getFirstItem();
+		ItemStack secondItem = event.getInventory().getSecondItem();
+		ItemStack resultItem = event.getResult();
+		Itemable<?> first = ItemUtils.of(firstItem);
+		Itemable<?> second = ItemUtils.of(secondItem);
+		Itemable<?> originalResult = ItemUtils.of(resultItem);
+		Pair<@NotNull AdvancedRecipe<AnvilInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result = Utils.advancedAnvilRecipes().getResult(first,second,originalResult);
+		SuccessfulPrepareAnvilEvent newEvent = new SuccessfulPrepareAnvilEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
 		if (result == null) newEvent.setCancelled(true);
 		event.setResult(result == null ? null : result.second.third.asItem());
 		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
@@ -193,20 +196,46 @@ public class MiscListeners implements Listener {
 		Itemable<?> first = ItemUtils.of(event.getInventory().getInputEquipment());
 		Itemable<?> second = ItemUtils.of(event.getInventory().getInputMineral());
 		Itemable<?> originalResult = ItemUtils.of(event.getResult());
-		Pair<@NotNull AdvancedRecipe<SmithingInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result =
-				Utils.advancedSmithingRecipes().getResult(first,second,originalResult);
-		SuccessfulPrepareSmithingEvent newEvent = new SuccessfulPrepareSmithingEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,
-				result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
+		Pair<@NotNull AdvancedRecipe<SmithingInventory>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> result = Utils.advancedSmithingRecipes().getResult(first,second,originalResult);
+		SuccessfulPrepareSmithingEvent newEvent = new SuccessfulPrepareSmithingEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
 		if (result == null) newEvent.setCancelled(true);
 		event.setResult(result == null ? null : result.second.third.asItem());
 		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
 		else {
-			SMITHING_RECIPE_EVENTS.put(event.getInventory(),
-					new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
+			SMITHING_RECIPE_EVENTS.put(event.getInventory(),new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
 			event.setResult(newEvent.result().asItem());
 		}
 	}
 	
-	private record SuccessfulPrepareInfo<V>(@NotNull Itemable<?> first, @Nullable Itemable<?> second, @NotNull V recipe,
-											@NotNull Itemable<?> result, @Nullable Itemable<?> firstAfter, @Nullable Itemable<?> secondAfter) {}
+	private record SuccessfulPrepareInfo<V>(@NotNull Itemable<?> first, @Nullable Itemable<?> second, @NotNull V recipe,@NotNull Itemable<?> result, @Nullable Itemable<?> firstAfter, @Nullable Itemable<?> secondAfter) {}
+	
+	@EventHandler(ignoreCancelled = true)
+	public void onLootGenerateFixItems(LootGenerateEvent event) {
+		if (event.getLoot().isEmpty()) return;
+		List<ItemStack> loot = new ArrayList<>(event.getLoot());
+		Pair<Function<ItemStack,Itemable<?>>,Itemable<?>> info;
+		for (int i = 0; i < loot.size(); i++) {
+			info = LootGenerationItemUpdater.getResult(loot.get(i));
+			if (info != null) loot.set(i,info.second() instanceof NullItemable ? null : info.second().asItem());
+		}
+		event.setLoot(loot);
+	}
+	
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
+	public void onCreativeDropFixItem(PlayerDropItemEvent event) {
+		if (event.getPlayer().getGameMode() != GameMode.CREATIVE) return;
+		Pair<BiFunction<Integer,ItemStack,Itemable<?>>,Itemable<?>> result = CreativeMenuItemUpdater.getResult(null,event.getItemDrop().getItemStack());
+		if (result == null) return;
+		if (result.second() instanceof NullItemable) event.setCancelled(true);
+		else event.getItemDrop().setItemStack(result.second().asItem());
+	}
+	
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
+	public void onCreativeClickFixItem(InventoryClickEvent event) {
+		if (event.getClick() == ClickType.CREATIVE) Utils.runNotNull(CreativeMenuItemUpdater.getResult(event.getRawSlot(),event.getCursor()),result -> new BukkitRunnable() {
+			public void run() {
+				event.getWhoClicked().getInventory().setItem(event.getSlot(),result.second() instanceof NullItemable ? null : result.second().asItem());
+			}
+		}.runTaskLater(DMan16UtilsMain.getInstance(),1));
+	}
 }

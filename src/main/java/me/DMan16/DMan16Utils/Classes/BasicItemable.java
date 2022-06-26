@@ -47,7 +47,7 @@ public class BasicItemable extends BasicItemableGeneral<BasicItemable> {
 	}
 	
 	@NotNull
-	public String ItemableKey() {
+	public String mappableKey() {
 		return "basic_itemable";
 	}
 }

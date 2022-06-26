@@ -158,7 +158,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 				enchantment = (Map<?,?>) o;
 				enchant = Utils.getEnchantment(Utils.getString(enchantment.get("id")));
 				level = Utils.getInteger(enchantment.get("lvl"));
-				if (enchant != null && level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
+				if (enchant != null && level != null && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
 			} catch (Exception e1) {}
 		} catch (Exception e) {
 			try {
@@ -168,7 +168,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 					name = Objects.requireNonNull(Utils.getString(entry.getKey()));
 					level = Utils.getInteger(entry.getValue());
 					enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
-					if (level != null && level > 0 && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
+					if (level != null && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
 				} catch (Exception e3) {}
 			} catch (Exception e2) {}
 		}
@@ -325,7 +325,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	}
 	
 	@NotNull
-	public String ItemableKey() {
+	public String mappableKey() {
 		return "item";
 	}
 	

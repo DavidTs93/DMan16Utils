@@ -9,8 +9,10 @@ import me.DMan16.DMan16Utils.Classes.Trio;
 import me.DMan16.DMan16Utils.Effects.CommandTestEffects;
 import me.DMan16.DMan16Utils.Events.Callers.EventCallers;
 import me.DMan16.DMan16Utils.Holograms.HologramsManager;
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Items.*;
 import me.DMan16.DMan16Utils.Listeners.*;
+import me.DMan16.DMan16Utils.Minigames.MiniGamesManager;
 import me.DMan16.DMan16Utils.Restrictions.RestrictionsCommandListener;
 import me.DMan16.DMan16Utils.Utils.CitizensManager;
 import me.DMan16.DMan16Utils.Utils.PlaceholderManager;
@@ -28,6 +30,7 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
+import java.util.Objects;
 
 public final class DMan16UtilsMain extends JavaPlugin {
 	private static DMan16UtilsMain INSTANCE = null;
@@ -40,6 +43,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	private CancelPlayers CancelPlayers = null;
 	private PlayerVersionLogger PlayerVersionLogger = null;
 	private PlayerPlayTimeLogger PlayerPlayTimeLogger = null;
+	private MiniGamesManager MiniGamesManager = null;
 	private final AdvancedRecipes<AnvilInventory> advancedAnvilRecipes = new AdvancedRecipes<>();
 	private final AdvancedRecipes<SmithingInventory> advancedSmithingRecipes = new AdvancedRecipes<>();
 	
@@ -52,10 +56,8 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	public void onEnable() {
 		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		try {
-			if (!ItemUtils.registerItemable("item", new ItemableInfo<>(ItemableStack.class,ItemableStack::of,ItemableStack::of)))
-				throw new Exception("Failed to register \"item\" Itemable!");
-			if (!ItemUtils.registerItemable("command", new ItemableInfo<>(ItemableCommand.class,ItemableCommand::of,null)))
-				throw new Exception("Failed to register \"command\" Itemable!");
+			if (!ItemUtils.registerItemable("item",new ItemableInfo<>(ItemableStack.class,ItemableStack::of,ItemableStack::of))) throw new Exception("Failed to register \"item\" Itemable!");
+			if (!ItemUtils.registerItemable("command",new ItemableInfo<>(ItemableCommand.class,ItemableCommand::of,null))) throw new Exception("Failed to register \"command\" Itemable!");
 			CustomItems.start();
 		} catch (Exception e) {
 			Utils.chatColorsLogPlugin("&fDMan16Utils&c problem! Error:");
@@ -65,7 +67,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 			return;
 		}
 		firstOfAll();
-		Utils.chatColorsLogPlugin("&aLoaded, running on version: &f" + Utils.getVersion() + "&a, Java version: &f" + Utils.javaVersion());
+		Utils.chatColorsLogPlugin("&aLoaded,running on version: &f" + Utils.getVersion() + "&a,Java version: &f" + Utils.javaVersion());
 		if (WorldGuardManager != null) Utils.chatColorsLogPlugin("&aHooked to &fWorldGuard");
 		if (PAPIManager != null) Utils.chatColorsLogPlugin("&aHooked to &fPlaceholderAPI");
 		if (CitizensManager != null) Utils.chatColorsLogPlugin("&aHooked to &fCitizens");
@@ -99,8 +101,9 @@ public final class DMan16UtilsMain extends JavaPlugin {
 		if (getServer().getPluginManager().getPlugin("ViaVersion") != null) try {
 			PlayerVersionLogger = new PlayerVersionLogger();
 		} catch (Exception e) {e.printStackTrace();}
+		MiniGamesManager = new MiniGamesManager(INSTANCE);
 		PlayerPlayTimeLogger = new PlayerPlayTimeLogger();
-		Utils.advancedAnvilRecipes().register("item_repair", new AdvancedRecipe<>((first,second,originalResult) -> {
+		Utils.advancedAnvilRecipes().register("item_repair",new AdvancedRecipe<>((first,second,originalResult) -> {
 			if (!(second instanceof ItemableStack itemable) || !(first instanceof Enchantable<?> enchantable) || enchantable.repairItem() == null || !enchantable.repairItem().similar(itemable)) return null;
 			int amount = itemable.amount() / enchantable.repairItem().amount();
 			int fix = enchantable.fix(amount);
@@ -108,16 +111,15 @@ public final class DMan16UtilsMain extends JavaPlugin {
 			amount = itemable.amount() - ((amount - fix) * enchantable.repairItem().amount());
 			return Trio.of(null,amount <= 0 ? null : itemable.copy(amount),enchantable);
 		}));
-		Utils.advancedAnvilRecipes().register("item_enchant", new AdvancedRecipe<>((first,second,originalResult) -> {
+		Utils.advancedAnvilRecipes().register("enchantable_enchant",new AdvancedRecipe<>((first,second,originalResult) -> {
 			HashMap<Enchantment,Integer> enchants;
-			if (!(second instanceof ItemableStack itemable) || (enchants = Utils.applyNotNull(Utils.getStoredEnchants(itemable.asItem()),HashMap::new)) == null) return null;
-			if (first instanceof Enchantable<?> enchantable) {
-				if (enchantable.shouldBreak()) return null;
-				Enchantable<?> result = enchantable.copy();
-				return enchants.entrySet().stream().anyMatch(entry -> result.addEnchant(entry.getKey(),entry.getValue())) ? Trio.of(null,null,result) : null;
-			} else if (first instanceof ItemableStack item) return item.material() == Material.ENCHANTED_BOOK ? null : Trio.of(null,null,originalResult);
-			else return null;
+			if (!(first instanceof Enchantable<?> enchantable) || !(second instanceof ItemableStack itemable) || (enchants = Utils.applyNotNull(Utils.getStoredEnchants(itemable.asItem()),HashMap::new)) == null) return null;
+			if (enchantable.shouldBreak()) return null;
+			Enchantable<?> result = enchantable.copy();
+			return enchants.entrySet().stream().anyMatch(entry -> result.addEnchantment(entry.getKey(),entry.getValue())) ? Trio.of(null,null,result) : null;
 		}));
+		Utils.advancedAnvilRecipes().register("item_enchant",new AdvancedRecipe<>((first,second,originalResult) ->
+				Objects.equals(Utils.applyNotNull(first,Itemable::material),Material.ENCHANTED_BOOK) && Objects.equals(Utils.applyNotNull(second,Itemable::material),Material.ENCHANTED_BOOK) ? Trio.of(null,null,originalResult) : null));
 	}
 	
 	private void initiateMenuItems() {
@@ -148,17 +150,17 @@ public final class DMan16UtilsMain extends JavaPlugin {
 //			recipes.remove();
 //			removed.add(recipe);
 //		}/* else if (recipe instanceof FurnaceRecipe furnace) {
-//			Utils.chatColorsLogPlugin("&aFurnace recipe: &b" + furnace.getKey().getKey() + "&a, input: &b" + furnace.getInput().getType().name() + "&a, result: &b" +
-//					furnace.getResult().getType().name() + "&a, time: &b" + furnace.getCookingTime() + "&a, XP: &b" + furnace.getExperience() + "&a, group: &b" + furnace.getGroup());
+//			Utils.chatColorsLogPlugin("&aFurnace recipe: &b" + furnace.getKey().getKey() + "&a,input: &b" + furnace.getInput().getType().name() + "&a,result: &b" +
+//					furnace.getResult().getType().name() + "&a,time: &b" + furnace.getCookingTime() + "&a,XP: &b" + furnace.getExperience() + "&a,group: &b" + furnace.getGroup());
 //		} else if (recipe instanceof BlastingRecipe blast) {
-//			Utils.chatColorsLogPlugin("&aBlasting recipe: &b" + blast.getKey().getKey() + "&a, input: &b" + blast.getInput().getType().name() + "&a, result: &b" +
-//					blast.getResult().getType().name() + "&a, time: &b" + blast.getCookingTime() + "&a, XP: &b" + blast.getExperience() + "&a, group: &b" + blast.getGroup());
+//			Utils.chatColorsLogPlugin("&aBlasting recipe: &b" + blast.getKey().getKey() + "&a,input: &b" + blast.getInput().getType().name() + "&a,result: &b" +
+//					blast.getResult().getType().name() + "&a,time: &b" + blast.getCookingTime() + "&a,XP: &b" + blast.getExperience() + "&a,group: &b" + blast.getGroup());
 //		} else if (recipe instanceof SmokingRecipe smoke) {
-//			Utils.chatColorsLogPlugin("&aSmoking recipe: &b" + smoke.getKey().getKey() + "&a, input: &b" + smoke.getInput().getType().name() + "&a, result: &b" +
-//					smoke.getResult().getType().name() + "&a, time: &b" + smoke.getCookingTime() + "&a, XP: &b" + smoke.getExperience() + "&a, group: &b" + smoke.getGroup());
+//			Utils.chatColorsLogPlugin("&aSmoking recipe: &b" + smoke.getKey().getKey() + "&a,input: &b" + smoke.getInput().getType().name() + "&a,result: &b" +
+//					smoke.getResult().getType().name() + "&a,time: &b" + smoke.getCookingTime() + "&a,XP: &b" + smoke.getExperience() + "&a,group: &b" + smoke.getGroup());
 //		} else if (recipe instanceof CampfireRecipe camp) {
-//			Utils.chatColorsLogPlugin("&aCampfire recipe: &b" + camp.getKey().getKey() + "&a, input: &b" + camp.getInput().getType().name() + "&a, result: &b" +
-//					camp.getResult().getType().name() + "&a, time: &b" + camp.getCookingTime() + "&a, XP: &b" + camp.getExperience() + "&a, group: &b" + camp.getGroup());
+//			Utils.chatColorsLogPlugin("&aCampfire recipe: &b" + camp.getKey().getKey() + "&a,input: &b" + camp.getInput().getType().name() + "&a,result: &b" +
+//					camp.getResult().getType().name() + "&a,time: &b" + camp.getCookingTime() + "&a,XP: &b" + camp.getExperience() + "&a,group: &b" + camp.getGroup());
 //		}*/
 //		Utils.addRemovedRecipes(removed);
 //	}
@@ -193,6 +195,10 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	
 	public PlayerPlayTimeLogger getPlayerPlayTimeLogger() {
 		return PlayerPlayTimeLogger;
+	}
+	
+	public MiniGamesManager getMiniGamesManager() {
+		return MiniGamesManager;
 	}
 	
 	@NotNull

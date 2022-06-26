@@ -2,6 +2,7 @@ package me.DMan16.DMan16Utils.Classes;
 
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
+import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.jetbrains.annotations.Contract;
@@ -14,7 +15,7 @@ public class AdvancedRecipes<V extends Inventory> {
 	private final LinkedHashMap<@NotNull String,@NotNull AdvancedRecipe<V>> RECIPES = new LinkedHashMap<>();
 	
 	public boolean register(@NotNull String name, @NotNull AdvancedRecipe<V> recipe) {
-		return !name.isEmpty() && RECIPES.putIfAbsent(name,recipe) == null;
+		return (name = Utils.fixKey(name)) != null && RECIPES.putIfAbsent(name,recipe) == null;
 	}
 	
 	public boolean remove(@NotNull String name) {
@@ -23,8 +24,7 @@ public class AdvancedRecipes<V extends Inventory> {
 	
 	@Nullable
 	@Contract("null,_,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>>
-	getResult(Itemable<?> first, Itemable<?> second, Itemable<?> originalResult) {
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> getResult(Itemable<?> first, Itemable<?> second, Itemable<?> originalResult) {
 		Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>> result;
 		if (first != null) for (AdvancedRecipe<V> recipe : RECIPES.values()) {
 			result = recipe.getResult(first,second,originalResult);
@@ -35,8 +35,7 @@ public class AdvancedRecipes<V extends Inventory> {
 	
 	@Nullable
 	@Contract("null,_,_ -> null")
-	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>>
-	getResult(ItemStack first, ItemStack second, ItemStack originalResult) {
+	public Pair<@NotNull AdvancedRecipe<V>,@NotNull Trio<@Nullable Itemable<?>,@Nullable Itemable<?>,@NotNull Itemable<?>>> getResult(ItemStack first, ItemStack second, ItemStack originalResult) {
 		return getResult(ItemUtils.of(first),ItemUtils.of(second),ItemUtils.of(originalResult));
 	}
 }

@@ -18,20 +18,62 @@ import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
+import java.lang.reflect.Field;
 import java.util.*;
 import java.util.Map.Entry;
 
 public abstract class CustomEnchantment extends Enchantment implements Listener {
+	private static final @NotNull Field ACCEPTING_NEW = Objects.requireNonNull(acceptingNew());
+	private static final @NotNull Field BY_KEY = Objects.requireNonNull(byKey());
+	private static final @NotNull Field BY_NAME = Objects.requireNonNull(byName());
+	
 	private final @NotNull Set<NamespacedKey> conflicts;
+	private boolean registered = false;
 	
 	protected CustomEnchantment(@NotNull String key, @Nullable Collection<@NotNull NamespacedKey> conflicts) {
 		super(NamespacedKey.minecraft(Objects.requireNonNull(Utils.fixKey(key))));
 		this.conflicts = new HashSet<>();
-		if (conflicts != null) this.conflicts.addAll(conflicts);
+		if (conflicts != null) addConflicts(conflicts);
 	}
 	
 	protected CustomEnchantment(@NotNull String key, @NotNull NamespacedKey ... conflicts) {
 		this(key,Arrays.asList(conflicts));
+	}
+	
+	protected void addConflicts(@NotNull Collection<@NotNull NamespacedKey> conflicts) {
+		this.conflicts.addAll(conflicts);
+	}
+	
+	protected void addConflicts(NamespacedKey @NotNull ... conflicts) {
+		this.conflicts.addAll(Arrays.asList(conflicts));
+	}
+	
+	protected void removeConflicts(@NotNull Collection<@NotNull NamespacedKey> conflicts) {
+		conflicts.forEach(this.conflicts::remove);
+	}
+	
+	protected void removeConflicts(NamespacedKey @NotNull ... conflicts) {
+		Arrays.asList(conflicts).forEach(this.conflicts::remove);
+	}
+	
+	public boolean isRegistered() {
+		return registered;
+	}
+	
+	public void register() throws IllegalAccessException {
+		ACCEPTING_NEW.setAccessible(true);
+		ACCEPTING_NEW.set(null,true);
+		Enchantment.registerEnchantment(this);
+		registered = true;
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void unregister() throws IllegalAccessException {
+		BY_KEY.setAccessible(true);
+		((HashMap<NamespacedKey,Enchantment>) BY_KEY.get(null)).remove(getKey());
+		BY_NAME.setAccessible(true);
+		((HashMap<String,Enchantment>) BY_NAME.get(null)).remove(getKey().getKey());
+		registered = false;
 	}
 	
 	@NotNull
@@ -150,5 +192,32 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 	
 	public boolean includes(ItemStack item) {
 		return Utils.notNull(item) && includes(item.getType());
+	}
+	
+	@Nullable
+	@Contract(pure = true)
+	private static Field acceptingNew() {
+		try {
+			return Enchantment.class.getDeclaredField("acceptingNew");
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract(pure = true)
+	private static Field byKey() {
+		try {
+			return Enchantment.class.getDeclaredField("byKey");
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	@Contract(pure = true)
+	private static Field byName() {
+		try {
+			return Enchantment.class.getDeclaredField("byName");
+		} catch (Exception e) {}
+		return null;
 	}
 }

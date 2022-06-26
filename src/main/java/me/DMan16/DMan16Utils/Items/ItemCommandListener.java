@@ -38,7 +38,7 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 					Itemable<?> itemable = ItemUtils.ofOrHolder(item);
 					player.sendMessage(Component.text("Item class: ",NamedTextColor.GREEN).append(Component.text(itemable.getClass().getName(),NamedTextColor.AQUA)).
 							append(Component.newline()).append(Component.text("Item string: ",NamedTextColor.GREEN)).
-							append(Component.text(itemable.stringItemable(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.stringItemable()))));
+							append(Component.text(itemable.stringMappable(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.stringMappable()))));
 				}
 			}
 			return true;
@@ -61,8 +61,7 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 		if (!args[0].equalsIgnoreCase("give")) return new ArrayList<>();
 		if (args.length == 2) return Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).filter(name -> Utils.containsTabComplete(args[1],name)).toList();
 		if (args.length == 3) {
-			Set<String> set = Utils.joinSets(ItemUtils.getRegisteredItemables(),MATERIALS).stream().filter(name -> Utils.containsTabComplete(args[2],name)).map(String::toLowerCase).
-					collect(Collectors.toSet());
+			Set<String> set = Utils.joinSets(ItemUtils.getRegisteredItemablesKeys(),MATERIALS).stream().filter(name -> Utils.containsTabComplete(args[2],name)).map(String::toLowerCase).collect(Collectors.toSet());
 			boolean removed = set.remove(args[2].toLowerCase());
 			List<String> list = new ArrayList<>(set);
 			if (removed) list.add(0,args[2].toLowerCase());

@@ -10,7 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Map;
 
-public interface Itemable<V extends Itemable<V>> extends Copyable<V> {
+public interface Itemable<V extends Itemable<V>> extends Copyable<V>,Mappable {
 	@NotNull ItemStack asItem();
 	
 	/**
@@ -26,13 +26,4 @@ public interface Itemable<V extends Itemable<V>> extends Copyable<V> {
 	@NotNull Material material();
 	
 	@NotNull Component giveComponent();
-	
-	@NotNull Map<@NotNull String,Object> toMap();
-	
-	@NotNull String ItemableKey();
-	
-	@NotNull
-	default String stringItemable() {
-		return ItemableKey() + ":" + Utils.getJSONString(toMap());
-	}
 }

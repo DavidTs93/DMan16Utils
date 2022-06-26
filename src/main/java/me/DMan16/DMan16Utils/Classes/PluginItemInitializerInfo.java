@@ -47,7 +47,7 @@ public class PluginItemInitializerInfo extends BasicItemableGeneral<PluginItemIn
 	}
 	
 	@NotNull
-	public String ItemableKey() {
+	public String mappableKey() {
 		return "plugin_item_initializer_info";
 	}
 }

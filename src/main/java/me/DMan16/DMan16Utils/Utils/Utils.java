@@ -18,9 +18,11 @@ import me.DMan16.DMan16Utils.Interfaces.ExceptionalConsumer;
 import me.DMan16.DMan16Utils.Interfaces.ExceptionalFunction;
 import me.DMan16.DMan16Utils.Interfaces.InterfacesUtils;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
 import me.DMan16.DMan16Utils.Listeners.CancelPlayers;
 import me.DMan16.DMan16Utils.Listeners.PlayerVersionLogger;
+import me.DMan16.DMan16Utils.Minigames.MiniGamesManager;
 import me.DMan16.DMan16Utils.Restrictions.Restrictions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ScopedComponent;
@@ -100,7 +102,7 @@ public class Utils {
 	private static final @Unmodifiable List<Integer> PLAYER_STORAGE_SLOTS_NO_OFF_HAND; // 0-35
 	private static final @Unmodifiable List<Integer> PLAYER_STORAGE_SLOTS; // -106,0-35
 	private static final @Unmodifiable List<Integer> PLAYER_INVENTORY_SLOTS; // -106,0-35,100-103
-	public static final Gson GSON = new GsonBuilder().create();
+	private static final Gson GSON = defaultGsonBuilder().create();
 	private static List<Material> interactable = null;
 	private static final @NotNull Set<@NotNull Recipe> removedRecipes = new HashSet<>();
 	
@@ -825,7 +827,7 @@ public class Utils {
 	public static String toString(@Nullable ItemStack item) {
 		if (isNull(item)) return null;
 		Itemable<?> itemable = ItemUtils.of(item);
-		if (itemable != null) return itemable.stringItemable();
+		if (itemable != null) return itemable.stringMappable();
 		try {
 			return ObjectToBase64(item);
 		} catch (Exception e) {}
@@ -1250,6 +1252,10 @@ public class Utils {
 		return DMan16UtilsMain.getInstance().getCancelPlayers();
 	}
 	
+	public static MiniGamesManager getMiniGamesManager() {
+		return DMan16UtilsMain.getInstance().getMiniGamesManager();
+	}
+	
 	public static PlayerVersionLogger getPlayerVersionLogger() {
 		return DMan16UtilsMain.getInstance().getPlayerVersionLogger();
 	}
@@ -1465,6 +1471,9 @@ public class Utils {
 		return false;
 	}
 	
+	/**
+	 * @return If key is empty before/after then null
+	 */
 	@Nullable
 	@Contract("null -> null")
 	public static String fixKey(@Nullable String key) {
@@ -1873,9 +1882,15 @@ public class Utils {
 		return objectArr;
 	}
 	
+	@NotNull
+	@Contract(" -> new")
+	public static GsonBuilder defaultGsonBuilder() {
+		return new GsonBuilder().disableHtmlEscaping();
+	}
+	
 	@Nullable
-	@Contract("null -> null")
-	public static HashMap<@NotNull String,Object> getMapFromJSON(String str) {
+	@Contract("_,null -> null")
+	public static HashMap<@NotNull String,Object> getMapFromJSON(@NotNull Gson GSON,@Nullable String str) {
 		if (str != null) try {
 			HashMap<String,Object> map = GSON.fromJson(str, new TypeToken<HashMap<String,Object>>() {}.getType());
 			map.remove(null);
@@ -1886,7 +1901,13 @@ public class Utils {
 	
 	@Nullable
 	@Contract("null -> null")
-	public static List<@NotNull Object> getListFromJSON(String str) {
+	public static HashMap<@NotNull String,Object> getMapFromJSON(String str) {
+		return getMapFromJSON(GSON,str);
+	}
+	
+	@Nullable
+	@Contract("_,null -> null")
+	public static List<@NotNull Object> getListFromJSON(@NotNull Gson GSON,@Nullable String str) {
 		if (str != null) try {
 			List<Object> map = GSON.fromJson(str, new TypeToken<ArrayList<Object>>() {}.getType());
 			map.remove(null);
@@ -1897,8 +1918,20 @@ public class Utils {
 	
 	@Nullable
 	@Contract("null -> null")
-	public static String getJSONString(Object obj) {
+	public static List<@NotNull Object> getListFromJSON(@Nullable String str) {
+		return getListFromJSON(GSON,str);
+	}
+	
+	@Nullable
+	@Contract("_,null -> null")
+	public static String getJSONString(@NotNull Gson GSON,@Nullable Object obj) {
 		return obj == null ? null : GSON.toJson(obj);
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static String getJSONString(@Nullable Object obj) {
+		return getJSONString(GSON,obj);
 	}
 	
 	@Nullable
@@ -2527,7 +2560,8 @@ public class Utils {
 	@NotNull
 	public static Component enchantmentsLoreLine(@NotNull Enchantment enchantment,@Positive int level) {
 		return (enchantment instanceof Engraving engraving) ? noItalic(Component.text(engraving.symbol,NamedTextColor.GOLD).append(Component.translatable(engraving.translationKey()))) :
-				applyOrOriginalIf(Utils.noItalic(Component.translatable(enchantment.translationKey(),NamedTextColor.GRAY)),line -> line.append(Component.space()).append(Component.translatable("enchantment.level." + level)),enchantment.getMaxLevel() > 1);
+				applyOrOriginalIf(Utils.noItalic(Component.translatable(enchantment.translationKey(),NamedTextColor.GRAY)),
+						line -> line.append(Component.space()).append(Component.translatable("enchantment.level." + level)),Enchantable.getMaxLevel(enchantment) > enchantment.getStartLevel());
 	}
 	
 	@NotNull

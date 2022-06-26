@@ -3,6 +3,7 @@ package me.DMan16.DMan16Utils.Holograms;
 import me.DMan16.DMan16Utils.Events.SuccessfulJoinEvent;
 import me.DMan16.DMan16Utils.Interfaces.Listener;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -35,8 +36,7 @@ public class HologramsManager implements Listener {
 	private static void spawn(@NotNull Player player, @NotNull World world) {
 		new BukkitRunnable() {
 			public void run() {
-				Set<Hologram<?>> holograms = HOLOGRAMS.get(world);
-				if (holograms != null) holograms.forEach(hologram -> hologram.spawn(player));
+				Utils.runNotNull(HOLOGRAMS.get(world),holograms -> holograms.forEach(hologram -> hologram.spawn(player)));
 			}
 		}.runTaskLater(DMan16UtilsMain.getInstance(),1);
 	}

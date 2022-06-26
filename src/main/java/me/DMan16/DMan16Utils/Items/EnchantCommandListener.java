@@ -34,8 +34,7 @@ public final class EnchantCommandListener implements CommandExecutor,TabComplete
 		if (Utils.isNull(item) || item.getType() == Material.ENCHANTED_BOOK) return true;
 		int lvl = args.length > 2 ? Utils.thisOrThatOrNull(Utils.getInteger(args[2]),0) : 1;
 		if (set && Utils.sameItem(item,BOOK)) item = Utils.setEnchantments(BOOK.clone(),Map.of(ench,lvl));
-		else item = Utils.setEnchantments(item.clone(),Utils.applyGetOriginal(new HashMap<>(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments())),
-					enchants -> set ? enchants.put(ench,lvl) : enchants.remove(ench)));
+		else item = Utils.setEnchantments(item.clone(),Utils.applyGetOriginal(new HashMap<>(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments())),enchants -> set ? enchants.put(ench,lvl) : enchants.remove(ench)));
 		Itemable<?> itemable = ItemUtils.ofOrHolder(item);
 		player.getInventory().setItemInMainHand(itemable.asItem());
 		return true;
@@ -44,11 +43,12 @@ public final class EnchantCommandListener implements CommandExecutor,TabComplete
 	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
 		if (args.length == 0) return List.of("set","remove");
 		if (args.length == 1) return Stream.of("set","remove").filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).toList();
-		if (args.length == 2) return Arrays.stream(Enchantment.values()).map(ench -> ench.getKey().getKey()).filter(cmd -> Utils.containsTabComplete(args[1],cmd)).
-				map(String::toLowerCase).toList();
+		boolean set = args[0].equalsIgnoreCase("set");
+		if (!set && !args[0].equalsIgnoreCase("remove")) return new ArrayList<>();
+		if (args.length == 2) return Arrays.stream(Enchantment.values()).map(ench -> ench.getKey().getKey()).filter(cmd -> Utils.containsTabComplete(args[1],cmd)).map(String::toLowerCase).toList();
 		Enchantment ench = Enchantment.getByKey(NamespacedKey.minecraft(args[1]));
-		if (ench == null || !args[0].equalsIgnoreCase("set")) return new ArrayList<>();
-		if (args.length == 3) return IntStream.range(ench.getStartLevel(),ench.getMaxLevel() + 1).mapToObj(Integer::toString).toList();
+		if (ench == null || !set) return new ArrayList<>();
+		if (args.length == 3) return IntStream.range(ench.getStartLevel(),Enchantable.getMaxLevel(ench) + 1).mapToObj(Integer::toString).toList();
 		return new ArrayList<>();
 	}
 }

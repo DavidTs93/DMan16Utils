@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.Items;
 
+import me.DMan16.DMan16Utils.Classes.KeyedHashMap;
 import me.DMan16.DMan16Utils.Classes.Pair;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Utils.Utils;
@@ -13,14 +14,14 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.*;
 
 public class ItemUtils {
-	private static final HashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new HashMap<>();
+	private static final KeyedHashMap<@NotNull ItemableInfo<?>> MAP = new KeyedHashMap<>();
 	private static final LinkedHashMap<@NotNull Class<?>,@NotNull String> CLASS_MAP = new LinkedHashMap<>();
 	
 	public static <V extends Itemable<?>> boolean registerItemable(@NotNull String key, @NotNull ItemableInfo<V> info) {
 		key = Utils.fixKey(key);
-		if (key == null || MAP.containsKey(key) || CLASS_MAP.containsKey(info.getItemableClass())) return false;
+		if (key == null || MAP.containsKey(key) || CLASS_MAP.containsKey(info.getMappableClass())) return false;
 		MAP.put(key,info);
-		CLASS_MAP.put(info.getItemableClass(),key);
+		CLASS_MAP.put(info.getMappableClass(),key);
 		key = CLASS_MAP.remove(ItemableStack.class);
 		if (key != null) CLASS_MAP.put(ItemableStack.class,key);
 		return true;
@@ -28,7 +29,7 @@ public class ItemUtils {
 	
 	@NotNull
 	@Unmodifiable
-	public static Set<@NotNull String> getRegisteredItemables() {
+	public static Set<@NotNull String> getRegisteredItemablesKeys() {
 		return Collections.unmodifiableSet(MAP.keySet());
 	}
 	
@@ -39,17 +40,17 @@ public class ItemUtils {
 	
 	@Nullable
 	private static Itemable<?> ofOrSubstitute(@Nullable ItemableInfo<?> info, @Nullable Map<String,?> arguments) {
-		return info == null ? null : (info.getItemableClass() == ItemableStack.class ? ItemableStack.ofOrSubstitute(arguments) : info.fromArguments(arguments));
+		return info == null ? null : (info.getMappableClass() == ItemableStack.class ? ItemableStack.ofOrSubstitute(arguments) : info.fromArguments(arguments));
 	}
 	
 	@Nullable
 	public static Itemable<?> of(@NotNull String key, @Nullable Map<String,?> arguments) {
-		return of(MAP.get(key.toLowerCase()),arguments);
+		return of(MAP.get(key),arguments);
 	}
 	
 	@Nullable
 	public static Itemable<?> ofOrSubstitute(@NotNull String key, @Nullable Map<String,?> arguments) {
-		return ofOrSubstitute(MAP.get(key.toLowerCase()),arguments);
+		return ofOrSubstitute(MAP.get(key),arguments);
 	}
 	
 	@Nullable
@@ -86,8 +87,8 @@ public class ItemUtils {
 		Pair<String,Map<String,?>> keyAndMap = keyAndMap(str);
 		try {
 			if (keyAndMap == null) return (V) MAP.get(CLASS_MAP.get(clazz)).fromItem((ItemStack) Objects.requireNonNull(Utils.ObjectFromBase64(str)));
-			ItemableInfo<?> info = MAP.get(keyAndMap.first().toLowerCase());
-			return info != null && info.getItemableClass().equals(clazz) ? (V) of(info,keyAndMap.second()) : null;
+			ItemableInfo<?> info = MAP.get(keyAndMap.first());
+			return info != null && info.getMappableClass().equals(clazz) ? (V) of(info,keyAndMap.second()) : null;
 		} catch (Exception e) {}
 		return null;
 	}
@@ -150,7 +151,7 @@ public class ItemUtils {
 	@Nullable
 	@Contract("_,null -> null")
 	public static Itemable<?> of(@NotNull String key, @Nullable ItemStack item) {
-		return of(MAP.get(key.toLowerCase()),item);
+		return of(MAP.get(key),item);
 	}
 	
 	@Nullable
@@ -168,6 +169,24 @@ public class ItemUtils {
 		Itemable<?> itemable;
 		for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
 		return new ItemHolder(item);
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrSubstitute(@Nullable ItemStack item) {
+		Itemable<?> itemable;
+		if (item != null) for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
+		return ItemableStack.ofOrSubstitute(item);
+	}
+	
+	@Nullable
+	@Contract("null -> null; !null -> !null")
+	public static Itemable<?> ofOrSubstituteOrHolder(@Nullable ItemStack item) {
+		if (item == null) return null;
+		Itemable<?> itemable;
+		for (ItemableInfo<?> info : MAP.values()) if ((itemable = info.fromItem(item)) != null) return itemable;
+		itemable = ItemableStack.ofOrSubstitute(item);
+		return itemable == null ? new ItemHolder(item) : itemable;
 	}
 	
 	@Nullable
