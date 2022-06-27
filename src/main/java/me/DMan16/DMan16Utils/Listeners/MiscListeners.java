@@ -8,7 +8,7 @@ import me.DMan16.DMan16Utils.Events.SuccessfulPrepareSmithingEvent;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.Listener;
 import me.DMan16.DMan16Utils.Interfaces.NullItemable;
-import me.DMan16.DMan16Utils.Interfaces.Reviveable;
+import me.DMan16.DMan16Utils.Interfaces.ReviveableItemable;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
 import me.DMan16.DMan16Utils.Utils.Utils;
@@ -100,7 +100,7 @@ public class MiscListeners implements Listener {
 			}
 			int dmg = enchantable.damageItemStack();
 			if (enchantable.addDamage(event.getDamage()).shouldBreak()) {
-				if (!(enchantable instanceof Reviveable)) event.setDamage(max);
+				if (!(enchantable instanceof ReviveableItemable<?>)) event.setDamage(max);
 				else {
 					event.setDamage(0);
 					event.getItem().setItemMeta(enchantable.asItem().getItemMeta());

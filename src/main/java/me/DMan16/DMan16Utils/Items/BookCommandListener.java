@@ -26,14 +26,14 @@ public final class BookCommandListener implements CommandExecutor,TabCompleter {
 		if (!(sender instanceof Player player) || args.length <= 0) return true;
 		Enchantment ench = Utils.getEnchantment(args[0]);
 		if (ench == null) {
-			player.sendMessage("enchantment doesn't exist?!");
+			Utils.chatColors(player,"&cEnchantment doesn't exist");
 			return true;
 		}
 		int lvl = 1;
 		try {
 			lvl = Utils.clamp(Integer.parseInt(args[1]),1,Enchantable.getMaxLevel(ench));
 		} catch (Exception e) {}
-		Utils.runNotNull(ItemableStack.of(Utils.addEnchantment(new ItemStack(Material.ENCHANTED_BOOK),ench,lvl)),item -> player.getInventory().addItem(item.asItem()));
+		player.getInventory().addItem(ItemUtils.ofOrSubstituteOrHolder(Utils.addEnchantment(new ItemStack(Material.ENCHANTED_BOOK),ench,lvl)).asItem());
 		return true;
 	}
 	

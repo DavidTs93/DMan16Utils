@@ -1,6 +1,7 @@
 package me.DMan16.DMan16Utils.Classes;
 
 import io.papermc.paper.enchantments.EnchantmentRarity;
+import me.DMan16.DMan16Utils.Items.ItemUtils;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TranslatableComponent;
@@ -88,7 +89,7 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 	}
 	
 	public final boolean canEnchantItem(@NotNull ItemStack item) {
-		if (Utils.isNull(item) || (!includes(item) && item.getType() != Material.ENCHANTED_BOOK) || hasEnchantment(item)) return false;
+		if (Utils.isNull(item) || (!includes(item) && item.getType() != Material.ENCHANTED_BOOK)) return false;
 		for (Entry<Enchantment,Integer> ench : Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments()).entrySet()) if (conflictsWith(ench.getKey())) return false;
 		return true;
 	}
@@ -182,9 +183,14 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 		return Utils.notNull(item) && Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments()).containsKey(this);
 	}
 	
+	@Contract("null -> false")
+	public boolean hasEnchantmentNotEnchantedBook(ItemStack item) {
+		return Utils.notNull(item) && item.getType() != Material.ENCHANTED_BOOK && item.getEnchantments().containsKey(this);
+	}
+	
 	@NotNull
 	public ItemStack getBook(@Positive int lvl) {
-		return Utils.addEnchantment(new ItemStack(Material.ENCHANTED_BOOK),this,lvl);
+		return ItemUtils.ofOrSubstituteOrHolder(Utils.addEnchantment(new ItemStack(Material.ENCHANTED_BOOK),this,lvl)).asItem();
 	}
 	
 	public abstract boolean includes(Material material);

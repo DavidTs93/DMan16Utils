@@ -11,7 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
-public abstract class SocketableReviveable<V extends Socketable<V> & Reviveable> extends Socketable<V> implements Reviveable {
+public abstract class SocketableReviveable<V extends Socketable<V> & ReviveableItemable<V>> extends Socketable<V> implements ReviveableItemable<V> {
 	protected SocketableReviveable(@NotNull AttributesInfo info,boolean isDefault) {
 		super(info,isDefault);
 	}

@@ -1545,8 +1545,7 @@ public class Utils {
 	@Nullable
 	@Contract("null,_,_ -> null; !null,_,_ -> !null")
 	public static ItemStack addEnchantment(@Nullable ItemStack item, @NotNull Enchantment enchantment, int level) {
-		if (!isNull(item)) if (item.getType() == Material.ENCHANTED_BOOK)
-			item.setItemMeta(runGetOriginal((EnchantmentStorageMeta) item.getItemMeta(),meta -> meta.addStoredEnchant(enchantment,level,true)));
+		if (!isNull(item)) if (item.getType() == Material.ENCHANTED_BOOK) item.setItemMeta(runGetOriginal((EnchantmentStorageMeta) item.getItemMeta(),meta -> meta.addStoredEnchant(enchantment,level,true)));
 		else item.addUnsafeEnchantment(enchantment,level);
 		return item;
 	}
@@ -1557,13 +1556,14 @@ public class Utils {
 		if (!isNull(item) && !enchantments.isEmpty()) {
 			if (item.getType() == Material.ENCHANTED_BOOK) {
 				EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
-				if (meta.getStoredEnchants().isEmpty()) {
-					Entry<Enchantment,Integer> ench = enchantments.entrySet().iterator().next();
-					meta.addStoredEnchant(ench.getKey(),ench.getValue(),true);
-					item.setItemMeta(meta);
-				}
+				enchantments.forEach((enchantment,level) -> meta.addStoredEnchant(enchantment,level,true));
+				item.setItemMeta(meta);
 			} else {
 				boolean engraved = false;
+				for (Enchantment enchantment : item.getEnchantments().keySet()) if (enchantment instanceof Engraving) {
+					engraved = true;
+					break;
+				}
 				for (Entry<Enchantment,Integer> ench : enchantments.entrySet()) {
 					if (ench.getKey() instanceof Engraving) {
 						if (engraved) continue;
@@ -1581,7 +1581,7 @@ public class Utils {
 	public static ItemStack setEnchantments(@Nullable ItemStack item, @NotNull Map<@NotNull Enchantment,@NotNull Integer> enchantments) {
 		if (!isNull(item) && !enchantments.isEmpty()) if (item.getType() == Material.ENCHANTED_BOOK) {
 			EnchantmentStorageMeta meta = (EnchantmentStorageMeta) item.getItemMeta();
-			if (meta.hasStoredEnchants()) meta.getStoredEnchants().keySet().forEach(meta::removeStoredEnchant);
+			if (meta.hasStoredEnchants()) new HashSet<>(meta.getStoredEnchants().keySet()).forEach(meta::removeStoredEnchant);
 			enchantments.forEach((key,value) -> meta.addStoredEnchant(key,value,true));
 			item.setItemMeta(meta);
 		} else {

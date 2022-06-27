@@ -119,7 +119,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 			return enchants.entrySet().stream().anyMatch(entry -> result.addEnchantment(entry.getKey(),entry.getValue())) ? Trio.of(null,null,result) : null;
 		}));
 		Utils.advancedAnvilRecipes().register("item_enchant",new AdvancedRecipe<>((first,second,originalResult) ->
-				Objects.equals(Utils.applyNotNull(first,Itemable::material),Material.ENCHANTED_BOOK) && Objects.equals(Utils.applyNotNull(second,Itemable::material),Material.ENCHANTED_BOOK) ? Trio.of(null,null,originalResult) : null));
+				!Objects.equals(Utils.applyNotNull(first,Itemable::material),Material.ENCHANTED_BOOK) && Objects.equals(Utils.applyNotNull(second,Itemable::material),Material.ENCHANTED_BOOK) ? Trio.of(null,null,originalResult) : null));
 	}
 	
 	private void initiateMenuItems() {

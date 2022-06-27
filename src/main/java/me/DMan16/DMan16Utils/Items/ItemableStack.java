@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 public class ItemableStack implements Itemable<ItemableStack>,Amountable<ItemableStack> {
 	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
 	private static final HashMap<@NotNull Material,@Nullable Supplier<Itemable<?>>> DISABLED_MATERIALS = new HashMap<>();
+	private static final List<@NotNull Function<@NotNull ItemStack,@Nullable Itemable<?>>> DISABLED_ITEMS = new ArrayList<>();
 	
 	private final ItemStack item;
 	
@@ -49,12 +50,16 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		for (Material material : materials) DISABLED_MATERIALS.put(material,() -> get.apply(material));
 	}
 	
-	public static void addDisabledMaterialsSubstitutes(@NotNull Function<@NotNull Material,Itemable<?>> get, @NotNull Collection<@NotNull Material> materials) {
+	public static void addDisabledMaterialsSubstitutes(@NotNull Function<@NotNull Material,Itemable<?>> get,@NotNull Collection<@NotNull Material> materials) {
 		for (Material material : materials) DISABLED_MATERIALS.put(material,() -> get.apply(material));
 	}
 	
+	public static void addDisabledItemSubstitute(@NotNull Function<@NotNull ItemStack,@Nullable Itemable<?>> substitute) {
+		DISABLED_ITEMS.add(substitute);
+	}
+	
 	@SafeVarargs
-	public static void addDisabledMaterialsSubstitutes(@NotNull Pair<@NotNull Material,@Nullable Supplier<Itemable<?>>> ... infos) {
+	public static void addDisabledMaterialsSubstitutes(@NotNull Pair<@NotNull Material,@Nullable Supplier<Itemable<?>>> @NotNull ... infos) {
 		for (Pair<@NotNull Material,@Nullable Supplier<Itemable<?>>> info : infos) DISABLED_MATERIALS.put(info.first,info.second);
 	}
 	
@@ -78,10 +83,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@NotNull
 	public ItemStack asItem() {
-		if (material() != Material.ENCHANTED_BOOK) return Utils.addDurabilityLore(item.clone(),material().getMaxDurability(),0,true);
-		Map<Enchantment,Integer> enchantments = Utils.getStoredEnchants(item);
-		if (enchantments == null || enchantments.size() != 1) return new ItemStack(Material.BOOK);
-		return Utils.setEnchantments(Utils.makeItem(Material.ENCHANTED_BOOK,null,enchantmentsLore(enchantments),ItemFlag.values()),enchantments);
+		return material() == Material.ENCHANTED_BOOK ? item.clone() : Utils.addDurabilityLore(item.clone(),material().getMaxDurability(),0,true);
 	}
 	
 	@NotNull
@@ -107,7 +109,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		} catch (Exception e) {}
 		ItemableStack stack = new ItemableStack(item);
 		ItemableStack fromMap = of(stack.toMap());
-		return fromMap == null || (item.getType() != Material.ENCHANTED_BOOK && !Utils.sameItem(item,fromMap.item)) ? null : stack;
+		return fromMap == null || !Utils.sameItem(item,fromMap.item) ? null : stack;
 	}
 	
 	@Nullable
@@ -120,6 +122,8 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	@Contract("null -> null")
 	public static Itemable<?> ofOrSubstitute(ItemStack item) {
 		if (item == null || !legalBut(item.getType())) return null;
+		Itemable<?> result;
+		for (Function<ItemStack,Itemable<?>> check : DISABLED_ITEMS) if ((result = check.apply(item)) != null) return result;
 		Supplier<Itemable<?>> info = DISABLED_MATERIALS.get(item.getType());
 		return info != null ? info.get() : getLegalItemableStack(item);
 	}
@@ -207,14 +211,14 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@Nullable
 	@Contract("null,_ -> null")
-	public static Itemable<?> ofOrSubstitute(Material material, @Nullable Map<String,?> arguments) {
+	public static Itemable<?> ofOrSubstitute(Material material,@Nullable Map<String,?> arguments) {
 		Supplier<Itemable<?>> info = DISABLED_MATERIALS.get(material);
 		return info != null ? info.get() : of(material,arguments);
 	}
 	
 	@Nullable
 	@Contract("null,_ -> null")
-	public static ItemableStack of(Material material, @Nullable Map<String,?> arguments) {
+	public static ItemableStack of(Material material,@Nullable Map<String,?> arguments) {
 		if (!legal(material)) return null;
 		ItemStack item = new ItemStack(material);
 		if (arguments == null) return new ItemableStack(item);
@@ -271,7 +275,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 			return map;
 		}
 		ItemMeta meta = item.getItemMeta();
-		Utils.runNotNull(Utils.mapComponent(meta.displayName()), name -> map.put("Name",name));
+		Utils.runNotNull(Utils.mapComponent(meta.displayName()),name -> map.put("Name",name));
 		if (item.getType().getMaxDurability() > 0) try {
 			int damage = ((Damageable) meta).getDamage();
 			if (damage > 0) map.put("Damage",damage);
@@ -316,7 +320,7 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 		return (obj instanceof ItemableStack other) && material() == other.material() && Utils.sameItem(asItem(),other.asItem());
 	}
 	
-	public boolean similar(Object obj, boolean ignoreDurability, boolean ignoreFlags) {
+	public boolean similar(Object obj,boolean ignoreDurability,boolean ignoreFlags) {
 		return (obj instanceof ItemableStack other) && material() == other.material() && Utils.similarItem(item,other.item,ignoreDurability,ignoreFlags);
 	}
 	

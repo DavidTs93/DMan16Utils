@@ -1,6 +1,5 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.Material;
@@ -33,10 +32,9 @@ public final class EnchantCommandListener implements CommandExecutor,TabComplete
 		ItemStack item = player.getInventory().getItemInMainHand();
 		if (Utils.isNull(item) || item.getType() == Material.ENCHANTED_BOOK) return true;
 		int lvl = args.length > 2 ? Utils.thisOrThatOrNull(Utils.getInteger(args[2]),0) : 1;
-		if (set && Utils.sameItem(item,BOOK)) item = Utils.setEnchantments(BOOK.clone(),Map.of(ench,lvl));
-		else item = Utils.setEnchantments(item.clone(),Utils.applyGetOriginal(new HashMap<>(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments())),enchants -> set ? enchants.put(ench,lvl) : enchants.remove(ench)));
-		Itemable<?> itemable = ItemUtils.ofOrHolder(item);
-		player.getInventory().setItemInMainHand(itemable.asItem());
+		if (set && item.getType() == Material.BOOK) item = ItemUtils.ofOrSubstituteOrHolder(Utils.setEnchantments(new ItemStack(Material.ENCHANTED_BOOK),Map.of(ench,lvl))).asItem();
+		else item = ItemUtils.ofOrSubstituteOrHolder(Utils.setEnchantments(item.clone(),Utils.applyGetOriginal(new HashMap<>(Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments())),enchants -> set ? enchants.put(ench,lvl) : enchants.remove(ench)))).asItem();
+		player.getInventory().setItemInMainHand(item);
 		return true;
 	}
 	
