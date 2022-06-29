@@ -46,8 +46,8 @@ public abstract class Socketable<V extends Socketable<V>> extends Enchantable<V>
 	}
 	
 	@NotNull
-	protected Component enchantmentsLoreLine(@NotNull Enchantment ench,int lvl) {
-		return Utils.enchantmentsLoreLine(ench,lvl);
+	protected Component enchantmentsLoreLine(@NotNull Enchantment enchantment,int lvl) {
+		return Utils.enchantmentsLoreLine(enchantment,lvl);
 	}
 	
 	@Override
@@ -68,6 +68,10 @@ public abstract class Socketable<V extends Socketable<V>> extends Enchantable<V>
 	
 	@NotNull
 	public final V setRandomMaxEnchantments() {
-		return setRandomMaxEnchantments(maxPossibleSockets());
+		return setRandomMaxEnchantments(maxInitialEnchantments());
+	}
+	
+	protected int maxInitialEnchantments() {
+		return maxPossibleSockets() - 1;
 	}
 }

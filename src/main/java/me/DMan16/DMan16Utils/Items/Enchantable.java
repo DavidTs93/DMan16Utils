@@ -4,7 +4,9 @@ import me.DMan16.DMan16Utils.Classes.AttributesInfo;
 import me.DMan16.DMan16Utils.Classes.Engraving;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Enums.Tags;
+import me.DMan16.DMan16Utils.Interfaces.EnchantmentsHolder;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Interfaces.Repairable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -16,19 +18,19 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V> {
+public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implements Itemable<V>,EnchantmentsHolder,Repairable {
 	protected static final HashMap<@NotNull Enchantment,@NotNull Integer> EXTRA_MAX_LEVELS = new HashMap<>();
 	protected static final NamespacedKey DAMAGE_KEY = new NamespacedKey(DMan16UtilsMain.getInstance(),"item_damage");
 	protected static final NamespacedKey MAX_ENCHANTMENTS_KEY = new NamespacedKey(DMan16UtilsMain.getInstance(),"max_enchantments");
-	public static final int CUSTOM_FIX_DIVIDE = 10;
+	public static final int DEFAULT_CUSTOM_FIX_DIVIDE = 10;
 	private static final int MAX_ENCHANTMENTS = 20;
 	
 	protected @Nullable Engraving engraving = null;
@@ -62,6 +64,11 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	
 	public static int getExtraMaxLevels(@NotNull Enchantment enchantment,int amount) {
 		return Utils.thisOrThatOrNull(EXTRA_MAX_LEVELS.get(enchantment),0);
+	}
+	
+	@Positive
+	public int fixDivide() {
+		return DEFAULT_CUSTOM_FIX_DIVIDE;
 	}
 	
 	@Positive
@@ -186,9 +193,6 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		return (V) this;
 	}
 	
-	@MonotonicNonNull
-	public abstract ItemableStack repairItem();
-	
 	@NonNegative
 	public final int damage() {
 		return damage;
@@ -200,7 +204,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	@NonNegative
 	public final int fix(@NonNegative int amount) {
 		if (damage == 0) return amount;
-		int damage = shouldBreak() ? maxDurability() : this.damage,per = maxDurability() / CUSTOM_FIX_DIVIDE;
+		int damage = shouldBreak() ? maxDurability() : this.damage,per = maxDurability() / fixDivide();
 		while (damage > 0 && amount > 0) {
 			damage -= per;
 			amount--;
@@ -210,12 +214,6 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	}
 	
 	@NotNull public abstract String key();
-	
-	@Positive public abstract int maxDurability();
-	
-	public final boolean shouldBreak() {
-		return damage >= maxDurability();
-	}
 	
 	@NotNull
 	@SuppressWarnings("unchecked")
@@ -302,14 +300,15 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		return damageItemStack(material());
 	}
 	
-	@NonNegative
-	public int damageItemStack(@NotNull Material material) {
-		return damage <= 0 ? 0 : (int) Math.max(1,Math.floor(((float) damage) / maxDurability() * material.getMaxDurability()));
-	}
-	
 	@NotNull
 	public final Component giveComponent() {
 		return displayName().hoverEvent(asItemNoAttributes().asHoverEvent());
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public Map<@NotNull Enchantment,@NotNull Integer> getEnchantments() {
+		return Collections.unmodifiableMap(enchantments);
 	}
 	
 	@NotNull

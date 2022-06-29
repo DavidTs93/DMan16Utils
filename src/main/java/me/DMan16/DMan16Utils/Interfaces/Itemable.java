@@ -13,17 +13,21 @@ import java.util.Map;
 public interface Itemable<V extends Itemable<V>> extends Copyable<V>,Mappable {
 	@NotNull ItemStack asItem();
 	
+	@NotNull Material material();
+	
+	@NotNull Component giveComponent();
+	
+	default boolean canPassAsThis(@NotNull Itemable<?> item) {
+		return equals(item);
+	}
+	
 	/**
 	 * @param onSuccess - will run Sync
 	 * @param onFail - will run ASync/Sync
 	 */
 	default void give(@NotNull Player player,@Nullable Runnable onSuccess,@Nullable Runnable onFail,@Nullable Map<@NotNull Integer,@NotNull Integer> toRemove,int ... toEmpty) {
-		if (Utils.addFully(player,asItem(),toRemove,toEmpty).isEmpty()) {
+		if (!Utils.addFully(player,asItem(),toRemove,toEmpty).isEmpty()) {
 			if (onSuccess != null) onSuccess.run();
 		} else if (onFail != null) onFail.run();
 	}
-	
-	@NotNull Material material();
-	
-	@NotNull Component giveComponent();
 }

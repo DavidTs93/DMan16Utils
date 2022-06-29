@@ -77,7 +77,9 @@ public class PlayerPlayTimeLogger implements Listener {
 		} catch (Exception e) {e.printStackTrace();}
 	}
 	
-	public Long currentPlayTime(@NotNull UUID ID) {
-		return joinedSinceLastUpdate.get(ID);
+	public long currentPlayTime(@NotNull UUID ID) {
+		long now = System.currentTimeMillis();
+		Long join = joinedSinceLastUpdate.get(ID);
+		return join == null ? timeSinceLastUpdate(now) : timeSinceLastUpdate(now,join);
 	}
 }

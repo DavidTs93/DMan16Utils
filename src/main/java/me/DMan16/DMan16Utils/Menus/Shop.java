@@ -58,8 +58,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	protected void setPagePurchases() {
-		if (purchases != null && !purchases.isEmpty())
-			purchases.get(currentPage - 1).forEach((slot,info) -> info.first().generatePurchaseItem(player,alterValueSetPagePurchases(info.second()),item -> setItem(slot,item),() -> setFailedItem(slot)));
+		if (purchases != null && !purchases.isEmpty()) purchases.get(currentPage - 1).forEach((slot,info) -> info.first().generatePurchaseItem(player,alterValueSetPagePurchases(info.second()),item -> setItem(slot,item),() -> setFailedItem(slot)));
 	}
 	
 	protected void setFailedItem(int slot) {}
@@ -78,8 +77,8 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
-		HashMap<Integer,Pair<V,T>> page = purchases.get(currentPage - 1);
-		Pair<V,T> purchase = page.get(slot);
+		HashMap<Integer,Pair<V,T>> page = purchases.isEmpty() ? null : purchases.get(currentPage - 1);
+		Pair<V,T> purchase = page == null || page.isEmpty() ? null : page.get(slot);
 		if (purchase != null) handlePurchase(event,slot,page,purchase,slotItem,click);
 		else otherOtherSlot(event,slot,slotItem,click);
 	}

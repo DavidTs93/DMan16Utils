@@ -95,18 +95,18 @@ public class ItemUtils {
 	
 	@Nullable
 	@Contract("null -> null")
-	public static Itemable<?> ofOrSubstitute(@Nullable String str) {
-		if (str == null) return null;
-		Material material = Utils.getMaterial(str);
-		return material != null ? ItemableStack.ofOrSubstitute(material) : ofOrSubstitute(keyAndMap(str));
-	}
-	
-	@Nullable
-	@Contract("null -> null")
 	public static Itemable<?> of(@Nullable String str) {
 		if (str == null) return null;
 		Material material = Utils.getMaterial(str);
 		return material != null ? ItemableStack.of(material,null) : of(keyAndMap(str));
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrSubstitute(@Nullable String str) {
+		if (str == null) return null;
+		Material material = Utils.getMaterial(str);
+		return material != null ? ItemableStack.ofOrSubstitute(material) : ofOrSubstitute(keyAndMap(str));
 	}
 	
 	@Nullable
@@ -116,6 +116,18 @@ public class ItemUtils {
 		Material material = Utils.getMaterial(str);
 		if (material != null) return ItemableStack.of(material,null);
 		Itemable<?> itemable = of(keyAndMap(str));
+		if (itemable != null) return itemable;
+		ItemStack item = (ItemStack) Utils.ObjectFromBase64(str);
+		return Utils.isNull(item) ? null : new ItemHolder(item);
+	}
+	
+	@Nullable
+	@Contract("null -> null")
+	public static Itemable<?> ofOrSubstituteOrHolder(@Nullable String str) {
+		if (str == null) return null;
+		Material material = Utils.getMaterial(str);
+		if (material != null) return ItemableStack.ofOrSubstitute(material,null);
+		Itemable<?> itemable = ofOrSubstitute(keyAndMap(str));
 		if (itemable != null) return itemable;
 		ItemStack item = (ItemStack) Utils.ObjectFromBase64(str);
 		return Utils.isNull(item) ? null : new ItemHolder(item);

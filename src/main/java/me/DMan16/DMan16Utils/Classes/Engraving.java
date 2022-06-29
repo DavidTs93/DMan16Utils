@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.Classes;
 
+import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.Socketable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.Material;
@@ -14,7 +15,7 @@ import java.util.*;
 import java.util.function.Function;
 
 public final class Engraving extends CustomEnchantment {
-	private static final @NotNull HashMap<@NotNull Engraving,@NotNull List<@NotNull Function<@NotNull Socketable<?>,@Nullable Integer>>> EXTRA_SCORES = new HashMap<>();
+	private static final @NotNull HashMap<@NotNull Engraving,@NotNull List<@NotNull Function<@NotNull Enchantable<?>,@Nullable Integer>>> EXTRA_SCORES = new HashMap<>();
 	
 	public final char symbol;
 	private final @NotNull @Unmodifiable Set<@NotNull EnchantmentTarget> targets;
@@ -27,15 +28,15 @@ public final class Engraving extends CustomEnchantment {
 		this.materials = materials == null ? Set.of() : Set.copyOf(materials);
 	}
 	
-	public static void registerExtraEngravingScore(@NotNull Engraving engraving,@NotNull Function<@NotNull Socketable<?>,@Nullable Integer> scoreFunction) {
+	public static void registerExtraEngravingScore(@NotNull Engraving engraving,@NotNull Function<@NotNull Enchantable<?>,@Nullable Integer> scoreFunction) {
 		EXTRA_SCORES.computeIfAbsent(engraving,l -> new ArrayList<>()).add(scoreFunction);
 	}
 	
 	@Nullable
-	public static Integer getEngravingExtraScore(@NotNull Socketable<?> socketable) {
-		List<@NotNull Function<@NotNull Socketable<?>,@Nullable Integer>> list = Utils.applyNotNull(socketable.getEngraving(),EXTRA_SCORES::get);
+	public static Integer getEngravingExtraScore(@NotNull Enchantable<?> enchantable) {
+		List<@NotNull Function<@NotNull Enchantable<?>,@Nullable Integer>> list = Utils.applyNotNull(enchantable.getEngraving(),EXTRA_SCORES::get);
 		if (list == null || list.isEmpty()) return null;
-		List<Integer> scores = list.stream().map(function -> function.apply(socketable)).filter(Objects::nonNull).toList();
+		List<Integer> scores = list.stream().map(function -> function.apply(enchantable)).filter(Objects::nonNull).toList();
 		return scores.isEmpty() ? null : scores.stream().reduce(0,Integer::sum);
 	}
 	

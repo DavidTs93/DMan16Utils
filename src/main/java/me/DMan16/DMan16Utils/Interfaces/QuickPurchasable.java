@@ -13,7 +13,7 @@ public interface QuickPurchasable<V> extends Purchasable<V,Empty> {
 	
 	@Nullable
 	default ItemStack itemCantAfford(@NotNull Player player,Empty val) {
-		return null;
+		return itemCanPurchaseAndAfford(player,val);
 	}
 	
 	default boolean isOwned(@NotNull Player player,Empty val) {

@@ -27,6 +27,7 @@ public final class AttributesInfo {
 			EquipmentSlot.CHEST,UUID.fromString("9F3D476D-C118-4544-8365-64846904B482"),EquipmentSlot.LEGS,UUID.fromString("D8499B04-0E66-4726-AB29-64469D734E03"),
 			EquipmentSlot.FEET,UUID.fromString("845DB27C-C624-495F-8C9F-6020A9A58B64"),EquipmentSlot.HAND,UUID.fromString("CB3F55D3-645C-4F38-A497-9C13A33DB5C5"),
 			EquipmentSlot.OFF_HAND,UUID.fromString("FA233E1C-4180-4865-B01B-BCCE9785ACA6"));
+	public static final int HSL_JUMP = 20;
 	
 	public final float health;
 	public final float armor;
@@ -48,7 +49,7 @@ public final class AttributesInfo {
 		score += attackDamage * 2;
 		score += attackDamagePercent / 5;
 		if (rangedMult != null) score += rangedMult / 5;
-		if (attackSpeed != null) score += attackSpeed / 20;
+		if (attackSpeed != null) score += attackSpeed / HSL_JUMP;
 		score += luck;
 		score += movementSpeed / 10;
 		return score;
@@ -146,7 +147,7 @@ public final class AttributesInfo {
 		stringAttribute(movementSpeed,true,lore,Attribute.GENERIC_MOVEMENT_SPEED.translationKey(),NamedTextColor.YELLOW);
 		if (attackSpeed != null) {
 			lore.add(Component.empty());
-			lore.add(EMPTY.append(Component.translatable(Attribute.GENERIC_ATTACK_SPEED.translationKey(),NamedTextColor.LIGHT_PURPLE)).append(Component.text(": ",NamedTextColor.WHITE)).append(Component.text(attackSpeed,Utils.getTextColorHSL((attackSpeed / 20) * 20,100,50))));
+			lore.add(EMPTY.append(Component.translatable(Attribute.GENERIC_ATTACK_SPEED.translationKey(),NamedTextColor.LIGHT_PURPLE)).append(Component.text(": ",NamedTextColor.WHITE)).append(Component.text(attackSpeed,Utils.getTextColorHSL((attackSpeed / HSL_JUMP) * HSL_JUMP,100,50))));
 		}
 		return lore;
 	}

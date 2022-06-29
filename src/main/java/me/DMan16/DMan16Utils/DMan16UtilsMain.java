@@ -9,7 +9,7 @@ import me.DMan16.DMan16Utils.Classes.Trio;
 import me.DMan16.DMan16Utils.Effects.CommandTestEffects;
 import me.DMan16.DMan16Utils.Events.Callers.EventCallers;
 import me.DMan16.DMan16Utils.Holograms.HologramsManager;
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Interfaces.*;
 import me.DMan16.DMan16Utils.Items.*;
 import me.DMan16.DMan16Utils.Listeners.*;
 import me.DMan16.DMan16Utils.Minigames.MiniGamesManager;
@@ -25,11 +25,12 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 public final class DMan16UtilsMain extends JavaPlugin {
@@ -46,6 +47,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	private MiniGamesManager MiniGamesManager = null;
 	private final AdvancedRecipes<AnvilInventory> advancedAnvilRecipes = new AdvancedRecipes<>();
 	private final AdvancedRecipes<SmithingInventory> advancedSmithingRecipes = new AdvancedRecipes<>();
+	private final AdvancedRecipes<GrindstoneInventory> advancedGrindstoneRecipes = new AdvancedRecipes<>();
 	
 	public void onLoad() {
 		if (INSTANCE != null) throw new IllegalArgumentException("DMan16Utils already exists!");
@@ -104,19 +106,26 @@ public final class DMan16UtilsMain extends JavaPlugin {
 		MiniGamesManager = new MiniGamesManager(INSTANCE);
 		PlayerPlayTimeLogger = new PlayerPlayTimeLogger();
 		Utils.advancedAnvilRecipes().register("item_repair",new AdvancedRecipe<>((first,second,originalResult) -> {
-			if (!(second instanceof ItemableStack itemable) || !(first instanceof Enchantable<?> enchantable) || enchantable.repairItem() == null || !enchantable.repairItem().similar(itemable)) return null;
-			int amount = itemable.amount() / enchantable.repairItem().amount();
-			int fix = enchantable.fix(amount);
+			if (!(first instanceof Repairable repairable) || !(second instanceof ItemableAmountable<?> repair)) return null;
+			ItemableAmountable<?> repairItem = repairable.repairItem();
+			if (repairItem == null || (!repairItem.canPassAsThis(repair) && !second.canPassAsThis(repair))) return null;
+			int amount = repair.amount() / repairItem.amount();
+			int fix = repairable.fix(amount);
 			if (fix >= amount) return null;
-			amount = itemable.amount() - ((amount - fix) * enchantable.repairItem().amount());
-			return Trio.of(null,amount <= 0 ? null : itemable.copy(amount),enchantable);
+			amount = repair.amount() - ((amount - fix) * repairItem.amount());
+			return Trio.of(null,amount <= 0 ? null : repair.copy(amount),first);
 		}));
-		Utils.advancedAnvilRecipes().register("enchantable_enchant",new AdvancedRecipe<>((first,second,originalResult) -> {
-			HashMap<Enchantment,Integer> enchants;
-			if (!(first instanceof Enchantable<?> enchantable) || !(second instanceof ItemableStack itemable) || (enchants = Utils.applyNotNull(Utils.getStoredEnchants(itemable.asItem()),HashMap::new)) == null) return null;
-			if (enchantable.shouldBreak()) return null;
+		Utils.advancedAnvilRecipes().register("enchantable_enchant_book",new AdvancedRecipe<>((first,second,originalResult) -> {
+			Map<Enchantment,Integer> enchants;
+			if (!(first instanceof Enchantable<?> enchantable) || enchantable.shouldBreak() || !(second instanceof EnchantmentsHolder holder) || second.material() != Material.ENCHANTED_BOOK || (enchants = holder.getEnchantments()).isEmpty()) return null;
 			Enchantable<?> result = enchantable.copy();
-			return enchants.entrySet().stream().anyMatch(entry -> result.addEnchantment(entry.getKey(),entry.getValue())) ? Trio.of(null,null,result) : null;
+			if (enchants.entrySet().stream().noneMatch(entry -> result.addEnchantment(entry.getKey(),entry.getValue()))) return null;
+			if ((result instanceof EnchantmentXPHolder resultXP) && (second instanceof EnchantmentXPHolder secondXP)) enchants.keySet().forEach(enchantment -> Utils.runNotNull(secondXP.getEnchantmentXP(enchantment),xp -> resultXP.addEnchantmentXP(enchantment,xp)));
+			return Trio.of(null,null,result);
+		}));
+		Utils.advancedGrindstoneRecipes().register("enchantable_grind",new AdvancedRecipe<>((first,second,originalResult) -> {
+			if (first != null && second != null) return null;
+			return (Utils.thisOrThatOrNull(first,second) instanceof Enchantable<?> enchantable) && enchantable.enchantmentsAmount() > 0 ? Trio.of(null,null,enchantable.clearEnchantments()) : null;
 		}));
 		Utils.advancedAnvilRecipes().register("item_enchant",new AdvancedRecipe<>((first,second,originalResult) ->
 				!Objects.equals(Utils.applyNotNull(first,Itemable::material),Material.ENCHANTED_BOOK) && Objects.equals(Utils.applyNotNull(second,Itemable::material),Material.ENCHANTED_BOOK) ? Trio.of(null,null,originalResult) : null));
@@ -209,5 +218,10 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	@NotNull
 	public AdvancedRecipes<SmithingInventory> advancedSmithingRecipes() {
 		return advancedSmithingRecipes;
+	}
+	
+	@NotNull
+	public AdvancedRecipes<GrindstoneInventory> advancedGrindstoneRecipes() {
+		return advancedGrindstoneRecipes;
 	}
 }

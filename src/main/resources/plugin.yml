@@ -24,6 +24,8 @@ commands:
     permission: dman16.command.repair
   fix:
     permission: dman16.command.fix
+  xpholder:
+    permission: prisonpop.command.xpholder
   uuid:
     permission: dman16.command.uuid
   test_effect:
@@ -44,6 +46,8 @@ permissions:
   dman16.command.repair:
     default: op
   dman16.command.fix:
+    default: op
+  prisonpop.command.xpholder:
     default: op
   dman16.command.uuid:
     default: op

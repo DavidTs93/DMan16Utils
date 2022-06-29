@@ -1270,6 +1270,11 @@ public class Utils {
 		return DMan16UtilsMain.getInstance().advancedSmithingRecipes();
 	}
 	
+	@NotNull
+	public static AdvancedRecipes<GrindstoneInventory> advancedGrindstoneRecipes() {
+		return DMan16UtilsMain.getInstance().advancedGrindstoneRecipes();
+	}
+	
 	public static boolean containsTabComplete(String arg1, String arg2) {
 		return (arg1 == null || arg1.isEmpty() || arg2.toLowerCase().contains(arg1.toLowerCase()));
 	}
@@ -2165,8 +2170,7 @@ public class Utils {
 	 * @return A HashMap containing the slots the item was added to and the respective amounts. Empty = nothing added = fail!
 	 */
 	@NotNull
-	public static List<@NotNull HashMap<@NotNull Integer,@NotNull Integer>> addFully(@NotNull Player player, @NotNull List<ItemStack> items,
-																					 @Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
+	public static List<@NotNull HashMap<@NotNull Integer,@NotNull Integer>> addFully(@NotNull Player player, @NotNull List<ItemStack> items,@Nullable Map<@NotNull Integer,@NotNull Integer> toRemove, int ... toEmpty) {
 		List<HashMap<Integer,Integer>> maps = new ArrayList<>();
 		List<@NotNull Integer> empty = Arrays.stream(toEmpty).boxed().toList();
 		if (toRemove == null) toRemove = new HashMap<>();
@@ -2474,14 +2478,13 @@ public class Utils {
 		if (oldDamage == null) return item;
 		int durability = Math.max(maxDurability - oldDamage - addDamage,0);
 		TextColor color;
-		int ratio = durability == 0 ? 0 : (int) Math.ceil(((double) maxDurability) / durability);
+		int ratio = durability == 0 ? 0 : divideCeil(maxDurability,durability);
 		if (ratio >= 100) color = NamedTextColor.RED;
 		else if (ratio >= 20) color = NamedTextColor.GOLD;
 		else if (ratio >= 2) color = NamedTextColor.YELLOW;
 		else if (ratio == 0) color = NamedTextColor.GRAY;
 		else color = NamedTextColor.GREEN;
-		List<Component> lore = List.of(Component.empty(),
-				Utils.noItalic(Component.translatable("item.durability",NamedTextColor.WHITE,Component.text(durability,color),Component.text(maxDurability,NamedTextColor.GRAY))));
+		List<Component> lore = List.of(Component.empty(),Utils.noItalic(Component.translatable("item.durability",NamedTextColor.WHITE,Component.text(durability,color),Component.text(maxDurability,NamedTextColor.GRAY))));
 		return setInsteadIfDamageExists && oldDamage > 0 && item.getItemMeta().hasLore() ? Utils.setLore(item,lore) : Utils.addAfterLore(item,lore);
 	}
 	
@@ -2613,9 +2616,9 @@ public class Utils {
 	@NonNegative
 	public static long totalPlayTimeMillis(@NotNull UUID ID) throws SQLException {
 		try (Connection connection = getConnection(); Statement statement = connection.createStatement()) {
-			ResultSet result = statement.executeQuery("SELECT TotalPlayTimeMillis FROM Players_Data WHERE ID='" + ID + "';");
+			ResultSet result = statement.executeQuery("SELECT TotalPlayTimeMillis FROM Players_Data WHERE UUID='" + ID + "';");
 			if (!result.next()) throw new SQLException("Player with the UUID \"" + ID + "\" not found in database!");
-			return thisOrThatOrNull(DMan16UtilsMain.getInstance().getPlayerPlayTimeLogger().currentPlayTime(ID),0L) + result.getLong("TotalPlayTimeMillis");
+			return DMan16UtilsMain.getInstance().getPlayerPlayTimeLogger().currentPlayTime(ID) + result.getLong("TotalPlayTimeMillis");
 		}
 	}
 	
@@ -2655,5 +2658,25 @@ public class Utils {
 	@NotNull
 	public static String locationBlockCoordinatesString(@NotNull Location loc) {
 		return "(" + loc.getBlockX() + "," + loc.getBlockY() + "," + loc.getBlockZ() + ")";
+	}
+	
+	public static float divideAsFloat(int dividend,int divisor) {
+		return ((float) dividend) / divisor;
+	}
+	
+	public static int divideCeil(int dividend,int divisor) {
+		return (int) Math.ceil(divideAsFloat(dividend,divisor));
+	}
+	
+	public static double divideAsDouble(long dividend,long divisor) {
+		return ((double) dividend) / divisor;
+	}
+	
+	public static long divideCeil(long dividend,long divisor) {
+		return (long) Math.ceil(divideAsDouble(dividend,divisor));
+	}
+	
+	public static long multiplyAsLong(int num1,int num2) {
+		return ((long) num1) * num2;
 	}
 }

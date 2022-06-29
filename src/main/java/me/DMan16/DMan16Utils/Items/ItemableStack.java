@@ -3,8 +3,9 @@ package me.DMan16.DMan16Utils.Items;
 import me.DMan16.DMan16Utils.Classes.Engraving;
 import me.DMan16.DMan16Utils.Classes.Pair;
 import me.DMan16.DMan16Utils.Enums.Tags;
-import me.DMan16.DMan16Utils.Interfaces.Amountable;
+import me.DMan16.DMan16Utils.Interfaces.EnchantmentsHolder;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Interfaces.ItemableAmountable;
 import me.DMan16.DMan16Utils.Restrictions.Restrictions;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -26,12 +27,13 @@ import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class ItemableStack implements Itemable<ItemableStack>,Amountable<ItemableStack> {
+public class ItemableStack implements ItemableAmountable<ItemableStack>,EnchantmentsHolder {
 	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
 	private static final HashMap<@NotNull Material,@Nullable Supplier<Itemable<?>>> DISABLED_MATERIALS = new HashMap<>();
 	private static final List<@NotNull Function<@NotNull ItemStack,@Nullable Itemable<?>>> DISABLED_ITEMS = new ArrayList<>();
@@ -69,6 +71,12 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	private ItemableStack(@NotNull ItemStack item) {
 		this.item = item.clone();
+	}
+	
+	@NotNull
+	@Unmodifiable
+	public Map<@NotNull Enchantment,@NotNull Integer> getEnchantments() {
+		return Utils.thisOrThatOrNull(Utils.getStoredEnchants(item),item.getEnchantments());
 	}
 	
 	@NotNull
@@ -317,7 +325,12 @@ public class ItemableStack implements Itemable<ItemableStack>,Amountable<Itemabl
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof ItemableStack other) && material() == other.material() && Utils.sameItem(asItem(),other.asItem());
+		return (obj instanceof ItemableStack item) && canPassAsThis(item);
+	}
+	
+	@Override
+	public boolean canPassAsThis(@NotNull Itemable<?> item) {
+		return item.material() == material() && Utils.sameItem(asItem(),item.asItem());
 	}
 	
 	public boolean similar(Object obj,boolean ignoreDurability,boolean ignoreFlags) {

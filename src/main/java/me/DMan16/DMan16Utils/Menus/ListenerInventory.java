@@ -45,7 +45,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		this.registered = false;
 	}
 	
-	protected void clear() {
+	protected final void clear() {
 		inventory.clear();
 	}
 	
@@ -97,7 +97,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		PLAYER_MENUS.values().remove(this);
 	}
 	
-	protected void close(boolean unregister, boolean cancelCloseUnregister) {
+	protected final void close(boolean unregister, boolean cancelCloseUnregister) {
 		if (unregister) {
 			unregister();
 			afterCloseUnregister(null);
@@ -145,7 +145,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	}
 	
 	@Nullable
-	protected InventoryView view(@NotNull Player player) {
+	protected final InventoryView view(@NotNull Player player) {
 		return playerViews.get(player);
 	}
 	
