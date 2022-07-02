@@ -1,7 +1,8 @@
-package me.DMan16.DMan16Utils.Interfaces;
+package me.DMan16.DMan16Utils.Items;
 
 import me.DMan16.DMan16Utils.Classes.AttributesInfo;
 import me.DMan16.DMan16Utils.Classes.Engraving;
+import me.DMan16.DMan16Utils.Interfaces.ReviveableItemable;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.Socketable;
 import me.DMan16.DMan16Utils.Utils.Utils;

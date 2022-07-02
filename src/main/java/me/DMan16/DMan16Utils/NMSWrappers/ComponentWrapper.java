@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class ComponentWrapper permits ComponentWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class ComponentWrapper permits ComponentWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.network.chat.Component}!</>
 	 */
-	public Object component() {
+	@MonotonicNonNull
+	public final Object component() {
 		return component;
 	}
 	
-	public boolean isComponent() {
+	public final boolean isComponent() {
 		return component != null;
 	}
 	

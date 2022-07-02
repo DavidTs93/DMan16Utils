@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers.Entities;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class LivingEntityWrapper permits LivingEntityWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class LivingEntityWrapper permits LivingEntityWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.entity.LivingEntity}!</>
 	 */
-	public Object livingEntity() {
+	@MonotonicNonNull
+	public final Object livingEntity() {
 		return entity;
 	}
 	
-	public boolean isLivingEntity() {
+	public final boolean isLivingEntity() {
 		return entity != null;
 	}
 	

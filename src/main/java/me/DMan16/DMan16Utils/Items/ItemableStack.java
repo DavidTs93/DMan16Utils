@@ -160,29 +160,24 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	@NotNull
 	public static Map<@NotNull Enchantment,@NotNull Integer> getEnchantments(Object obj) {
 		HashMap<Enchantment,Integer> enchants = new HashMap<>();
-		Enchantment enchant;
-		String key;
-		Integer level;
 		if (obj != null) try {
 			List<?> enchantments = (List<?>) obj;
-			Map<?,?> enchantment;
-			for (Object o : enchantments) try {
-				enchantment = (Map<?,?>) o;
-				enchant = Utils.getEnchantment(Utils.getString(enchantment.get("id")));
-				level = Utils.getInteger(enchantment.get("lvl"));
+			for (Object o : enchantments) Utils.runNoException(() ->  {
+				Map<?,?> enchantment = (Map<?,?>) o;
+				Enchantment enchant = Utils.getEnchantment(Utils.getString(enchantment.get("id")));
+				Integer level = Utils.getInteger(enchantment.get("lvl"));
 				if (enchant != null && level != null && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
-			} catch (Exception e1) {}
+			});
 		} catch (Exception e) {
-			try {
+			Utils.runNoException(() -> {
 				Map<?,?> enchantments = (Map<?,?>) obj;
-				String name;
-				for (Map.Entry<?,?> entry : enchantments.entrySet()) try {
-					name = Objects.requireNonNull(Utils.getString(entry.getKey()));
-					level = Utils.getInteger(entry.getValue());
-					enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
+				for (Map.Entry<?,?> entry : enchantments.entrySet()) Utils.runNoException(() ->  {
+					String name = Objects.requireNonNull(Utils.getString(entry.getKey()));
+					Integer level = Utils.getInteger(entry.getValue());
+					Enchantment enchant = Objects.requireNonNull(Enchantment.getByKey(NamespacedKey.minecraft(name)));
 					if (level != null && level >= enchant.getStartLevel()) enchants.putIfAbsent(enchant,level);
-				} catch (Exception e3) {}
-			} catch (Exception e2) {}
+				});
+			});
 		}
 		return enchants;
 	}
@@ -195,15 +190,13 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	@NotNull
 	public static List<@NotNull Pattern> getPatterns(Object obj) {
 		List<@NotNull Pattern> patterns = new ArrayList<>();
-		if (obj != null) try {
+		if (obj != null) Utils.runNoException(() -> {
 			List<?> list = (List<?>) obj;
-			Map<?,?> map;
-			for (Object o : list) try {
-				map = (Map<?,?>) o;
-				patterns.add(new Pattern(DyeColor.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("color"))),String::toUpperCase)),
-						PatternType.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("pattern"))),String::toUpperCase))));
-			} catch (Exception e1) {}
-		} catch (Exception e) {}
+			for (Object o : list) Utils.runNoException(() ->  {
+				Map<?,?> map = (Map<?,?>) o;
+				patterns.add(new Pattern(DyeColor.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("color"))),String::toUpperCase)),PatternType.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("pattern"))),String::toUpperCase))));
+			});
+		});
 		return patterns;
 	}
 	
@@ -235,9 +228,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 		Integer damage = Utils.getInteger(arguments.get("Damage"));
 		if (damage != null) {
 			if (damage >= material.getMaxDurability()) return new ItemableStack(item);
-			else if (damage >= 0) try {
-				((Damageable) meta).setDamage(damage);
-			} catch (Exception e) {}
+			else if (damage >= 0) Utils.runNoException(() -> ((Damageable) meta).setDamage(damage));
 		}
 		Component name = Utils.mapToComponent(arguments.get("Name"));
 		if (name != null) meta.displayName(Utils.noItalic(name));
@@ -253,8 +244,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 		item.setItemMeta(meta);
 		item.setAmount(Math.max(1,Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("Amount")),1)));
 		item = Utils.addEnchantments(item,getEnchantments(arguments.get("Enchantments")));
-		if (arguments.get("Restrictions") instanceof List<?> restrictions)
-			Restrictions.addRestrictions(item,restrictions.stream().map(Utils::getString).map(Restrictions::byName).filter(Objects::nonNull).toList());
+		if (arguments.get("Restrictions") instanceof List<?> restrictions) Restrictions.addRestrictions(item,restrictions.stream().map(Utils::getString).map(Restrictions::byName).filter(Objects::nonNull).toList());
 		return new ItemableStack(item);
 	}
 	
@@ -284,11 +274,11 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 		}
 		ItemMeta meta = item.getItemMeta();
 		Utils.runNotNull(Utils.mapComponent(meta.displayName()),name -> map.put("Name",name));
-		if (item.getType().getMaxDurability() > 0) try {
+		if (item.getType().getMaxDurability() > 0) Utils.runNoException(() ->  {
 			int damage = ((Damageable) meta).getDamage();
 			if (damage > 0) map.put("Damage",damage);
-		} catch (Exception e) {
-		} else Utils.runNotNullIf(Utils.applyNotNull(meta.lore(),lore -> lore.stream().map(Utils::mapComponent).toList()),lore -> map.put("Lore",lore),lore -> !lore.isEmpty());
+		});
+		else Utils.runNotNullIf(Utils.applyNotNull(meta.lore(),lore -> lore.stream().map(Utils::mapComponent).toList()),lore -> map.put("Lore",lore),lore -> !lore.isEmpty());
 //		List<Component> originalLore = meta.lore();
 //		if (originalLore != null) {
 //			originalLore = new ArrayList<>(originalLore);
@@ -307,9 +297,9 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 //				originalLore.remove((int) j);
 //			}
 //		}
-		if (item.getType() == Material.PLAYER_HEAD) try {
+		if (item.getType() == Material.PLAYER_HEAD) Utils.runNoException(() ->  {
 			map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first());
-		} catch (Exception e) {}
+		});
 		if (meta.isUnbreakable()) map.put("Unbreakable",true);
 		int model;
 		if (meta.hasCustomModelData() && (model = meta.getCustomModelData()) > 0) map.put("Model",model);
@@ -352,9 +342,9 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	}
 	
 	@NotNull
-	@Contract(pure = true)
+	@Contract(value = "_ -> new",pure = true)
 	public ItemableStack copy(@Positive int amount) {
-		return Utils.runGetOriginal(new ItemableStack(item),item -> item.item.setAmount(amount));
+		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxStackSize())));
 	}
 	
 	@Nullable
@@ -372,9 +362,5 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	@Positive
 	public int amount() {
 		return item.getAmount();
-	}
-	
-	public int maxStackSize() {
-		return item.getMaxStackSize();
 	}
 }

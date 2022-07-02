@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class WorldWrapper permits WorldWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class WorldWrapper permits WorldWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.server.level.ServerLevel}!</>
 	 */
-	public Object world() {
+	@MonotonicNonNull
+	public final Object world() {
 		return world;
 	}
 	
-	public boolean isWorld() {
+	public final boolean isWorld() {
 		return world != null;
 	}
 	

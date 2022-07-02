@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers.Entities;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class EntityWrapper permits EntityWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class EntityWrapper permits EntityWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.entity.Entity}!</>
 	 */
-	public Object entity() {
+	@MonotonicNonNull
+	public final Object entity() {
 		return entity;
 	}
 	
-	public boolean isEntity() {
+	public final boolean isEntity() {
 		return entity != null;
 	}
 	

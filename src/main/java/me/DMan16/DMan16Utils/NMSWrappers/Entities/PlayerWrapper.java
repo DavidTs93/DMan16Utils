@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers.Entities;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class PlayerWrapper permits PlayerWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class PlayerWrapper permits PlayerWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.server.level.ServerPlayer}!</>
 	 */
-	public Object player() {
+	@MonotonicNonNull
+	public final Object player() {
 		return player;
 	}
 	
-	public boolean isPlayer() {
+	public final boolean isPlayer() {
 		return player != null;
 	}
 	

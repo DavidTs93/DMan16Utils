@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class SynchedEntityDataWrapper permits SynchedEntityDataWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class SynchedEntityDataWrapper permits SynchedEntityDataWrapper.Sa
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.network.syncher.SynchedEntityData}!</>
 	 */
-	public Object data() {
+	@MonotonicNonNull
+	public final Object data() {
 		return data;
 	}
 	
-	public boolean isData() {
+	public final boolean isData() {
 		return data != null;
 	}
 	

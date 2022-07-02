@@ -2679,4 +2679,10 @@ public class Utils {
 	public static long multiplyAsLong(int num1,int num2) {
 		return ((long) num1) * num2;
 	}
+	
+	public static void runNoException(@NotNull Runnable run) {
+		try {
+			run.run();
+		} catch (Exception e) {}
+	}
 }

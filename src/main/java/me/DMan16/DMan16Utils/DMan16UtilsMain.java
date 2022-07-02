@@ -93,6 +93,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 		new RepairCommandListener();
 		new FixCommandListener();
 		new UUIDCommandListener();
+		new XPHolderCommandListener();
 		new MiscListeners();
 		CancelPlayers = new CancelPlayers();
 		new HologramsManager();

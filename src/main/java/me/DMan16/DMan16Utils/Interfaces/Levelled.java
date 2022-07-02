@@ -29,7 +29,6 @@ public interface Levelled<V extends Itemable<V>> extends Itemable<V> {
 	
 	@NotNull
 	default Component giveComponent() {
-		return name().append(Component.text(" (",NamedTextColor.WHITE).append(levelLine().color(NamedTextColor.WHITE)).append(Component.text(")"))).
-				hoverEvent(asItem().asHoverEvent());
+		return name().append(Component.text(" (",NamedTextColor.WHITE).append(levelLine().color(NamedTextColor.WHITE)).append(Component.text(")"))).hoverEvent(asItem().asHoverEvent());
 	}
 }

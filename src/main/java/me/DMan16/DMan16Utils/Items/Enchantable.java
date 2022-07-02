@@ -7,9 +7,12 @@ import me.DMan16.DMan16Utils.Enums.Tags;
 import me.DMan16.DMan16Utils.Interfaces.EnchantmentsHolder;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.Repairable;
+import me.DMan16.DMan16Utils.NMSWrappers.TagWrapper;
+import me.DMan16.DMan16Utils.Utils.ReflectionUtils;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.minecraft.nbt.ByteTag;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.enchantments.Enchantment;
@@ -272,27 +275,29 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	}
 	
 	@NotNull
+	protected static ItemStack finalizeItem(@NotNull ItemStack item,@Nullable AttributesInfo info,@NotNull String key,@NotNull EquipmentSlot slot,@Nullable HashMap<Enchantment,Integer> enchantments,boolean shouldBreak,@Positive int maxDurability,@NonNegative int damage,boolean isDefault) {
+		if (!shouldBreak) {
+			if (enchantments != null) item = Utils.addEnchantments(item,enchantments);
+			item = info == null ? AttributesInfo.addAttributesNull(item,key,slot) : info.addAttributes(item,key,slot);
+		} else item = AttributesInfo.addAttributesNull(item,key,slot);
+//		return ReflectionUtils.addNBTTag(Utils.addDurabilityLore(item,maxDurability,damage,false),"Original",new Co);
+		
+		return Utils.applyOrOriginalIf(Utils.addDurabilityLore(item,maxDurability,damage,false),i -> ReflectionUtils.addNBTTag(i,"Original",new TagWrapper.Safe(ByteTag.ONE)),isDefault);
+	}
+	
+	@NotNull
 	protected final ItemStack finalizeItem(@NotNull ItemStack item) {
 		return finalizeItem(item,info);
 	}
 	
 	@NotNull
 	protected final ItemStack finalizeItem(@NotNull ItemStack item,@Nullable AttributesInfo info) {
-		return finalizeItem(item,info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage());
-	}
-	
-	@NotNull
-	protected static ItemStack finalizeItem(@NotNull ItemStack item,@Nullable AttributesInfo info,@NotNull String key,@NotNull EquipmentSlot slot,@Nullable HashMap<Enchantment,Integer> enchantments,boolean shouldBreak,@Positive int maxDurability,@NonNegative int damage) {
-		if (!shouldBreak) {
-			if (enchantments != null) item = Utils.addEnchantments(item,enchantments);
-			item = info == null ? AttributesInfo.addAttributesNull(item,key,slot) : info.addAttributes(item,key,slot);
-		} else item = AttributesInfo.addAttributesNull(item,key,slot);
-		return Utils.addDurabilityLore(item,maxDurability,damage,false);
+		return finalizeItem(item,info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage(),isDefault);
 	}
 	
 	@NotNull
 	public final ItemStack asItem() {
-		return finalizeItem(asItemNoAttributes(),info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage());
+		return finalizeItem(asItemNoAttributes(),info,key(),equipSlot(),enchantments,shouldBreak(),maxDurability(),damage(),isDefault);
 	}
 	
 	@NonNegative
@@ -312,7 +317,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	}
 	
 	@NotNull
-	protected final HashMap<@NotNull String,Object> baseMap() {
+	public Map<@NotNull String,Object> toMap() {
 		HashMap<String,Object> map = new HashMap<>();
 		if (!enchantments.isEmpty()) map.put("Enchantments",ItemableStack.getEnchantments(enchantments));
 		if (engraving != null) map.put("Engraving",engraving.name());

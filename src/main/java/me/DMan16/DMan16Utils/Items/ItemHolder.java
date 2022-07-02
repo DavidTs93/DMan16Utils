@@ -1,18 +1,22 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Interfaces.ItemableAmountable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.inventory.ItemStack;
+import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
 
-public class ItemHolder implements Itemable<ItemHolder> {
+public class ItemHolder implements ItemableAmountable<ItemHolder> {
 	private final ItemStack item;
 	
+	/**
+	 * The item is cloned
+	 */
 	public ItemHolder(@NotNull ItemStack item) {
 		this.item = item.clone();
 	}
@@ -50,5 +54,15 @@ public class ItemHolder implements Itemable<ItemHolder> {
 	@NotNull
 	public String stringMappable() {
 		return Utils.thisOrThatOrNull(Utils.ObjectToBase64(item),"");
+	}
+	
+	@NotNull
+	public ItemHolder copy(@Positive int amount) {
+		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxStackSize())));
+	}
+	
+	@Positive
+	public int amount() {
+		return item.getAmount();
 	}
 }

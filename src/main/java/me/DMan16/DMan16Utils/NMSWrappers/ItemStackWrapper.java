@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class ItemStackWrapper permits ItemStackWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class ItemStackWrapper permits ItemStackWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.item.ItemStack}!</>
 	 */
-	public Object item() {
+	@MonotonicNonNull
+	public final Object item() {
 		return item;
 	}
 	
-	public boolean isItem() {
+	public final boolean isItem() {
 		return item != null;
 	}
 	

@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.NMSWrappers.Entities;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class HumanWrapper permits HumanWrapper.Safe {
@@ -15,11 +16,12 @@ public sealed class HumanWrapper permits HumanWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.entity.player.Player}!</>
 	 */
-	public Object human() {
+	@MonotonicNonNull
+	public final Object human() {
 		return human;
 	}
 	
-	public boolean isHuman() {
+	public final boolean isHuman() {
 		return human != null;
 	}
 	

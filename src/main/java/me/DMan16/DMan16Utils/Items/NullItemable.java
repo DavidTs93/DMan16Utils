@@ -1,5 +1,6 @@
-package me.DMan16.DMan16Utils.Interfaces;
+package me.DMan16.DMan16Utils.Items;
 
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;

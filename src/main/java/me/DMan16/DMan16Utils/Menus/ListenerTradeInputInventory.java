@@ -145,7 +145,7 @@ public abstract class ListenerTradeInputInventory extends ListenerInventoryPages
 		if (paymentItems.isEmpty()) return paymentItems;
 		List<ItemStack> requiredCopy = new ArrayList<>(requiredPayment);
 		for (ItemStack item1 : requiredCopy) for (ItemStack item2 : paymentItems) if (Utils.sameItem(item1,item2)) {
-			int amount = Math.max(Math.min(item1.getAmount(),item2.getAmount()),0);
+			int amount = Utils.clamp(item1.getAmount(),0,item2.getAmount());
 			item1.setAmount(item1.getAmount() - amount);
 			item2.setAmount(item2.getAmount() - amount);
 		}

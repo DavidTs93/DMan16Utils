@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Interfaces;
 
-import me.DMan16.DMan16Utils.Enums.Rarity;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Enums.Rarity;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -17,7 +17,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.Arrays;
 import java.util.Iterator;
 
-public interface Tiered<V extends Tiered<V> > extends Amountable<V> {
+public interface Tiered<V extends Tiered<V>> {
 	NamespacedKey TIER = new NamespacedKey(DMan16UtilsMain.getInstance(),"tier");
 	
 	@NonNegative int tier();

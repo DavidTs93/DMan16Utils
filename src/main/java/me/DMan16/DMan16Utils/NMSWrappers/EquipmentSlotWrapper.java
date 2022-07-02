@@ -1,26 +1,28 @@
 package me.DMan16.DMan16Utils.NMSWrappers;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.NotNull;
 
 public sealed class EquipmentSlotWrapper permits EquipmentSlotWrapper.Safe {
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.entity.EquipmentSlot}!</>
 	 */
-	protected final Object component;
+	protected final Object slot;
 	
 	public EquipmentSlotWrapper(@NotNull Object obj) {
-		component = (obj instanceof net.minecraft.world.entity.EquipmentSlot) ? obj : null;
+		slot = (obj instanceof net.minecraft.world.entity.EquipmentSlot) ? obj : null;
 	}
 	
 	/**
 	 * !null -> safe to cast to {@link net.minecraft.world.entity.EquipmentSlot}!</>
 	 */
-	public Object slot() {
-		return component;
+	@MonotonicNonNull
+	public final Object slot() {
+		return slot;
 	}
 	
-	public boolean isSlot() {
-		return component != null;
+	public final boolean isSlot() {
+		return slot != null;
 	}
 	
 	public static final class Safe extends EquipmentSlotWrapper {

@@ -154,7 +154,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	protected void changePage(int num) {
-		setPage(Math.min(Math.max(currentPage + num,1),maxPage()));
+		setPage(Utils.clamp(currentPage + num,1,maxPage()));
 	}
 	
 	protected void reset() {
