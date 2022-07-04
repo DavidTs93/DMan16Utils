@@ -26,6 +26,8 @@ commands:
     permission: dman16.command.fix
   xpholder:
     permission: prisonpop.command.xpholder
+  sockets:
+    permission: prisonpop.command.sockets
   uuid:
     permission: dman16.command.uuid
   test_effect:
@@ -48,6 +50,8 @@ permissions:
   dman16.command.fix:
     default: op
   prisonpop.command.xpholder:
+    default: op
+  prisonpop.command.sockets:
     default: op
   dman16.command.uuid:
     default: op

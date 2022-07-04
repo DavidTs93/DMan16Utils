@@ -3,8 +3,6 @@ package me.DMan16.DMan16Utils.Items;
 import me.DMan16.DMan16Utils.Classes.AttributesInfo;
 import me.DMan16.DMan16Utils.Classes.Engraving;
 import me.DMan16.DMan16Utils.Interfaces.ReviveableItemable;
-import me.DMan16.DMan16Utils.Items.Enchantable;
-import me.DMan16.DMan16Utils.Items.Socketable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
@@ -36,7 +34,7 @@ public abstract class SocketableReviveable<V extends Socketable<V> & ReviveableI
 	}
 	
 	protected int socketsScore() {
-		return 2 * (maxEnchantments() + (maxEnchantments() == maxPossibleSockets() ? 1 : 0));
+		return 2 * (maxEnchantments() + (maxEnchantments() == maxPossibleEnchantments() ? 1 : 0));
 	}
 	
 	protected int enchantmentsScore() {

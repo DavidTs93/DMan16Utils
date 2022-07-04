@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Socketable<V extends Socketable<V>> extends Enchantable<V> {
 	private static final @NotNull Component EMPTY_LINE = Utils.noItalic(Component.translatable("menu.socket_empty",NamedTextColor.AQUA).append(Component.translatable("menu.empty_socket",NamedTextColor.GRAY)));
@@ -24,7 +23,7 @@ public abstract class Socketable<V extends Socketable<V>> extends Enchantable<V>
 	}
 	
 	@Positive
-	public int maxPossibleSockets() {
+	public int maxPossibleEnchantments() {
 		return 5;
 	}
 	
@@ -50,28 +49,13 @@ public abstract class Socketable<V extends Socketable<V>> extends Enchantable<V>
 		return Utils.enchantmentsLoreLine(enchantment,lvl);
 	}
 	
-	@Override
-	protected V setMaxEnchantmentSlots(@Positive int maxEnchantments) {
-		return super.setMaxEnchantmentSlots(Math.min(maxEnchantments,maxPossibleSockets()));
-	}
-	
 	public boolean addEnchantmentSlot() {
 		int old = maxEnchantments;
 		return old != setMaxEnchantmentSlots(old + 1).maxEnchantments;
 	}
 	
-	@Override
-	@Positive
-	protected final int randomMaxEnchantments(@Positive int limit) {
-		return ThreadLocalRandom.current().nextInt(0,Math.min(limit,maxPossibleSockets())) + 1;
-	}
-	
 	@NotNull
 	public final V setRandomMaxEnchantments() {
-		return setRandomMaxEnchantments(maxInitialEnchantments());
-	}
-	
-	protected int maxInitialEnchantments() {
-		return maxPossibleSockets() - 1;
+		return setRandomMaxEnchantments(randomMaxEnchantments(maxPossibleEnchantments() - 1));
 	}
 }

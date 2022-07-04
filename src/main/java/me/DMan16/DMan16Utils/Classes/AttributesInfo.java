@@ -35,7 +35,7 @@ public final class AttributesInfo {
 	public final float knockbackResistance;
 	public final float attackDamage;
 	public final float attackDamagePercent;
-	public final @Nullable Float rangedMult;
+	public final @Nullable Float rangedMultiplier;
 	private final @Nullable @Positive @Range(from = 1,to = 100) Integer attackSpeed;
 	public final float luck;
 	public final float movementSpeed;
@@ -48,26 +48,26 @@ public final class AttributesInfo {
 		score += knockbackResistance / 10;
 		score += attackDamage * 2;
 		score += attackDamagePercent / 5;
-		if (rangedMult != null) score += rangedMult / 5;
+		if (rangedMultiplier != null) score += rangedMultiplier / 5;
 		if (attackSpeed != null) score += attackSpeed / HSL_JUMP;
 		score += luck;
 		score += movementSpeed / 10;
 		return score;
 	}
 	
-	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMult,@Nullable Number attackSpeed,
+	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,
 						   @Nullable Number luck,@Nullable Number movementSpeed) {
 		this.health = f(health);
 		this.armor = f(armor);
 		this.armorToughness = f(armorToughness);
 		this.attackDamage = f(attackDamage);
 		this.attackDamagePercent = f(attackDamagePercent);
-		this.rangedMult = rangedMult == null ? null : f(rangedMult);
-		this.attackSpeed = attackSpeed == null ? null : Utils.clamp(attackSpeed.intValue(),0,99) + 1;
+		this.rangedMultiplier = rangedMultiplier == null ? null : f(rangedMultiplier);
+		this.attackSpeed = attackSpeed == null ? null : Utils.clamp(Utils.round(attackSpeed.floatValue()),0,99) + 1;
 		this.knockbackResistance = f(knockbackResistance);
 		this.luck = f(luck);
 		this.movementSpeed = f(movementSpeed);
-		if (this.health == 0 && this.armor == 0 && this.armorToughness == 0 && this.attackDamage == 0 && this.rangedMult == null && this.knockbackResistance == 0 && this.luck == 0 && this.movementSpeed == 0) throw new IllegalArgumentException();
+		if (this.health == 0 && this.armor == 0 && this.armorToughness == 0 && this.attackDamage == 0 && this.rangedMultiplier == null && this.knockbackResistance == 0 && this.luck == 0 && this.movementSpeed == 0) throw new IllegalArgumentException();
 	}
 	
 	private static float f(@Nullable Number f) {
@@ -75,10 +75,10 @@ public final class AttributesInfo {
 	}
 	
 	@Nullable
-	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMult,@Nullable Number attackSpeed,
+	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,
 									@Nullable Number luck,@Nullable Number movementSpeed) {
 		try {
-			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 		} catch (Exception e) {}
 		return null;
 	}
@@ -120,18 +120,21 @@ public final class AttributesInfo {
 	@Nullable
 	@Positive
 	public Float attackSpeed() {
-		return attackSpeed == null ? null : attackSpeed(attackSpeed);
+		return attackSpeed == null ? null : 4 * attackSpeed / 100f;
 	}
 	
-	private static float attackSpeed(@Positive @Range(from = 1,to = 100) int attackSpeed) {
-		return 4 * attackSpeed / 100f;
+	@Nullable
+	@Positive
+	@Range(from = 1,to = 100)
+	public Integer attackSpeedRank() {
+		return attackSpeed;
 	}
 	
 	@Nullable
 	@Contract(pure = true)
 	public AttributesInfo join(AttributesInfo info) {
 		return info == null ? this : of(this.health + info.health,this.armor + info.armor,this.armorToughness + info.armorToughness,this.knockbackResistance + info.knockbackResistance,this.attackDamage + info.attackDamage,
-				this.attackDamagePercent + info.attackDamagePercent,join(this.rangedMult,info.rangedMult),join(this.attackSpeed,info.attackSpeed),this.luck + info.luck,this.movementSpeed + info.movementSpeed);
+				this.attackDamagePercent + info.attackDamagePercent,join(this.rangedMultiplier,info.rangedMultiplier),join(this.attackSpeed,info.attackSpeed),this.luck + info.luck,this.movementSpeed + info.movementSpeed);
 	}
 	
 	@NotNull
@@ -142,7 +145,7 @@ public final class AttributesInfo {
 		stringAttribute(armorToughness,false,lore,Attribute.GENERIC_ARMOR_TOUGHNESS.translationKey(),NamedTextColor.GRAY);
 		stringAttribute(knockbackResistance,true,lore,Attribute.GENERIC_KNOCKBACK_RESISTANCE.translationKey(),NamedTextColor.DARK_PURPLE);
 		stringAttribute(attackDamage,false,lore,Attribute.GENERIC_ATTACK_DAMAGE.translationKey(),NamedTextColor.BLUE);
-		if (rangedMult != null) stringAttribute(rangedMult,true,lore,"attribute.name.projectile_damage",NamedTextColor.GOLD);
+		if (rangedMultiplier != null) stringAttribute(rangedMultiplier,true,lore,"attribute.name.projectile_damage",NamedTextColor.GOLD);
 		stringAttribute(luck,false,lore,Attribute.GENERIC_LUCK.translationKey(),NamedTextColor.GREEN);
 		stringAttribute(movementSpeed,true,lore,Attribute.GENERIC_MOVEMENT_SPEED.translationKey(),NamedTextColor.YELLOW);
 		if (attackSpeed != null) {
@@ -178,7 +181,7 @@ public final class AttributesInfo {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof AttributesInfo info) && health == info.health && armor == info.armor && armorToughness == info.armorToughness && knockbackResistance == info.knockbackResistance && attackDamage == info.attackDamage && Objects.equals(rangedMult,info.rangedMult) &&
+		return (obj instanceof AttributesInfo info) && health == info.health && armor == info.armor && armorToughness == info.armorToughness && knockbackResistance == info.knockbackResistance && attackDamage == info.attackDamage && Objects.equals(rangedMultiplier,info.rangedMultiplier) &&
 				Objects.equals(attackSpeed,info.attackSpeed) && luck == info.luck && movementSpeed == info.movementSpeed;
 	}
 	
@@ -199,54 +202,60 @@ public final class AttributesInfo {
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withHealth(@Nullable Number health) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withArmor(@Nullable Number armor) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withKnockbackResistance(@Nullable Number knockbackResistance) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withAttackDamage(@Nullable Number attackDamage) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withAttackDamagePercent(@Nullable Number attackDamagePercent) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
-	public AttributesInfo withRangedMult(@Nullable Number rangedMult) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+	public AttributesInfo withRangedMultiplier(@Nullable Number rangedMultiplier) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
+	}
+	
+	@NotNull
+	@Contract(pure = true)
+	public AttributesInfo withAttackSpeedRank(@Nullable Number attackSpeed) {
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withAttackSpeed(@Nullable Number attackSpeed) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed == null ? null : (attackSpeed.floatValue() + 4) * 25,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withLuck(@Nullable Number luck) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 	
 	@NotNull
 	@Contract(pure = true)
 	public AttributesInfo withMovementSpeed(@Nullable Number movementSpeed) {
-		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMult,attackSpeed,luck,movementSpeed);
+		return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 	}
 }

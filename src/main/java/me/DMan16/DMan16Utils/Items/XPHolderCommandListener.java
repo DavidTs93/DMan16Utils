@@ -33,7 +33,7 @@ public final class XPHolderCommandListener implements CommandExecutor,TabComplet
 		if (args.length < 2) return false;
 		Itemable<?> item = ItemUtils.of(player.getInventory().getItemInMainHand());
 		if (!(item instanceof EnchantmentXPHolder xpHolder)) {
-			player.sendMessage(Utils.chatColors("&cNo NTSocketable item in main hand!"));
+			player.sendMessage(Utils.chatColors("&cNo EnchantmentXPHolder item in main hand!"));
 			return true;
 		}
 		int idx = BASE.indexOf(args[0].toLowerCase());

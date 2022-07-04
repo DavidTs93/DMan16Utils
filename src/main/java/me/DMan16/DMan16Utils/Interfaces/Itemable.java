@@ -2,6 +2,7 @@ package me.DMan16.DMan16Utils.Interfaces;
 
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -29,5 +30,17 @@ public interface Itemable<V extends Itemable<V>> extends Copyable<V>,Mappable {
 		if (!Utils.addFully(player,asItem(),toRemove,toEmpty).isEmpty()) {
 			if (onSuccess != null) onSuccess.run();
 		} else if (onFail != null) onFail.run();
+	}
+	
+	@NotNull
+	default Component commandGiveAmountGetMessage(@NotNull Player player,int amount) {
+		int given = amount <= 0 ? 0 : amount - Utils.addItems(player,Utils.asAmount(asItem(),amount)).stream().map(ItemStack::getAmount).reduce(0,Integer::sum);
+		Component msg;
+		if (given > 0) {
+			msg = giveComponent();
+			if (given > 1) msg = msg.append(Component.text(" x" + given,NamedTextColor.WHITE));
+			msg = Component.text("Gave ",NamedTextColor.GREEN).append(msg);
+		} else msg = Component.text("No items given",NamedTextColor.GOLD);
+		return msg;
 	}
 }

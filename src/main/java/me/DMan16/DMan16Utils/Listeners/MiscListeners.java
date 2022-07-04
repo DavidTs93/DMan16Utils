@@ -105,7 +105,7 @@ public class MiscListeners implements Listener {
 				else {
 					event.setDamage(0);
 					event.getItem().setItemMeta(itemable.asItem().getItemMeta());
-					event.getPlayer().playSound(event.getPlayer().getLocation(),itemable.material() == Material.SHIELD ? Sound.ITEM_SHIELD_BREAK : Sound.ENTITY_ITEM_BREAK,1,1);
+					event.getPlayer().playSound(event.getPlayer().getLocation(),itemable.material() == Material.SHIELD ? Sound.ITEM_SHIELD_BREAK : Sound.ENTITY_ITEM_BREAK,1,0.9f);
 				}
 			} else {
 				event.setDamage(enchantable.damageItemStack() - dmg);

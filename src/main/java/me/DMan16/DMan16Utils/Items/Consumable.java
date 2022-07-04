@@ -10,8 +10,6 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minecraft.nbt.ByteTag;
 import org.bukkit.Material;
-import org.bukkit.Sound;
-import org.bukkit.SoundCategory;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemFlag;
@@ -25,7 +23,6 @@ import org.jetbrains.annotations.Range;
 import org.jetbrains.annotations.Unmodifiable;
 
 import java.util.*;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 public abstract class Consumable<V extends Consumable<V>> implements ItemableAmountable<V> {
@@ -42,13 +39,15 @@ public abstract class Consumable<V extends Consumable<V>> implements ItemableAmo
 	 * Not empty
 	 */
 	private final @Nullable @Unmodifiable Map<@NotNull PotionEffectType,@NotNull @Positive @Range(from = 1,to = 100) Integer> effectsRemove;
+	private final @Nullable Itemable<?> leftover;
 	private final @Nullable @Positive Integer model;
 	private final @Nullable Component name;
 	private final boolean enchanted;
 	private @Positive int amount = 1;
 	
 	protected Consumable(@NotNull String key,@NotNull Material material,boolean isDefault,int hunger,float saturation,@Nullable Collection<@NotNull Pair<@NotNull PotionEffect,@NotNull Integer>> effectsAdd,@Nullable Map<@NotNull PotionEffectType,@NotNull Integer> effectsRemove,
-						 Integer model,@Nullable Component name,boolean enchanted) {
+						 @Nullable Itemable<
+			?> leftover,Integer model,@Nullable Component name,boolean enchanted) {
 		this.key = Objects.requireNonNull(Utils.fixKey(key));
 		this.material = material;
 		this.isDefault = isDefault;
@@ -65,13 +64,14 @@ public abstract class Consumable<V extends Consumable<V>> implements ItemableAmo
 			effectsAdd = effectsAdd.stream().filter(pair -> pair.first().getAmplifier() >= 0 && pair.first().getDuration() > 0 && pair.second() > 0).map(pair -> Pair.of(pair.first(),Math.min(pair.second(),100))).toList();
 			this.effectsAdd = effectsAdd.isEmpty() ? null : List.copyOf(effectsAdd);
 		} else this.effectsAdd = null;
+		this.leftover = leftover;
 		this.model = model == null || model <= 0 ? null : model;
 		this.name = name;
 		this.enchanted = enchanted;
 	}
 	
 	protected Consumable(@NotNull String key,@NotNull Material material,boolean isDefault,@NotNull ConsumableInfo info,Integer model,@Nullable Component name,boolean enchanted) {
-		this(key,material,isDefault,info.hunger(),info.saturation(),info.effectsAdd(),info.effectsRemove(),model,name,enchanted);
+		this(key,material,isDefault,info.hunger(),info.saturation(),info.effectsAdd(),info.effectsRemove(),info.leftover(),model,name,enchanted);
 	}
 	
 	protected boolean isIllegal(@NotNull String key,@NotNull Material material,boolean isDefault) {
@@ -137,6 +137,11 @@ public abstract class Consumable<V extends Consumable<V>> implements ItemableAmo
 		return name == null ? Component.translatable(material().translationKey(),NamedTextColor.WHITE) : name;
 	}
 	
+	@Nullable
+	public Itemable<?> leftover() {
+		return leftover;
+	}
+	
 	@Positive
 	public int amount() {
 		return amount;
@@ -173,18 +178,7 @@ public abstract class Consumable<V extends Consumable<V>> implements ItemableAmo
 	}
 	
 	public boolean onConsume(@NotNull Player player) {
-		player.getWorld().playSound(player.getLocation(),onConsumeSound(),onConsumeSoundCategory(),1,1 + (ThreadLocalRandom.current().nextFloat() - ThreadLocalRandom.current().nextFloat()) * 0.4F);
 		return true;
-	}
-	
-	@NotNull
-	protected Sound onConsumeSound() {
-		return Sound.ENTITY_PLAYER_BURP;
-	}
-	
-	@NotNull
-	protected SoundCategory onConsumeSoundCategory() {
-		return SoundCategory.NEUTRAL;
 	}
 	
 	public record ConsumableInfo(int hunger,float saturation,@Nullable Collection<@NotNull Pair<@NotNull PotionEffect,@NotNull Integer>> effectsAdd,@Nullable Map<@NotNull PotionEffectType,@NotNull Integer> effectsRemove,@Nullable Itemable<?> leftover) {}

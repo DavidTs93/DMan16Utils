@@ -3,7 +3,6 @@ package me.DMan16.DMan16Utils.Items;
 import me.DMan16.DMan16Utils.Classes.AttributesInfo;
 import me.DMan16.DMan16Utils.Classes.Engraving;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
-import me.DMan16.DMan16Utils.Enums.Tags;
 import me.DMan16.DMan16Utils.Interfaces.EnchantmentsHolder;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.Repairable;
@@ -34,7 +33,6 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	protected static final NamespacedKey DAMAGE_KEY = new NamespacedKey(DMan16UtilsMain.getInstance(),"item_damage");
 	protected static final NamespacedKey MAX_ENCHANTMENTS_KEY = new NamespacedKey(DMan16UtilsMain.getInstance(),"max_enchantments");
 	public static final int DEFAULT_CUSTOM_FIX_DIVIDE = 10;
-	private static final int MAX_ENCHANTMENTS = 20;
 	
 	protected @Nullable Engraving engraving = null;
 	protected final @NotNull HashMap<@NotNull Enchantment,@NotNull @Positive Integer> enchantments = new HashMap<>();
@@ -84,7 +82,7 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		return enchantments.size();
 	}
 	
-	public abstract @NonNegative int model();
+	public abstract @Nullable @Positive Integer model();
 	
 	@Nullable
 	@Positive
@@ -105,10 +103,15 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		return maxEnchantments - enchantments.size();
 	}
 	
+	@Positive
+	public int maxPossibleEnchantments() {
+		return Integer.MAX_VALUE;
+	}
+	
 	@SuppressWarnings("unchecked")
 	protected V setMaxEnchantmentSlots(@Positive int maxEnchantments) {
 		if (maxEnchantments == this.maxEnchantments) return (V) this;
-		this.maxEnchantments = Math.min(maxEnchantments,MAX_ENCHANTMENTS);
+		this.maxEnchantments = Math.min(maxEnchantments,maxPossibleEnchantments());
 		Set<Enchantment> keys = enchantments.keySet();
 		if (keys.size() > this.maxEnchantments) {
 			List<Enchantment> keysList = new ArrayList<>(keys);
@@ -120,6 +123,11 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 	@Positive
 	protected int randomMaxEnchantments(@Positive int limit) {
 		return ThreadLocalRandom.current().nextInt(0,limit) + 1;
+	}
+	
+	@NotNull
+	public V setRandomMaxEnchantments() {
+		return setRandomMaxEnchantments(randomMaxEnchantments(maxPossibleEnchantments()));
 	}
 	
 	@NotNull
@@ -148,11 +156,16 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 		if (enchantment instanceof Engraving engraving) return this.engraving == null;
 		Boolean existingCheck = canEnchantExisting(enchantment,level);
 		if ((existingCheck == null && emptyEnchantmentSlots() <= 0) || Boolean.FALSE.equals(existingCheck)) return false;
-		if (Tags.AXES.contains(material())) {
-			if (enchantment == Enchantment.DIG_SPEED || enchantment == Enchantment.LOOT_BONUS_BLOCKS || enchantment == Enchantment.SILK_TOUCH) return false;
-			if (enchantment != Enchantment.LOOT_BONUS_MOBS && enchantment != Enchantment.KNOCKBACK && enchantment != Enchantment.FIRE_ASPECT && !enchantment.canEnchantItem(new ItemStack(material()))) return false;
-		} else if (!enchantment.canEnchantItem(new ItemStack(material()))) return false;
+		Boolean specialAllowed = specialAllowedEnchantment(enchantment);
+		if (specialAllowed == null) {
+			if (!enchantment.canEnchantItem(new ItemStack(material()))) return false;
+		} else if (!specialAllowed) return false;
 		return enchantments.keySet().stream().noneMatch(ench -> Utils.conflictsNotEquals(ench,enchantment));
+	}
+	
+	@Nullable
+	protected Boolean specialAllowedEnchantment(@NotNull Enchantment enchantment) {
+		return null;
 	}
 	
 	/**

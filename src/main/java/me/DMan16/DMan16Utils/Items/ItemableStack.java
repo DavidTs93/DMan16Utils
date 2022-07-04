@@ -37,6 +37,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
 	private static final HashMap<@NotNull Material,@Nullable Supplier<Itemable<?>>> DISABLED_MATERIALS = new HashMap<>();
 	private static final List<@NotNull Function<@NotNull ItemStack,@Nullable Itemable<?>>> DISABLED_ITEMS = new ArrayList<>();
+	private static final @NotNull Set<@NotNull Material> NO_ENCHANTMENTS_MATERIALS = new HashSet<>();
 	
 	private final ItemStack item;
 	
@@ -67,6 +68,14 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	
 	public static void addDisabledMaterialsSubstitutes(@NotNull Collection<@NotNull Pair<@NotNull Material,@Nullable Supplier<Itemable<?>>>> infos) {
 		for (Pair<@NotNull Material,@Nullable Supplier<Itemable<?>>> info : infos) DISABLED_MATERIALS.put(info.first,info.second);
+	}
+	
+	public static void addNoEnchantmentsMaterials(@NotNull Collection<@NotNull Material> materials) {
+		NO_ENCHANTMENTS_MATERIALS.addAll(materials);
+	}
+	
+	public static void addNoEnchantmentsMaterials(@NotNull Material ... materials) {
+		NO_ENCHANTMENTS_MATERIALS.addAll(Arrays.asList(materials));
 	}
 	
 	private ItemableStack(@NotNull ItemStack item) {
@@ -115,6 +124,10 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 		if (item.getType().getMaxDurability() > 0) try {
 			if (((Damageable) item.getItemMeta()).getDamage() <= 0) item = Utils.setLore(item,null);
 		} catch (Exception e) {}
+		if (NO_ENCHANTMENTS_MATERIALS.contains(item.getType())) {
+			item = item.clone();
+			new HashSet<>(item.getEnchantments().keySet()).forEach(item::removeEnchantment);
+		}
 		ItemableStack stack = new ItemableStack(item);
 		ItemableStack fromMap = of(stack.toMap());
 		return fromMap == null || !Utils.sameItem(item,fromMap.item) ? null : stack;
@@ -184,7 +197,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	
 	@NotNull
 	public static List<@NotNull Map<@NotNull String,@NotNull String>> getPatterns(@NotNull List<@NotNull Pattern> patterns) {
-		return patterns.stream().map(pattern -> Map.of("pattern",pattern.getPattern().name(),"color",pattern.getColor().name())).toList();
+		return patterns.stream().map(pattern -> Map.of("Pattern",pattern.getPattern().name(),"Color",pattern.getColor().name())).toList();
 	}
 	
 	@NotNull
@@ -194,14 +207,14 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 			List<?> list = (List<?>) obj;
 			for (Object o : list) Utils.runNoException(() ->  {
 				Map<?,?> map = (Map<?,?>) o;
-				patterns.add(new Pattern(DyeColor.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("color"))),String::toUpperCase)),PatternType.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("pattern"))),String::toUpperCase))));
+				patterns.add(new Pattern(DyeColor.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("Color"))),String::toUpperCase)),PatternType.valueOf(Utils.applyNotNull(Utils.fixKey(Utils.getString(map.get("Pattern"))),String::toUpperCase))));
 			});
 		});
 		return patterns;
 	}
 	
 	@NotNull
-	private static ItemFlag @NotNull [] getFlags(int num) {
+	public static ItemFlag @NotNull [] getFlags(int num) {
 		List<@NotNull Boolean> bits = new ArrayList<>();
 		for (int i = 0; i <= 7; i++) bits.add(((num >> i) & 1) == 1);
 		ItemFlag[] itemFlags = ItemFlag.values();
@@ -230,12 +243,10 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 			if (damage >= material.getMaxDurability()) return new ItemableStack(item);
 			else if (damage >= 0) Utils.runNoException(() -> ((Damageable) meta).setDamage(damage));
 		}
-		Component name = Utils.mapToComponent(arguments.get("Name"));
-		if (name != null) meta.displayName(Utils.noItalic(name));
-		List<Component> lore = Utils.mapToListComponent(arguments.get("Lore"));
-		if (lore != null) meta.lore(lore);
-		meta.setUnbreakable(Utils.thisOrThatOrNull(Utils.getBoolean(arguments.get("Unbreakable")),false));
-		meta.setCustomModelData(Utils.applyOrOriginalIf(Utils.getInteger(arguments.get("Model")),Utils::Null,num -> num <= 0));
+		Utils.runNotNull(Utils.mapToComponent(arguments.get("Name")),name -> meta.displayName(Utils.noItalic(name)));
+		Utils.runNotNull(Utils.mapToListComponent(arguments.get("Lore")),meta::lore);
+		Utils.runNotNull(Utils.getBoolean(arguments.get("Unbreakable")),meta::setUnbreakable);
+		Utils.runNotNullIf(Utils.getInteger(arguments.get("Model")),meta::setCustomModelData,model -> model > 0);
 		String skin = Utils.getString(arguments.get("Skin"));
 		if (skin != null && material == Material.PLAYER_HEAD) Utils.setSkin((SkullMeta) meta,skin,null);
 		meta.addItemFlags(getFlags(Utils.thisOrThatOrNull(Utils.getInteger(arguments.get("HideFlags")),0)));
@@ -297,9 +308,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 //				originalLore.remove((int) j);
 //			}
 //		}
-		if (item.getType() == Material.PLAYER_HEAD) Utils.runNoException(() ->  {
-			map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first());
-		});
+		if (item.getType() == Material.PLAYER_HEAD) Utils.runNoException(() -> map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first()));
 		if (meta.isUnbreakable()) map.put("Unbreakable",true);
 		int model;
 		if (meta.hasCustomModelData() && (model = meta.getCustomModelData()) > 0) map.put("Model",model);
