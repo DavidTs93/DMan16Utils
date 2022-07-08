@@ -106,14 +106,14 @@ public abstract class InnerInventoryAmountable<V extends Itemable<V> & Amountabl
 					while (amount > 0) {
 						addSlot = null;
 						for (int i = 0; i < originalMenu.get(currentPage).size(); i++)
-							if ((temp = originalMenu.get(currentPage).get(i)) == null || (item.equals(temp) && temp.amount() < temp.maxStackSize())) {
+							if ((temp = originalMenu.get(currentPage).get(i)) == null || (item.equals(temp) && temp.amount() < temp.maxSize())) {
 								addSlot = i;
 								break;
 							}
 						if (addSlot == null) break;
 						temp = originalMenu.get(currentPage).get(addSlot);
 						int itemAmount = temp == null ? 0 : temp.amount();
-						item = item.copy(Math.min(amount + itemAmount,item.maxStackSize()) - itemAmount);
+						item = item.copy(Math.min(amount + itemAmount,item.maxSize()) - itemAmount);
 						int added = add(item);
 						if (added <= 0) break;
 						amount -= added;
@@ -124,11 +124,11 @@ public abstract class InnerInventoryAmountable<V extends Itemable<V> & Amountabl
 				}
 			} else if (slot < size) {
 				if (action == InventoryAction.SWAP_WITH_CURSOR) {
-					if (item == null || item.amount() > item.maxStackSize() || !swap(this.originalMenu.get(currentPage).get(slot),fromItem.apply(event.getCursor())))
+					if (item == null || item.amount() > item.maxSize() || !swap(this.originalMenu.get(currentPage).get(slot),fromItem.apply(event.getCursor())))
 						event.setCancelled(true);
 				} else if (action == InventoryAction.HOTBAR_SWAP) {
 					item = fromItem.apply(click == ClickType.SWAP_OFFHAND ? player.getInventory().getItemInOffHand() : player.getInventory().getItem(event.getHotbarButton()));
-					if (item == null || item.amount() > item.maxStackSize() || !swap(originalMenu.get(currentPage).get(slot),item)) event.setCancelled(true);
+					if (item == null || item.amount() > item.maxSize() || !swap(originalMenu.get(currentPage).get(slot),item)) event.setCancelled(true);
 					else originalMenu.get(currentPage).set(slot,item);
 				} else if (action == InventoryAction.PICKUP_SOME) event.setCancelled(true);
 				else if (action == InventoryAction.PICKUP_ALL || action == InventoryAction.DROP_ALL_SLOT) {
@@ -148,7 +148,7 @@ public abstract class InnerInventoryAmountable<V extends Itemable<V> & Amountabl
 						return;
 					}
 					amount = add(action == InventoryAction.PLACE_ALL ? item : (action == InventoryAction.PLACE_ONE ? item.copy(1) :
-							item.copy(item.maxStackSize() - item.amount())));
+							item.copy(item.maxSize() - item.amount())));
 					if (amount > 0) originalMenu.get(currentPage).set(slot,item.copy(item.amount() + amount));
 					else event.setCancelled(true);
 				}

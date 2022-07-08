@@ -21,32 +21,36 @@ import java.util.function.Function;
 public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInventoryPages {
 	protected List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> purchases;
 	
-	protected  <P extends Shop<V,T>> Shop(@NotNull Player player, int lines, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,@Nullable Function<P,@NotNull Boolean> doFirstMore) {
+	protected  <P extends Shop<V,T>> Shop(@NotNull Player player,int lines,@Nullable Component name,@Nullable Boolean border,@NotNull JavaPlugin plugin,@Nullable Function<P,@NotNull Boolean> doFirstMore) {
 		super(player,player,lines,name,border,plugin,(Shop<V,T> shop) -> first(shop,doFirstMore));
 	}
 	
 	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
-		purchases = toMapList(iter,size,this::isBorder);
+		purchases = new ArrayList<>(generatePages(iter,purchase -> Pair.of(purchase,(T) null),null,0,lines - 1,0,8,border() == null ? slot -> slot >= size - 9 : (border() ? this::isBorder : null),null).values());
 	}
 	
-	@NotNull
-	public static <V,T> List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> toMapList(@NotNull Iterator<@NotNull V> iter, int size,@NotNull Function<@NotNull Integer,@NotNull Boolean> isBorder) {
-		List<HashMap<Integer,Pair<V,T>>> list = new ArrayList<>();
-		HashMap<Integer,Pair<V,T>> map = new HashMap<>();
-		int i,idx;
-		while (iter.hasNext()) {
-			for (i = 0; i < size; i++) {
-				if (getInnerIndex(i,size,isBorder) == null) continue;
-				map.put(i,Pair.of(iter.next(),null));
-				if (!iter.hasNext()) break;
-			}
-			if (!map.isEmpty()) {
-				list.add(map);
-				map = new HashMap<>();
-			}
-		}
-		return list;
-	}
+//	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
+//		purchases = toMapList(iter,size,border() == null ? slot -> slot >= size : (border() ? this::isBorder : null));
+//	}
+//
+//	@NotNull
+//	public static <V,T> List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> toMapList(@NotNull Iterator<@NotNull V> iter,int size,@Nullable Function<@NotNull Integer,@NotNull Boolean> isBorder) {
+//		List<HashMap<Integer,Pair<V,T>>> list = new ArrayList<>();
+//		HashMap<Integer,Pair<V,T>> map = new HashMap<>();
+//		int i,idx;
+//		while (iter.hasNext()) {
+//			for (i = 0; i < size; i++) {
+//				if (getInnerIndex(i,size,isBorder) == null) continue;
+//				map.put(i,Pair.of(iter.next(),null));
+//				if (!iter.hasNext()) break;
+//			}
+//			if (!map.isEmpty()) {
+//				list.add(map);
+//				map = new HashMap<>();
+//			}
+//		}
+//		return list;
+//	}
 	
 	protected void setPurchases(@NotNull List<@NotNull V> list) {
 		setPurchases(list.iterator());
@@ -64,7 +68,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected void setFailedItem(int slot) {}
 	
 	@SuppressWarnings("unchecked")
-	private static <V extends Purchasable<?,T>,T,P extends Shop<V,T>> boolean first(@NotNull Shop<V,T> shop, @Nullable Function<P,@NotNull Boolean> doFirstMore) {
+	private static <V extends Purchasable<?,T>,T,P extends Shop<V,T>> boolean first(@NotNull Shop<V,T> shop,@Nullable Function<P,@NotNull Boolean> doFirstMore) {
 		shop.purchases = new ArrayList<>();
 		shop.fancyButtons = true;
 		if (doFirstMore != null) if (!doFirstMore.apply((P) shop)) return false;
@@ -76,7 +80,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		return Math.max(1,purchases.size());
 	}
 	
-	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
+	protected void otherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click) {
 		HashMap<Integer,Pair<V,T>> page = purchases.isEmpty() ? null : purchases.get(currentPage - 1);
 		Pair<V,T> purchase = page == null || page.isEmpty() ? null : page.get(slot);
 		if (purchase != null) handlePurchase(event,slot,page,purchase,slotItem,click);
@@ -93,11 +97,11 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		return val;
 	}
 	
-	protected void handlePurchase(@NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,@NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
+	protected void handlePurchase(@NotNull InventoryClickEvent event,int slot,@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,@NotNull Pair<@NotNull V,@Nullable T> purchase,ItemStack slotItem,@NotNull ClickType click) {
 		purchase.first().purchase(player,alterValueHandlePurchase(purchase.second()),() -> handleAfterPurchase(true,event,slot,page,purchase,slotItem,click),() -> handleAfterPurchase(false,event,slot,page,purchase,slotItem,click));
 	}
 	
-	protected void handleAfterPurchase(boolean purchaseSuccessful, @NotNull InventoryClickEvent event, int slot, @NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page, @NotNull Pair<@NotNull V,@Nullable T> purchase, ItemStack slotItem, @NotNull ClickType click) {
+	protected void handleAfterPurchase(boolean purchaseSuccessful,@NotNull InventoryClickEvent event,int slot,@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,@NotNull Pair<@NotNull V,@Nullable T> purchase,ItemStack slotItem,@NotNull ClickType click) {
 		if (purchaseSuccessful) {
 			Utils.savePlayer(player);
 			reloadPage();
@@ -109,7 +113,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		alterPurchases(newPage);
 	}
 	
-	protected void otherOtherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {}
+	protected void otherOtherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click) {}
 	
 	protected void alterPurchases(int page) {}
 	

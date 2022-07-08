@@ -1,8 +1,8 @@
 package me.DMan16.DMan16Utils.Menus;
 
 import me.DMan16.DMan16Utils.Classes.BasicItemableGeneral;
-import me.DMan16.DMan16Utils.Interfaces.Backable;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Interfaces.Backable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Material;
@@ -12,18 +12,26 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.InventoryHolder;
-import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.Positive;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.jetbrains.annotations.Range;
 
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Function;
 
 public abstract class ListenerInventoryPages extends ListenerInventory {
+	protected final @NotNull JavaPlugin plugin;
+	/**
+	 * {@link ListenerInventory#size} / 9
+	 */
+	protected final @Positive @Range(from = 2,to = 6) int lines;
 	protected int currentPage = 1;
 	protected int slotClose = size - 5;
 	protected int slotNext = size - 1;
@@ -37,29 +45,21 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected int rightClickJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
-	protected final @NotNull JavaPlugin plugin;
-	protected InventoryView view;
 	
 	/**
 	 * @param lines Number of lines - NOT including the bottom (Close,Next,Previous) - 1-5
 	 */
 	@SuppressWarnings("unchecked")
-	protected <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner, @NotNull Player player, int lines, @Nullable Component name,
-																		 @Nullable Boolean border, @NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
-		super(Utils.makeInventory(owner,Objects.requireNonNull(lines > 5 || lines < 1 ? null : lines + 1,"Number of lines must be 1-5!"),Utils.noItalic(name)));
+	protected <V extends ListenerInventoryPages> ListenerInventoryPages(@Nullable InventoryHolder owner,@NotNull Player player,@Positive @Range(from = 1,to = 5) int lines,@Nullable Component name,
+																		@Nullable Boolean border,@NotNull JavaPlugin plugin,@Nullable Function<V,@NotNull Boolean> doFirst) {
+		super(Utils.makeInventory(owner,lines + 1,Utils.noItalic(name)));
 		this.plugin = plugin;
+		this.lines = lines + 1;
 		this.player = player;
 		this.border = border;
 		if (doFirst != null) if (!doFirst.apply((V) this)) throw new IllegalArgumentException();
 		setPage(1);
 		if (openOnInitialize) open(plugin,player);
-	}
-	
-	@Override
-	@Nullable
-	protected final InventoryView open(@NotNull Player player) {
-		this.view = super.open(player);
-		return this.view;
 	}
 	
 	@EventHandler
@@ -119,14 +119,15 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	@Nullable
-	public static Integer getInnerIndex(int slot, int size, @NotNull Function<@NotNull Integer,@NotNull Boolean> isBorder) {
-		return slot < 0 || slot >= size || isBorder.apply(slot) ? null : ((slot / 9) - 1) * 7 + (slot % 9) - 1;
+	public static Integer getInnerIndex(int slot,int size,@Nullable Function<@NotNull Integer,@NotNull Boolean> isBorder) {
+		return slot < 0 || slot >= size || (isBorder != null && isBorder.apply(slot)) ? null : ((slot / 9) - 1) * 7 + (slot % 9) - 1;
 	}
 	
 	public int slotBack() {
 		return slotBack;
 	}
 	
+	@MonotonicNonNull
 	protected Boolean border() {
 		return border;
 	}
@@ -135,7 +136,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return click == ClickType.DOUBLE_CLICK || (!click.isRightClick() && !click.isLeftClick() && !click.isCreativeAction());
 	}
 	
-	protected void empty(@NotNull InventoryClickEvent event, int slot, @NotNull ClickType click, boolean isNull) {}
+	protected void empty(@NotNull InventoryClickEvent event,int slot,@NotNull ClickType click,boolean isNull) {}
 	
 	protected boolean checkCancelled(@NotNull InventoryClickEvent event) {
 		return event.isCancelled();
@@ -226,19 +227,99 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 		return Utils.isNull(item) || Utils.sameItem(itemBorder().asItem(),item) || Utils.sameItem(itemInside().asItem(),item) || Utils.sameItem(itemInsideDark().asItem(),item);
 	}
 	
-	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+	protected boolean cancelCheck(int slot,int inventorySlot,@NotNull ClickType click,@NotNull InventoryAction action,int hotbarSlot) {
 		return true;
 	}
 	
-	protected boolean firstSlotCheck(int slot, @NotNull ClickType click) {
+	protected boolean firstSlotCheck(int slot,@NotNull ClickType click) {
 		return false;
 	}
 	
-	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+	protected boolean secondSlotCheck(int slot,int inventorySlot,@NotNull ClickType click,@NotNull InventoryAction action,int hotbarSlot) {
 		return click.isCreativeAction() || slot < 0;
 	}
 	
 	protected abstract void setPageContents();
 	public abstract int maxPage();
-	protected abstract void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click);
+	protected abstract void otherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click);
+	
+	@NotNull
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																				 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+		if (endLine < startLine || endColumn < startColumn) throw new IllegalArgumentException();
+		LinkedHashMap<Integer,LinkedHashMap<Integer,T>> pages = new LinkedHashMap<>();
+		List<Integer> slots = new ArrayList<>();
+		int slot;
+		for (int i = startLine; i <= endLine; i++) for (int j = startColumn; j <= endColumn; j++) {
+			slot = (i * 9) + j;
+			if ((allowSlot == null || allowSlot.apply(slot)) && (ignoreSlot == null || !ignoreSlot.apply(slot))) slots.add(slot);
+		}
+		if (slots.isEmpty()) return pages;
+		T item;
+		LinkedHashMap<Integer,T> page;
+		while (iter.hasNext()) {
+			page = new LinkedHashMap<>();
+			for (int i = 0; i < slots.size() && iter.hasNext(); i++) if ((item = convert.apply(iter.next())) != null && (isNull == null || !isNull.apply(item))) page.put(slots.get(i),item);
+			pages.put(pages.size(),page);
+		}
+		return pages;
+	}
+	
+	@NotNull
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																				 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+		return generatePages(collection.iterator(),convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
+	}
+	
+	@NotNull
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																				 @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+		return generatePages(iter,convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots == null ? null : ignoreSlots::contains,allowedSlots == null ? null : allowedSlots::contains);
+	}
+	
+	@NotNull
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+		return generatePages(collection.iterator(),convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots,allowedSlots);
+	}
+	
+	@NotNull
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																			   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+		return generatePages(iter,Utils::self,isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
+	}
+	
+	@NotNull
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																			   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+		return generatePages(collection.iterator(),isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
+	}
+	
+	@NotNull
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+		return generatePages(iter,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots == null ? null : ignoreSlots::contains,allowedSlots == null ? null : allowedSlots::contains);
+	}
+	
+	@NotNull
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+		return generatePages(collection.iterator(),isNull,startLine,startColumn,endLine,endColumn,ignoreSlots,allowedSlots);
+	}
 }

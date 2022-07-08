@@ -5,7 +5,7 @@ import org.checkerframework.checker.index.qual.Positive;
 public interface ItemableAmountable<V extends Itemable<V> & Amountable<V>> extends Itemable<V>,Amountable<V> {
 	@Override
 	@Positive
-	default int maxStackSize() {
+	default int maxSize() {
 		return material().getMaxStackSize();
 	}
 }

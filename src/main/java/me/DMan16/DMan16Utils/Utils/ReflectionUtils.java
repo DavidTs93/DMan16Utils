@@ -90,19 +90,19 @@ public class ReflectionUtils {
 		return addEffects(entity,cause,Arrays.asList(effects));
 	}
 	
-	public static boolean[] removeEffects(@NotNull Player player,@NotNull Cause cause,@NotNull List<PotionEffectType> effects) {
+	public static boolean[] removeEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull List<PotionEffectType> effects) {
 		if (effects.isEmpty()) return new boolean[0];
 		boolean[] result = new boolean[effects.size()];
 		for (int i = 0; i < effects.size(); i++) {
 			PotionEffectType effect = effects.get(i);
 			net.minecraft.world.effect.MobEffect mobEffect = (net.minecraft.world.effect.MobEffect) MobEffectWrapper.fromPotionEffectType(effect).mobEffect();
-			result[i] = ((net.minecraft.server.level.ServerPlayer) getHandle(player).player()).removeEffect(mobEffect,cause);
+			result[i] = ((net.minecraft.world.entity.LivingEntity) getHandle(entity).livingEntity()).removeEffect(mobEffect,cause);
 		}
 		return result;
 	}
 	
-	public static boolean[] removeEffects(@NotNull Player player,@NotNull Cause cause,@NotNull PotionEffectType ... effects) {
-		return removeEffects(player,cause,Arrays.asList(effects));
+	public static boolean[] removeEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull PotionEffectType ... effects) {
+		return removeEffects(entity,cause,Arrays.asList(effects));
 	}
 	
 	@NotNull
@@ -113,7 +113,7 @@ public class ReflectionUtils {
 		if (type == null) return List.of(arr);
 		for (Field field : arr) {
 			field.setAccessible(true);
-			if ((exact && field.getType() == type) || type.isAssignableFrom(field.getType())) list.add(field);
+			if (field.getType() == type || (!exact && type.isAssignableFrom(field.getType()))) list.add(field);
 		}
 		return Collections.unmodifiableList(list);
 	}

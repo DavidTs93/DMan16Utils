@@ -353,7 +353,7 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	@NotNull
 	@Contract(value = "_ -> new",pure = true)
 	public ItemableStack copy(@Positive int amount) {
-		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxStackSize())));
+		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxSize())));
 	}
 	
 	@Nullable

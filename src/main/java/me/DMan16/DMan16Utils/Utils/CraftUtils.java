@@ -9,10 +9,12 @@ import org.bukkit.craftbukkit.v1_18_R2.CraftWorld;
 import org.bukkit.craftbukkit.v1_18_R2.advancement.CraftAdvancement;
 import org.bukkit.craftbukkit.v1_18_R2.entity.*;
 import org.bukkit.craftbukkit.v1_18_R2.inventory.CraftItemStack;
+import org.bukkit.craftbukkit.v1_18_R2.potion.CraftPotionUtil;
 import org.bukkit.craftbukkit.v1_18_R2.scoreboard.CraftScoreboard;
 import org.bukkit.craftbukkit.v1_18_R2.util.CraftMagicNumbers;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionData;
 import org.bukkit.scoreboard.Scoreboard;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -24,6 +26,11 @@ public class CraftUtils {
 	@NotNull
 	static Function<@NotNull ItemStack,net.minecraft.world.item.@NotNull ItemStack> asNMSCopy() {
 		return CraftItemStack::asNMSCopy;
+	}
+	
+	@NotNull
+	public static Function<@NotNull PotionData,@NotNull String> potionFromData() {
+		return CraftPotionUtil::fromBukkit;
 	}
 	
 	@Nullable

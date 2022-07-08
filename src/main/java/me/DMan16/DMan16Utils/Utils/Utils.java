@@ -20,6 +20,7 @@ import me.DMan16.DMan16Utils.Interfaces.InterfacesUtils;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
+import me.DMan16.DMan16Utils.Items.NullItemable;
 import me.DMan16.DMan16Utils.Listeners.CancelPlayers;
 import me.DMan16.DMan16Utils.Listeners.PlayerVersionLogger;
 import me.DMan16.DMan16Utils.Minigames.MiniGamesManager;
@@ -77,6 +78,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -616,6 +618,16 @@ public class Utils {
 	}
 	
 	@Contract(value = "null -> true",pure = true)
+	public static boolean isNull(@Nullable Material material) {
+		return material == null || material.isAir();
+	}
+	
+	@Contract(value = "null -> false",pure = true)
+	public static boolean notNull(@Nullable Material material) {
+		return !isNull(material);
+	}
+	
+	@Contract(value = "null -> true",pure = true)
 	public static boolean isNull(@Nullable ItemStack item) {
 		return item == null || isNull(item.getType()) || item.getAmount() <= 0;
 	}
@@ -626,13 +638,23 @@ public class Utils {
 	}
 	
 	@Contract(value = "null -> true",pure = true)
-	public static boolean isNull(@Nullable Material material) {
-		return material == null || material.isAir();
+	public static boolean isNull(@Nullable Itemable<?> item) {
+		return item == null || (item instanceof NullItemable);
 	}
 	
 	@Contract(value = "null -> false",pure = true)
-	public static boolean notNull(@Nullable Material material) {
-		return !isNull(material);
+	public static boolean notNull(@Nullable Itemable<?> item) {
+		return !isNull(item);
+	}
+	
+	@Contract(value = "null -> true",pure = true)
+	public static boolean isNullOrEmpty(@Nullable Collection<?> collection) {
+		return collection == null || collection.isEmpty();
+	}
+	
+	@Contract(value = "null -> true",pure = true)
+	public static boolean isNullOrEmpty(@Nullable Map<?,?> map) {
+		return map == null || map.isEmpty();
 	}
 	
 	public static class PairInt extends Pair<Integer,Integer> {
@@ -2680,9 +2702,39 @@ public class Utils {
 		return ((long) num1) * num2;
 	}
 	
-	public static void runNoException(@NotNull Runnable run) {
+	public static void runNoException(@NotNull Runnable runnable) {
 		try {
-			run.run();
+			runnable.run();
 		} catch (Exception e) {}
+	}
+	
+	public static void runNoExceptionPrint(@NotNull Runnable runnable) {
+		try {
+			runnable.run();
+		} catch (Exception e) {e.printStackTrace();}
+	}
+	
+	@Nullable
+	public static <V> V getNoException(@NotNull Supplier<V> supplier) {
+		try {
+			return supplier.get();
+		} catch (Exception e) {}
+		return null;
+	}
+	
+	@Nullable
+	public static <V> V getNoExceptionPrint(@NotNull Supplier<V> supplier) {
+		try {
+			return supplier.get();
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
+	}
+	
+	@Nullable
+	public static <V,T> T getNoExceptionPrint(@NotNull Function<V,T> function,@NotNull V value) {
+		try {
+			return function.apply(value);
+		} catch (Exception e) {e.printStackTrace();}
+		return null;
 	}
 }

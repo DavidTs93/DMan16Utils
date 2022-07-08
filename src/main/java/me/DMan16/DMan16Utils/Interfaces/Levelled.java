@@ -4,23 +4,36 @@ import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.entity.Player;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
 public interface Levelled<V extends Itemable<V>> extends Itemable<V> {
 	
 	@NotNull Component name();
 	
-	int level();
+	@Positive int level();
 	
-	boolean isMaxLevel();
+	@Positive int maxLevel();
 	
-	int leftToLevel(int level);
+	default int leftToLevel(@Positive int level) {
+		return level() - level;
+	}
 	
-	int leftToMaxLevel();
+	@NonNegative
+	default int leftToMaxLevel() {
+		return leftToLevel(maxLevel());
+	}
 	
-	boolean canIncreaseLevel(int levels);
+	default boolean isMaxLevel() {
+		return leftToMaxLevel() == 0;
+	}
 	
-	@NotNull V increaseLevel(@NotNull Player player, int slot, int levels);
+	default boolean canIncreaseLevel(@Positive int levels) {
+		return level() + levels <= maxLevel();
+	}
+	
+	@NotNull V increaseLevel(@NotNull Player player,int slot,int levels);
 	
 	@NotNull
 	default Component levelLine() {

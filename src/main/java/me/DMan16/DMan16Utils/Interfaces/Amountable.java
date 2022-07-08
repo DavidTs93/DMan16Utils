@@ -8,6 +8,14 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
+	@Positive int amount();
+	
+	@Positive int maxSize();
+	
+	default boolean isMaxSize() {
+		return maxSize() <= amount();
+	}
+	
 	@NotNull @Contract(value = "_ -> new",pure = true) V copy(@Positive int amount);
 	
 	@NotNull
@@ -19,7 +27,7 @@ public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
 	@NotNull
 	@Contract(value = " -> new",pure = true)
 	default V copyMaxStack() {
-		return copy(maxStackSize());
+		return copy(maxSize());
 	}
 	
 	@NotNull
@@ -48,8 +56,4 @@ public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
 		long newAmount = Utils.clamp(((long) amount()) - amount,Integer.MIN_VALUE,Integer.MAX_VALUE);
 		return newAmount <= 0 ? null : copy((int) newAmount);
 	}
-	
-	@Positive int amount();
-	
-	@Positive int maxStackSize();
 }

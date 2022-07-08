@@ -58,7 +58,7 @@ public class ItemHolder implements ItemableAmountable<ItemHolder> {
 	
 	@NotNull
 	public ItemHolder copy(@Positive int amount) {
-		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxStackSize())));
+		return Utils.runGetOriginal(copy(),copy -> copy.item.setAmount(Math.min(amount,maxSize())));
 	}
 	
 	@Positive

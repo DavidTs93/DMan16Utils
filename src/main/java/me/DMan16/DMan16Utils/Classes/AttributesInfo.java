@@ -145,7 +145,7 @@ public final class AttributesInfo {
 		stringAttribute(armorToughness,false,lore,Attribute.GENERIC_ARMOR_TOUGHNESS.translationKey(),NamedTextColor.GRAY);
 		stringAttribute(knockbackResistance,true,lore,Attribute.GENERIC_KNOCKBACK_RESISTANCE.translationKey(),NamedTextColor.DARK_PURPLE);
 		stringAttribute(attackDamage,false,lore,Attribute.GENERIC_ATTACK_DAMAGE.translationKey(),NamedTextColor.BLUE);
-		if (rangedMultiplier != null) stringAttribute(rangedMultiplier,true,lore,"attribute.name.projectile_damage",NamedTextColor.GOLD);
+		stringAttribute(rangedMultiplier,true,lore,"attribute.name.projectile_damage",NamedTextColor.GOLD);
 		stringAttribute(luck,false,lore,Attribute.GENERIC_LUCK.translationKey(),NamedTextColor.GREEN);
 		stringAttribute(movementSpeed,true,lore,Attribute.GENERIC_MOVEMENT_SPEED.translationKey(),NamedTextColor.YELLOW);
 		if (attackSpeed != null) {
@@ -190,13 +190,9 @@ public final class AttributesInfo {
 		return new AttributeModifier(SLOT_UUID_MAP.get(slot),key,percent ? amount / 100f : amount,multiply ? AttributeModifier.Operation.MULTIPLY_SCALAR_1 : AttributeModifier.Operation.ADD_NUMBER,slot);
 	}
 	
-	private void stringAttribute(float amount,boolean percent,@NotNull List<Component> lore,@NotNull String translate,@NotNull TextColor color) {
-		if (amount == 0) return;
-		StringBuilder str = new StringBuilder();
-		if (amount > 0) str.append("+");
-		str.append(Utils.toString(amount,2));
-		if (percent) str.append("%");
-		lore.add(EMPTY.append(Component.text(str.toString(),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED)).append(Component.space()).append(Component.translatable(translate,color)));
+	private void stringAttribute(@Nullable Float amount,boolean percent,@NotNull List<Component> lore,@NotNull String translate,@NotNull TextColor color) {
+		if (amount != null && amount != 0) lore.add(EMPTY.append(Component.translatable("attribute.modifier." + (amount > 0 ? "plus" : "take") + "." + (percent ? 1 : 0),amount > 0 ? NamedTextColor.AQUA : NamedTextColor.DARK_RED).
+				args(Component.text(Utils.toString(amount,2)),Component.translatable(translate,color))));
 	}
 	
 	@NotNull

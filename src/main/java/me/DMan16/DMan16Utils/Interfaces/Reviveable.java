@@ -6,9 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.TreeMap;
 
-public interface Reviveable<V extends Reviveable<V>> {
-	@Positive int totalScore();
-	
+public interface Reviveable<V extends Reviveable<V>> extends Scoreable {
 	@NotNull
 	default Pair<@NotNull Integer,@NotNull Integer> reviveCost() {
 		int upgrade = 0,amount = totalScore();
