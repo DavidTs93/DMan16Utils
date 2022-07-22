@@ -10,7 +10,7 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class ItemableInfo<V extends Itemable<?>> extends MappableInfo<V,ItemStack> {
-	public ItemableInfo(@NotNull Class<V> clazz, @NotNull Function<@Nullable Map<String,?>,@Nullable V> fromArguments, @Nullable Function<@NotNull ItemStack,@Nullable V> fromItem) {
+	public ItemableInfo(@NotNull Class<V> clazz,@NotNull Function<@Nullable Map<String,?>,@Nullable V> fromArguments,@Nullable Function<@NotNull ItemStack,@Nullable V> fromItem) {
 		super(clazz,fromArguments,fromItem);
 	}
 	

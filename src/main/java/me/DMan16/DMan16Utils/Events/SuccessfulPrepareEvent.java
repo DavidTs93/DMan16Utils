@@ -19,7 +19,7 @@ public abstract class SuccessfulPrepareEvent<V extends Inventory> extends Event 
 	private boolean cancelled;
 	
 	public SuccessfulPrepareEvent(@Nullable Itemable<?> first,@Nullable Itemable<?> second,@Nullable AdvancedRecipe<V> recipe,
-								  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter, @Nullable Itemable<?> originalResult) {
+								  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter,@Nullable Itemable<?> originalResult) {
 		this.first = first;
 		this.second = second;
 		this.recipe = recipe;

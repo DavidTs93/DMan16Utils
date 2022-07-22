@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Items;
 
 import me.DMan16.DMan16Utils.Classes.Engraving;
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.Enums.Tags;
 import me.DMan16.DMan16Utils.Interfaces.EnchantmentsHolder;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
@@ -34,7 +34,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 public class ItemableStack implements ItemableAmountable<ItemableStack>,EnchantmentsHolder {
-	private static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
+	public static final Color DEFAULT_LEATHER_COLOR = ((LeatherArmorMeta) new ItemStack(Material.LEATHER_HELMET).getItemMeta()).getColor();
 	private static final HashMap<@NotNull Material,@Nullable Supplier<Itemable<?>>> DISABLED_MATERIALS = new HashMap<>();
 	private static final List<@NotNull Function<@NotNull ItemStack,@Nullable Itemable<?>>> DISABLED_ITEMS = new ArrayList<>();
 	private static final @NotNull Set<@NotNull Material> NO_ENCHANTMENTS_MATERIALS = new HashSet<>();
@@ -111,7 +111,6 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 	@Contract("null -> false")
 	private static boolean legalBut(Material material) {
 		return Utils.notNull(material) && material.isItem();
-//		return Utils.notNull(material) && material.isItem() && (material.getEquipmentSlot() == EquipmentSlot.HAND || material.getEquipmentSlot() == EquipmentSlot.OFF_HAND);
 	}
 	
 	@Contract("null -> false")
@@ -290,24 +289,6 @@ public class ItemableStack implements ItemableAmountable<ItemableStack>,Enchantm
 			if (damage > 0) map.put("Damage",damage);
 		});
 		else Utils.runNotNullIf(Utils.applyNotNull(meta.lore(),lore -> lore.stream().map(Utils::mapComponent).toList()),lore -> map.put("Lore",lore),lore -> !lore.isEmpty());
-//		List<Component> originalLore = meta.lore();
-//		if (originalLore != null) {
-//			originalLore = new ArrayList<>(originalLore);
-//			Component line;
-//			Integer j = null;
-//			for (int i = 0; i < originalLore.size() - 1; i++) {
-//				line = originalLore.get(i);
-//				if (!(line instanceof TextComponent text) || !text.content().isEmpty()) continue;
-//				line = originalLore.get(i + 1);
-//				if (!(line instanceof TranslatableComponent translate) || !translate.key().equalsIgnoreCase("item.durability")) continue;
-//				j = i;
-//				break;
-//			}
-//			if (j != null) {
-//				originalLore.remove(j + 1);
-//				originalLore.remove((int) j);
-//			}
-//		}
 		if (item.getType() == Material.PLAYER_HEAD) Utils.runNoException(() -> map.put("Skin",Objects.requireNonNull(Utils.getSkin(Objects.requireNonNull(Utils.getProfile((SkullMeta) meta)))).first()));
 		if (meta.isUnbreakable()) map.put("Unbreakable",true);
 		int model;

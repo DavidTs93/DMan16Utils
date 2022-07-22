@@ -21,7 +21,7 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	private final ExecuteAs executeAs;
 	private final Component displayName;
 	
-	private ItemableCommand(@NotNull ItemableStack item, @NotNull String command, @NotNull ExecuteAs executeAs, @NotNull Component displayName) {
+	private ItemableCommand(@NotNull ItemableStack item,@NotNull String command,@NotNull ExecuteAs executeAs,@NotNull Component displayName) {
 		this.item = item;
 		this.command = command;
 		this.executeAs = executeAs;
@@ -62,7 +62,7 @@ public class ItemableCommand implements Itemable<ItemableCommand> {
 	
 	@Nullable
 	@Contract("null,_,_ -> null; _,null,_ -> null")
-	public static ItemableCommand of(ItemableStack item, String command, ExecuteAs executeAs) {
+	public static ItemableCommand of(ItemableStack item,String command,ExecuteAs executeAs) {
 		Component displayName;
 		if (item == null || command == null || command.trim().isEmpty() || (displayName = item.asItem().getItemMeta().displayName()) == null) return null;
 		command = command.trim();

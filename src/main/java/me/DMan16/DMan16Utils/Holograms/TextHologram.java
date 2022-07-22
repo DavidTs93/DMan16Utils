@@ -97,18 +97,4 @@ public class TextHologram implements Hologram<TextHologram> {
 	public TextHologram copy() {
 		return new TextHologram(line);
 	}
-	
-	@Override
-	public TextHologram clone() {
-		try {
-			TextHologram clone = (TextHologram) super.clone();
-			clone.ID = 0;
-			clone.location = null;
-			clone.world = null;
-			clone.create = null;
-			clone.destroy = null;
-			return clone;
-		} catch (Exception e) {}
-		return copy();
-	}
 }

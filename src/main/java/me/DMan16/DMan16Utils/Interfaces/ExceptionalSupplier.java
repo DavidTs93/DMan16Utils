@@ -1,12 +1,9 @@
 package me.DMan16.DMan16Utils.Interfaces;
 
+/**
+ * See {@link java.util.function.Supplier}
+ */
 @FunctionalInterface
 public interface ExceptionalSupplier<V> {
-
-    /**
-     * Gets a result.
-     *
-     * @return a result
-     */
     V get() throws Exception;
 }

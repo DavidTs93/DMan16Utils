@@ -11,6 +11,7 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -55,6 +56,7 @@ public abstract class ListenerTradeInputResultInventory extends ListenerInventor
 		for (int i = 0; i < extraItemsSlots.size() && i < extraItems.size(); i++) setItem(extraItemsSlots.get(i),extraItems.get(i));
 	}
 	
+	@Positive
 	public int maxPage() {
 		return 1;
 	}
@@ -71,7 +73,7 @@ public abstract class ListenerTradeInputResultInventory extends ListenerInventor
 	}
 	
 	@Override
-	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {}
+	protected void otherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click) {}
 	
 	protected void clearItems() {
 		ItemStack item = getItem(slotItem);

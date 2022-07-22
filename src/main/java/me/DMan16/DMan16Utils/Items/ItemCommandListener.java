@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -30,17 +30,22 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 		command.setTabCompleter(this);
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		if (args.length < 3) {
 			if (args.length <= 0 && (sender instanceof Player player)) {
 				ItemStack item = player.getInventory().getItemInMainHand();
 				if (Utils.notNull(item)) {
-					Itemable<?> itemable = ItemUtils.ofOrHolder(item);
-					player.sendMessage(Component.text("Item class: ",NamedTextColor.GREEN).append(Component.text(itemable.getClass().getName(),NamedTextColor.AQUA)).
-							append(Component.newline()).append(Component.text("Item string: ",NamedTextColor.GREEN)).
-							append(Component.text(itemable.stringMappable(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.stringMappable()))));
+					Itemable<?> itemable = ItemUtils.ofOrSubstituteOrHolder(item);
+					player.sendMessage(Component.text("Item class: ",NamedTextColor.GREEN).append(Component.text(itemable.getClass().getName(),NamedTextColor.AQUA)).append(Component.newline()).
+							append(Component.text("Item string: ",NamedTextColor.GREEN)).append(Component.text(itemable.stringMappable(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.stringMappable()))));
 				}
 			}
+			return true;
+		}
+		if (args[0].equalsIgnoreCase("item")) {
+			Itemable<?> itemable = ItemUtils.ofOrSubstituteOrHolder(String.join(" ",Arrays.copyOfRange(args,1,args.length)));
+			sender.sendMessage(itemable == null ? Component.text("Item not found") : Component.text("Item class: ",NamedTextColor.GREEN).append(Component.text(itemable.getClass().getName(),NamedTextColor.AQUA)).append(Component.newline()).
+					append(Component.text("Item string: ",NamedTextColor.GREEN)).append(Component.text(itemable.stringMappable(),NamedTextColor.AQUA).clickEvent(ClickEvent.copyToClipboard(itemable.stringMappable()))));
 			return true;
 		}
 		if (!args[0].equalsIgnoreCase("give")) return true;
@@ -56,11 +61,12 @@ public class ItemCommandListener implements CommandExecutor,TabCompleter {
 		return true;
 	}
 	
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
-		if (args.length == 1) return Stream.of("give").filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).toList();
-		if (!args[0].equalsIgnoreCase("give")) return new ArrayList<>();
-		if (args.length == 2) return Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).filter(name -> Utils.containsTabComplete(args[1],name)).toList();
-		if (args.length == 3) {
+	public List<String> onTabComplete(@NotNull CommandSender sender,@NotNull Command command,@NotNull String alias,String[] args) {
+		if (args.length == 1) return Stream.of("give","item").filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).toList();
+		boolean give = args[0].equalsIgnoreCase("give");
+		if (!give && !args[0].equalsIgnoreCase("item")) return new ArrayList<>();
+		if (args.length == 2 && give) return Bukkit.getServer().getOnlinePlayers().stream().map(Player::getName).filter(name -> Utils.containsTabComplete(args[1],name)).toList();
+		if ((args.length == 3 && give) || args.length == 2) {
 			Set<String> set = Utils.joinSets(ItemUtils.getRegisteredItemablesKeys(),MATERIALS).stream().filter(name -> Utils.containsTabComplete(args[2],name)).map(String::toLowerCase).collect(Collectors.toSet());
 			boolean removed = set.remove(args[2].toLowerCase());
 			List<String> list = new ArrayList<>(set);

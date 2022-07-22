@@ -1,9 +1,9 @@
 package me.DMan16.DMan16Utils.Menus;
 
 import me.DMan16.DMan16Utils.Classes.BasicItemableGeneral;
-import me.DMan16.DMan16Utils.Classes.Pair;
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -19,6 +19,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.jetbrains.annotations.Unmodifiable;
@@ -44,8 +45,8 @@ public abstract class ListenerTradeInputInventory extends ListenerInventoryPages
 	protected int slotResult;
 	protected List<ItemStack> leftoversForResult;
 	
-	public <V extends ListenerTradeInputInventory> ListenerTradeInputInventory(@Nullable InventoryHolder owner,@NotNull Player player,@Nullable Component name,@NotNull JavaPlugin plugin,@NotNull Itemable<?> item,@NotNull List<ItemStack> requiredPayment,
-																			   @Nullable Function<V,@NotNull Boolean> doFirst) {
+	public <V extends ListenerTradeInputInventory> ListenerTradeInputInventory(@Nullable InventoryHolder owner,@NotNull Player player,@Nullable Component name,@NotNull JavaPlugin plugin,@NotNull Itemable<?> item,
+																			   @NotNull List<ItemStack> requiredPayment,@Nullable Function<V,@NotNull Boolean> doFirst) {
 		super(owner,player,5,name,true,plugin,(ListenerTradeInputInventory menu) -> first(menu,item,requiredPayment,doFirst));
 	}
 	
@@ -91,6 +92,7 @@ public abstract class ListenerTradeInputInventory extends ListenerInventoryPages
 		for (int i = 0; i < requiredSlots.size() && i < requiredPayment.size(); i++) setItem(requiredSlots.get(i),lock(requiredPayment.get(i)).first());
 	}
 	
+	@Positive
 	public int maxPage() {
 		return 1;
 	}
@@ -111,7 +113,7 @@ public abstract class ListenerTradeInputInventory extends ListenerInventoryPages
 	}
 	
 	@Override
-	protected void otherSlot(@NotNull InventoryClickEvent event, int slot, ItemStack slotItem, @NotNull ClickType click) {
+	protected void otherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click) {
 		if (slot == slotResult) {
 			if (leftoversForResult != null) new BukkitRunnable() {
 				public void run() {
@@ -141,7 +143,7 @@ public abstract class ListenerTradeInputInventory extends ListenerInventoryPages
 	}
 	
 	@NotNull
-	protected List<ItemStack> removePaymentCheckLegal(@NotNull Inventory inv, @NotNull List<ItemStack> paymentItems) {
+	protected List<ItemStack> removePaymentCheckLegal(@NotNull Inventory inv,@NotNull List<ItemStack> paymentItems) {
 		if (paymentItems.isEmpty()) return paymentItems;
 		List<ItemStack> requiredCopy = new ArrayList<>(requiredPayment);
 		for (ItemStack item1 : requiredCopy) for (ItemStack item2 : paymentItems) if (Utils.sameItem(item1,item2)) {

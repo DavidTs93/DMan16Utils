@@ -1,5 +1,6 @@
 package me.DMan16.DMan16Utils.Classes;
 
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.inventory.ItemStack;
@@ -13,7 +14,7 @@ import java.util.function.BiFunction;
 public final class CreativeMenuItemUpdater {
 	private static final LinkedHashMap<@NotNull String,@NotNull BiFunction<@Nullable Integer,@NotNull ItemStack,@Nullable Itemable<?>>> CHECKERS = new LinkedHashMap<>();
 	
-	public static boolean register(@NotNull String name, @NotNull BiFunction<@Nullable Integer,@NotNull ItemStack,@Nullable Itemable<?>> checker) {
+	public static boolean register(@NotNull String name,@NotNull BiFunction<@Nullable Integer,@NotNull ItemStack,@Nullable Itemable<?>> checker) {
 		return (name = Utils.fixKey(name)) != null && CHECKERS.putIfAbsent(name,checker) == null;
 	}
 	

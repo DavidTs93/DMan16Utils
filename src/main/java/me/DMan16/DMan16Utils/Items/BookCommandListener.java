@@ -22,7 +22,7 @@ public final class BookCommandListener implements CommandExecutor,TabCompleter {
 		command.setExecutor(this);
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		if (!(sender instanceof Player player) || args.length <= 0) return true;
 		Enchantment ench = Utils.getEnchantment(args[0]);
 		if (ench == null) {
@@ -37,7 +37,7 @@ public final class BookCommandListener implements CommandExecutor,TabCompleter {
 		return true;
 	}
 	
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+	public List<String> onTabComplete(@NotNull CommandSender sender,@NotNull Command command,@NotNull String alias,String[] args) {
 		if (args.length == 0 || args.length == 1) {
 			Stream<String> enchants = Arrays.stream(Enchantment.values()).map(ench -> ench.getKey().getKey());
 			return args.length == 0 ? enchants.toList() : enchants.filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).toList();

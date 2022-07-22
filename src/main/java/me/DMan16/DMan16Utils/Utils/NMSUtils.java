@@ -33,8 +33,7 @@ public class NMSUtils {
 		else return null;
 		net.kyori.adventure.text.format.TextColor textColor = component.color();
 		TextColor color = null;
-		if (textColor != null) color = (textColor instanceof net.kyori.adventure.text.format.NamedTextColor named) ? TextColor.fromLegacyFormat(ChatFormatting.getByName(named.toString())) :
-				TextColor.fromRgb(textColor.value());
+		if (textColor != null) color = (textColor instanceof net.kyori.adventure.text.format.NamedTextColor named) ? TextColor.fromLegacyFormat(ChatFormatting.getByName(named.toString())) : TextColor.fromRgb(textColor.value());
 		Style style = Style.EMPTY;
 		if (color != null) style = style.withColor(color);
 		Boolean bool;

@@ -18,14 +18,11 @@ public class CircleFlatEffect extends AnimatedBallEffect {
 		Location location = getLocation();
 		for (int i = 0; i < particlesPerIteration; i++) {
 			step++;
-			
 			float s = MathUtils.PI * MathUtils.PI * step / particles;
 			vector.setX(xFactor * size * MathUtils.cos(s) + xOffset);
 			vector.setZ(zFactor * size * MathUtils.sin(s) + zOffset);
 			vector.setY(yOffset);
-			
 			VectorUtils.rotateVector(vector,xRotation,yRotation,zRotation);
-			
 			display(particle,location.add(vector));
 			location.subtract(vector);
 		}

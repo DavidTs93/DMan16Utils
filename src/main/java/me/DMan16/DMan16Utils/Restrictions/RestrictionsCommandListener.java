@@ -24,7 +24,7 @@ public class RestrictionsCommandListener implements CommandExecutor,TabCompleter
 	}
 	
 	@Override
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		if (args.length < 1) return true;
 		if (!(sender instanceof Player player)) {
 			Utils.chatColors(sender,"&cOnly players can use this command!");
@@ -47,21 +47,19 @@ public class RestrictionsCommandListener implements CommandExecutor,TabCompleter
 				item = idx == 1 ? Restrictions.addRestrictions(item,restrictions) : Restrictions.removeRestrictions(item,restrictions);
 				List<Restrictions.Restriction> newRestrictions = new ArrayList<>(Restrictions.getRestrictions(item));
 				newRestrictions.removeAll(oldRestrictions);
-				Utils.chatColors(sender,newRestrictions.isEmpty() ? "&6No Restrictions " + (idx == 1 ? "added" : "removed") : "&a" + newRestrictions.size() +
-						" Restrictions " + (idx == 1 ? "added" : "removed") + ":\n" +
+				Utils.chatColors(sender,newRestrictions.isEmpty() ? "&6No Restrictions " + (idx == 1 ? "added" : "removed") : "&a" + newRestrictions.size() + " Restrictions " + (idx == 1 ? "added" : "removed") + ":\n" +
 						newRestrictions.stream().map(restriction -> "&b" + restriction.name()).collect(Collectors.joining("&f,")));
 			}
 		}
 		return true;
 	}
 	
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+	public List<String> onTabComplete(@NotNull CommandSender sender,@NotNull Command command,@NotNull String alias,String[] args) {
 		if (args.length == 1) return BASE.stream().filter(name -> Utils.containsTabComplete(args[0],name)).toList();
 		int idx = BASE.indexOf(args[0]);
 		if (idx <= 0) return new ArrayList<>();
 		if (idx == 1 || idx == 2) {
-			List<String> restrictions = Restrictions.getRestrictions().stream().map(Restrictions.Restriction::name).
-					filter(name -> Utils.containsTabComplete(args[args.length - 1],name)).collect(Collectors.toList());
+			List<String> restrictions = Restrictions.getRestrictions().stream().map(Restrictions.Restriction::name).filter(name -> Utils.containsTabComplete(args[args.length - 1],name)).collect(Collectors.toList());
 			restrictions.removeAll(Arrays.stream(Arrays.copyOfRange(args,1,args.length - 1)).map(String::toLowerCase).toList());
 			return restrictions;
 		}

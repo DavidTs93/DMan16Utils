@@ -1,9 +1,9 @@
 package me.DMan16.DMan16Utils.Listeners;
 
 import com.viaversion.viaversion.api.Via;
+import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Events.SuccessfulJoinEvent;
 import me.DMan16.DMan16Utils.Interfaces.Listener;
-import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.event.ClickEvent;
@@ -58,6 +58,7 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 		VERSIONS.put(756,"1_17_1");
 		VERSIONS.put(757,"1_18");
 		VERSIONS.put(758,"1_18_2");
+		VERSIONS.put(759,"1_19");
 	}
 	
 	public PlayerVersionLogger() throws SQLException {
@@ -117,16 +118,14 @@ public class PlayerVersionLogger implements Listener,CommandExecutor {
 	}
 	
 	@Override
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		HashMap<String,Integer> uses = getUses();
 		if (uses.isEmpty()) Utils.chatColors(sender,"&aNo versions recorded yet");
 		else {
-			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).
-					collect(Collectors.joining(";"));
+			String str = "title=Player versions;" + uses.entrySet().stream().map(entry -> entry.getKey().replace("_",".") + "=" + entry.getValue()).collect(Collectors.joining(";"));
 			String url = "https://DavidTs93.github.io/pie_chart.html?v=" + Base64Coder.encodeString(str);
 			ClickEvent click = ClickEvent.openUrl(url);
-			sender.sendMessage(Utils.noItalic(Component.text("Versions graph: ",NamedTextColor.GREEN,TextDecoration.UNDERLINED).
-					append(Component.text(url,NamedTextColor.BLUE).clickEvent(click))));
+			sender.sendMessage(Utils.noItalic(Component.text("Versions graph: ",NamedTextColor.GREEN,TextDecoration.UNDERLINED).append(Component.text(url,NamedTextColor.BLUE).clickEvent(click))));
 		}
 		return true;
 	}

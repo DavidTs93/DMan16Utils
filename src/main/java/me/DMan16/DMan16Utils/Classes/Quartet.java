@@ -13,7 +13,7 @@ public class Quartet<F,S,T,V> implements Copyable<Quartet<F,S,T,V>> {
 	public final T third;
 	public final V fourth;
 	
-	protected Quartet(F first, S second, T third, V fourth) {
+	protected Quartet(F first,S second,T third,V fourth) {
 		this.first = first;
 		this.second = second;
 		this.third = third;
@@ -82,8 +82,8 @@ public class Quartet<F,S,T,V> implements Copyable<Quartet<F,S,T,V>> {
 		return Quartet.of(first,second,third,fourth);
 	}
 	
-	@Contract(value = "_,_,_,_ -> new", pure = true)
-	public static <F,S,T,V> @NotNull Quartet<F,S,T,V> of(F first, S second, T third, V fourth) {
+	@Contract(value = "_,_,_,_ -> new",pure = true)
+	public static <F,S,T,V> @NotNull Quartet<F,S,T,V> of(F first,S second,T third,V fourth) {
 		return new Quartet<>(first,second,third,fourth);
 	}
 }

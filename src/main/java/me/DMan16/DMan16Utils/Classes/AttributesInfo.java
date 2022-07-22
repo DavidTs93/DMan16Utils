@@ -55,8 +55,8 @@ public final class AttributesInfo {
 		return score;
 	}
 	
-	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,
-						   @Nullable Number luck,@Nullable Number movementSpeed) {
+	private AttributesInfo(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+						   @Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		this.health = f(health);
 		this.armor = f(armor);
 		this.armorToughness = f(armorToughness);
@@ -75,8 +75,8 @@ public final class AttributesInfo {
 	}
 	
 	@Nullable
-	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,@Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,
-									@Nullable Number luck,@Nullable Number movementSpeed) {
+	public static AttributesInfo of(@Nullable Number health,@Nullable Number armor,@Nullable Number armorToughness,@Nullable Number knockbackResistance,@Nullable Number attackDamage,
+									@Nullable Number attackDamagePercent,@Nullable Number rangedMultiplier,@Nullable Number attackSpeed,@Nullable Number luck,@Nullable Number movementSpeed) {
 		try {
 			return new AttributesInfo(health,armor,armorToughness,knockbackResistance,attackDamage,attackDamagePercent,rangedMultiplier,attackSpeed,luck,movementSpeed);
 		} catch (Exception e) {}
@@ -181,8 +181,8 @@ public final class AttributesInfo {
 	
 	@Override
 	public boolean equals(Object obj) {
-		return (obj instanceof AttributesInfo info) && health == info.health && armor == info.armor && armorToughness == info.armorToughness && knockbackResistance == info.knockbackResistance && attackDamage == info.attackDamage && Objects.equals(rangedMultiplier,info.rangedMultiplier) &&
-				Objects.equals(attackSpeed,info.attackSpeed) && luck == info.luck && movementSpeed == info.movementSpeed;
+		return (obj instanceof AttributesInfo info) && health == info.health && armor == info.armor && armorToughness == info.armorToughness && knockbackResistance == info.knockbackResistance &&
+				attackDamage == info.attackDamage && Objects.equals(rangedMultiplier,info.rangedMultiplier) && Objects.equals(attackSpeed,info.attackSpeed) && luck == info.luck && movementSpeed == info.movementSpeed;
 	}
 	
 	@NotNull

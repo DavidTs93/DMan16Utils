@@ -19,8 +19,10 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull PlayerInteractEvent> rightClick, @Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
-	public InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull PlayerInteractEvent> rightClick, @Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
+public record InteractableItem(@NotNull String key,@Nullable Consumer<@NotNull PlayerInteractEvent> rightClick,@Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
+	public static final @NotNull Component OWNED = Utils.noItalic(Component.translatable("menu.owned",NamedTextColor.GREEN));
+	
+	public InteractableItem(@NotNull String key,@Nullable Consumer<@NotNull PlayerInteractEvent> rightClick,@Nullable Consumer<@NotNull PlayerInteractEvent> leftClick) {
 		this.key = Objects.requireNonNull(Utils.fixKey(key));
 		this.rightClick = rightClick;
 		this.leftClick = leftClick;
@@ -49,8 +51,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	}
 	
 	@NotNull
-	public static <V> Consumer<@NotNull PlayerInteractEvent> createOpenMenuConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> of,
-																					@NotNull BiConsumer<@NotNull Player,@NotNull V> openMenu) {
+	public static <V> Consumer<@NotNull PlayerInteractEvent> createOpenMenuConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> of,@NotNull BiConsumer<@NotNull Player,@NotNull V> openMenu) {
 		return (@NotNull PlayerInteractEvent event) -> {
 			V thing = of.apply(event.getItem());
 			if (thing == null) return;
@@ -60,19 +61,17 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	}
 	
 	@NotNull
-	public static <V> Consumer<@NotNull PlayerInteractEvent> createOpenMenuConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> of,
-																					@NotNull TriConsumer<@NotNull Player,@NotNull V,@NotNull Integer> openMenu) {
+	public static <V> Consumer<@NotNull PlayerInteractEvent> createOpenMenuConsumer(@NotNull Function<@Nullable ItemStack,@Nullable V> of,@NotNull TriConsumer<@NotNull Player,@NotNull V,@NotNull Integer> openMenu) {
 		return (@NotNull PlayerInteractEvent event) -> {
 			V thing = of.apply(event.getItem());
 			if (thing == null) return;
 			event.setCancelled(true);
-			openMenu.accept(event.getPlayer(),thing,event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
+			openMenu.accept(event.getPlayer(),thing,Utils.getSlot(event.getPlayer(),event.getHand() == EquipmentSlot.OFF_HAND ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND));
 		};
 	}
 	
 	@NotNull
-	public static <V> Consumer<@NotNull PlayerInteractEvent> createAddConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,
-																			   @NotNull BiFunction<@NotNull Player,@NotNull V,@NotNull Boolean> add, boolean ownedMessageOnFailedAdd) {
+	public static <V> Consumer<@NotNull PlayerInteractEvent> createAddConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,@NotNull BiFunction<@NotNull Player,@NotNull V,@NotNull Boolean> add,@Nullable Component failMessage) {
 		return (@NotNull PlayerInteractEvent event) -> {
 			try {
 				ItemStack item = event.getItem();
@@ -81,7 +80,7 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 				if (thing == null) return;
 				event.setCancelled(true);
 				if (!add.apply(event.getPlayer(),thing)) {
-					if (ownedMessageOnFailedAdd) event.getPlayer().sendMessage(Utils.noItalic(Component.translatable("menu.owned",NamedTextColor.GREEN)));
+					if (failMessage != null) event.getPlayer().sendMessage(failMessage);
 					return;
 				}
 				Utils.setSlot(event.getPlayer(),Utils.subtract(item,1),event.getHand() == EquipmentSlot.OFF_HAND ? -106 : event.getPlayer().getInventory().getHeldItemSlot());
@@ -91,7 +90,12 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 	}
 	
 	@NotNull
-	public static <V extends Addable> Consumer<@NotNull PlayerInteractEvent> createAddableConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get, boolean ownedMessageOnFailedAdd) {
+	public static <V> Consumer<@NotNull PlayerInteractEvent> createAddConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,@NotNull BiFunction<@NotNull Player,@NotNull V,@NotNull Boolean> add,boolean ownedMessageOnFailedAdd) {
+		return createAddConsumer(get,add,ownedMessageOnFailedAdd ? OWNED : null);
+	}
+	
+	@NotNull
+	public static <V extends Addable> Consumer<@NotNull PlayerInteractEvent> createAddableConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,@Nullable Component failMessage) {
 		return (@NotNull PlayerInteractEvent event) -> {
 			ItemStack item = event.getItem();
 			if (item == null) return;
@@ -101,12 +105,17 @@ public record InteractableItem(@NotNull String key, @Nullable Consumer<@NotNull 
 			Player player = event.getPlayer();
 			thing.add(player,result -> {
 				if (!result) {
-					if (ownedMessageOnFailedAdd) player.sendMessage(Utils.noItalic(Component.translatable("menu.owned",NamedTextColor.GREEN)));
+					if (failMessage != null) player.sendMessage(failMessage);
 					return;
 				}
-				Utils.setSlot(player,Utils.subtract(item,1),event.getHand() == EquipmentSlot.OFF_HAND ? -106 : player.getInventory().getHeldItemSlot());
+				Utils.setSlot(player,Utils.subtract(item,1),event.getHand() == EquipmentSlot.OFF_HAND ? EquipmentSlot.OFF_HAND : EquipmentSlot.HAND);
 				Utils.savePlayer(player);
 			},null);
 		};
+	}
+	
+	@NotNull
+	public static <V extends Addable> Consumer<@NotNull PlayerInteractEvent> createAddableConsumer(@NotNull Function<@NotNull ItemStack,@Nullable V> get,boolean ownedMessageOnFailedAdd) {
+		return createAddableConsumer(get,ownedMessageOnFailedAdd ? OWNED : null);
 	}
 }

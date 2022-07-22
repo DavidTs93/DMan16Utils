@@ -1,5 +1,6 @@
-package me.DMan16.DMan16Utils.Classes;
+package me.DMan16.DMan16Utils.Classes.Pairs;
 
+import me.DMan16.DMan16Utils.Classes.MapEntry;
 import me.DMan16.DMan16Utils.Interfaces.Copyable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -27,7 +28,7 @@ public class Pair<V,T> implements Copyable<Pair<V,T>> {
 	}
 	
 	@NotNull
-	@Contract(value = " -> new", pure = true)
+	@Contract(value = " -> new",pure = true)
 	public Pair<T,V> swapped() {
 		return of(this.second,this.first);
 	}
@@ -35,7 +36,7 @@ public class Pair<V,T> implements Copyable<Pair<V,T>> {
 	@NotNull
 	@Contract(pure = true)
 	public String toString() {
-		return "(" + this.first + ", " + this.second + ")";
+		return "(" + this.first + "," + this.second + ")";
 	}
 	
 	@Override
@@ -72,8 +73,8 @@ public class Pair<V,T> implements Copyable<Pair<V,T>> {
 		return MapEntry.of(first,second);
 	}
 	
-	@Contract(value = "_,_ -> new", pure = true)
-	public static <V,T> @NotNull Pair<V,T> of(V first, T second) {
+	@Contract(value = "_,_ -> new",pure = true)
+	public static <V,T> @NotNull Pair<V,T> of(V first,T second) {
 		return new Pair<>(first,second);
 	}
 	

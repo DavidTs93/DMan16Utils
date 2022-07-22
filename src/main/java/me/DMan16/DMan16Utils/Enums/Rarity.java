@@ -21,7 +21,7 @@ public enum Rarity {
 	public final int level;
 	public final TextColor color;
 	
-	Rarity(int level, TextColor color) {
+	Rarity(int level,TextColor color) {
 		this.level = level;
 		this.color = color;
 	}

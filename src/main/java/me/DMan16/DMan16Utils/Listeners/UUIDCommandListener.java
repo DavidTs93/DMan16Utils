@@ -20,7 +20,7 @@ public final class UUIDCommandListener implements CommandExecutor,TabCompleter {
 		cmd.setUsage("/uuid <name>");
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command cmd,@NotNull String label,@NotNull String[] args) {
 		if (args.length <= 0) return false;
 		UUID id = Bukkit.getPlayerUniqueId(args[0]);
 		String name = Utils.thisOrThatOrNull(id == null ? null : Utils.applyNotNull(Bukkit.getPlayer(id),Player::getName),args[0]);

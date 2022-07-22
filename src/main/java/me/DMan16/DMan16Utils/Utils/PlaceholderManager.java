@@ -8,12 +8,12 @@ import java.util.List;
 
 public class PlaceholderManager {
 	@NotNull
-	public String translate(@NotNull Player player, @NotNull String str) {
+	public String translate(@NotNull Player player,@NotNull String str) {
 		return PlaceholderAPI.setPlaceholders(player,str);
 	}
 	
 	@NotNull
-	public List<String> translate(@NotNull Player player, @NotNull List<String> str) {
+	public List<String> translate(@NotNull Player player,@NotNull List<String> str) {
 		return PlaceholderAPI.setPlaceholders(player,str);
 	}
 }

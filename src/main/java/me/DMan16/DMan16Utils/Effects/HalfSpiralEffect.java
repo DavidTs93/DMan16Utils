@@ -29,9 +29,7 @@ public class HalfSpiralEffect extends AnimatedBallEffect {
 			vector.setX(xFactor * r * MathUtils.cos(s) + xOffset);
 			vector.setZ(zFactor * r * MathUtils.sin(s) + zOffset);
 			vector.setY(yFactor * size * MathUtils.cos(t) + yOffset);
-			
 			VectorUtils.rotateVector(vector,xRotation,yRotation,zRotation);
-			
 			display(particle,location.add(vector));
 			location.subtract(vector);
 		}

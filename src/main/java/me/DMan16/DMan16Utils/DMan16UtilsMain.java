@@ -4,8 +4,9 @@ import com.comphenix.protocol.ProtocolLibrary;
 import com.comphenix.protocol.ProtocolManager;
 import me.DMan16.DMan16Utils.Classes.AdvancedRecipe;
 import me.DMan16.DMan16Utils.Classes.AdvancedRecipes;
+import me.DMan16.DMan16Utils.Classes.CustomRecipes;
 import me.DMan16.DMan16Utils.Classes.PluginItemInitializerInfo;
-import me.DMan16.DMan16Utils.Classes.Trio;
+import me.DMan16.DMan16Utils.Classes.Trios.Trio;
 import me.DMan16.DMan16Utils.Effects.CommandTestEffects;
 import me.DMan16.DMan16Utils.Events.Callers.EventCallers;
 import me.DMan16.DMan16Utils.Holograms.HologramsManager;
@@ -30,6 +31,9 @@ import org.bukkit.inventory.SmithingInventory;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.Statement;
 import java.util.Map;
 import java.util.Objects;
 
@@ -48,6 +52,7 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	private final AdvancedRecipes<AnvilInventory> advancedAnvilRecipes = new AdvancedRecipes<>();
 	private final AdvancedRecipes<SmithingInventory> advancedSmithingRecipes = new AdvancedRecipes<>();
 	private final AdvancedRecipes<GrindstoneInventory> advancedGrindstoneRecipes = new AdvancedRecipes<>();
+	private final CustomRecipes customRecipes = new CustomRecipes();
 	
 	public void onLoad() {
 		if (INSTANCE != null) throw new IllegalArgumentException("DMan16Utils already exists!");
@@ -56,11 +61,17 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	}
 	
 	public void onEnable() {
-		Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 		try {
+			try (Connection connection = Utils.getConnection(); Statement statement = connection.createStatement()) {
+				DatabaseMetaData data = connection.getMetaData();
+				statement.execute("CREATE TABLE IF NOT EXISTS " + Utils.PLAYERS_SKINS_TABLE + " (UUID VARCHAR(36) NOT NULL PRIMARY KEY)");
+				if (!data.getColumns(null,null,Utils.PLAYERS_SKINS_TABLE,"UUID").next()) statement.execute("ALTER TABLE " + Utils.PLAYERS_SKINS_TABLE + " ADD UUID VARCHAR(36) NOT NULL PRIMARY KEY;");
+				
+			}
+			Utils.chatColorsLogPlugin("&aConnected to MySQL database");
 			if (!ItemUtils.registerItemable("item",new ItemableInfo<>(ItemableStack.class,ItemableStack::of,ItemableStack::of))) throw new Exception("Failed to register \"item\" Itemable!");
 			if (!ItemUtils.registerItemable("command",new ItemableInfo<>(ItemableCommand.class,ItemableCommand::of,null))) throw new Exception("Failed to register \"command\" Itemable!");
-			CustomItems.start();
+			CustomItems.init();
 		} catch (Exception e) {
 			Utils.chatColorsLogPlugin("&fDMan16Utils&c problem! Error:");
 			e.printStackTrace();
@@ -152,30 +163,6 @@ public final class DMan16UtilsMain extends JavaPlugin {
 		PluginsItems.add("menu_inside_dark",new PluginItemInitializerInfo(Material.GRAY_STAINED_GLASS_PANE,Component.empty()));
 	}
 	
-//	private void removeRecipes() {
-//		Set<Recipe> removed = new HashSet<>();
-//		Iterator<Recipe> recipes = Bukkit.recipeIterator();
-//		Recipe recipe;
-//		while (recipes.hasNext()) if (((recipe = recipes.next()) instanceof ComplexRecipe) || (recipe instanceof ShapedRecipe) || (recipe instanceof ShapelessRecipe) ||
-//				(recipe instanceof SmithingRecipe)/* || (recipe instanceof StonecuttingRecipe)*/) {
-//			recipes.remove();
-//			removed.add(recipe);
-//		}/* else if (recipe instanceof FurnaceRecipe furnace) {
-//			Utils.chatColorsLogPlugin("&aFurnace recipe: &b" + furnace.getKey().getKey() + "&a,input: &b" + furnace.getInput().getType().name() + "&a,result: &b" +
-//					furnace.getResult().getType().name() + "&a,time: &b" + furnace.getCookingTime() + "&a,XP: &b" + furnace.getExperience() + "&a,group: &b" + furnace.getGroup());
-//		} else if (recipe instanceof BlastingRecipe blast) {
-//			Utils.chatColorsLogPlugin("&aBlasting recipe: &b" + blast.getKey().getKey() + "&a,input: &b" + blast.getInput().getType().name() + "&a,result: &b" +
-//					blast.getResult().getType().name() + "&a,time: &b" + blast.getCookingTime() + "&a,XP: &b" + blast.getExperience() + "&a,group: &b" + blast.getGroup());
-//		} else if (recipe instanceof SmokingRecipe smoke) {
-//			Utils.chatColorsLogPlugin("&aSmoking recipe: &b" + smoke.getKey().getKey() + "&a,input: &b" + smoke.getInput().getType().name() + "&a,result: &b" +
-//					smoke.getResult().getType().name() + "&a,time: &b" + smoke.getCookingTime() + "&a,XP: &b" + smoke.getExperience() + "&a,group: &b" + smoke.getGroup());
-//		} else if (recipe instanceof CampfireRecipe camp) {
-//			Utils.chatColorsLogPlugin("&aCampfire recipe: &b" + camp.getKey().getKey() + "&a,input: &b" + camp.getInput().getType().name() + "&a,result: &b" +
-//					camp.getResult().getType().name() + "&a,time: &b" + camp.getCookingTime() + "&a,XP: &b" + camp.getExperience() + "&a,group: &b" + camp.getGroup());
-//		}*/
-//		Utils.addRemovedRecipes(removed);
-//	}
-	
 	public static DMan16UtilsMain getInstance() {
 		return INSTANCE;
 	}
@@ -225,5 +212,10 @@ public final class DMan16UtilsMain extends JavaPlugin {
 	@NotNull
 	public AdvancedRecipes<GrindstoneInventory> advancedGrindstoneRecipes() {
 		return advancedGrindstoneRecipes;
+	}
+	
+	@NotNull
+	public CustomRecipes customRecipes() {
+		return customRecipes;
 	}
 }

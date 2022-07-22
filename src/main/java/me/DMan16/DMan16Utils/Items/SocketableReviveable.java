@@ -2,12 +2,12 @@ package me.DMan16.DMan16Utils.Items;
 
 import me.DMan16.DMan16Utils.Classes.AttributesInfo;
 import me.DMan16.DMan16Utils.Classes.Engraving;
-import me.DMan16.DMan16Utils.Interfaces.ReviveableItemable;
+import me.DMan16.DMan16Utils.Interfaces.ItemableReviveable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 
-public abstract class SocketableReviveable<V extends Socketable<V> & ReviveableItemable<V>> extends Socketable<V> implements ReviveableItemable<V> {
+public abstract class SocketableReviveable<V extends Socketable<V> & ItemableReviveable<V>> extends Socketable<V> implements ItemableReviveable<V> {
 	public static final int DURABILITY_JUMP = 20;
 	
 	protected SocketableReviveable(@NotNull AttributesInfo info,boolean isDefault) {
@@ -15,7 +15,7 @@ public abstract class SocketableReviveable<V extends Socketable<V> & ReviveableI
 	}
 	
 	@Positive
-	public int totalScore() {
+	public int score() {
 		int score = 1 + extraScore() + attributesScore() + engravingScore() + socketsScore() + enchantmentsScore();
 		if (shouldBreak()) score = Utils.round(score * brokenScoreMultiplier());
 		return Math.max(score,1);

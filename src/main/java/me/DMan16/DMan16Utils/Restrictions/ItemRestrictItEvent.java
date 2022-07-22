@@ -9,7 +9,7 @@ public abstract class ItemRestrictItEvent extends Event {
 	private final Restrictions.Restriction restriction;
 	private final ItemStack item;
 	
-	protected ItemRestrictItEvent(HumanEntity human, Restrictions.Restriction restriction, ItemStack item) {
+	protected ItemRestrictItEvent(HumanEntity human,Restrictions.Restriction restriction,ItemStack item) {
 		this.human = human;
 		this.restriction = restriction;
 		this.item = item;

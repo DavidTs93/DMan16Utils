@@ -6,7 +6,7 @@ import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 
-public interface Hologram<V extends Hologram<V>> extends Copyable<V>,Cloneable {
+public interface Hologram<V extends Hologram<V>> extends Copyable<V> {
 	
 	boolean spawn(@NotNull Location location);
 	
@@ -23,6 +23,4 @@ public interface Hologram<V extends Hologram<V>> extends Copyable<V>,Cloneable {
 	double maxSize();
 	
 	@NotNull V copy();
-	
-	V clone();
 }

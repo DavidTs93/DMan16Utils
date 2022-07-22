@@ -23,7 +23,7 @@ public final class EnchantCommandListener implements CommandExecutor,TabComplete
 		command.setExecutor(this);
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		if (!(sender instanceof Player player) || args.length < 2) return true;
 		boolean set = args[0].equalsIgnoreCase("set");
 		if (!set && !args[0].equalsIgnoreCase("remove")) return true;
@@ -38,7 +38,7 @@ public final class EnchantCommandListener implements CommandExecutor,TabComplete
 		return true;
 	}
 	
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, String[] args) {
+	public List<String> onTabComplete(@NotNull CommandSender sender,@NotNull Command command,@NotNull String alias,String[] args) {
 		if (args.length == 0) return List.of("set","remove");
 		if (args.length == 1) return Stream.of("set","remove").filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).toList();
 		boolean set = args[0].equalsIgnoreCase("set");

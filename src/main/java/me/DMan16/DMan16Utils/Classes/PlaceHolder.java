@@ -36,9 +36,9 @@ public abstract class PlaceHolder extends PlaceholderExpansion {
 		return plugin.getDescription().getVersion();
 	}
 	
-	public String onPlaceholderRequest(Player player, @NotNull String identifier) {
+	public String onPlaceholderRequest(Player player,@NotNull String identifier) {
 		return onRequest(player,identifier);
 	}
 	
-	public abstract String onRequest(OfflinePlayer player, @NotNull String identifier);
+	public abstract String onRequest(OfflinePlayer player,@NotNull String identifier);
 }

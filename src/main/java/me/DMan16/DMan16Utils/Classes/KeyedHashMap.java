@@ -30,7 +30,7 @@ public class KeyedHashMap<V> extends HashMap<String,V> {
 	}
 	
 	@Override
-	public V put(String key, V value) {
+	public V put(String key,V value) {
 		return super.put(fixKey(key),value);
 	}
 	
@@ -40,47 +40,47 @@ public class KeyedHashMap<V> extends HashMap<String,V> {
 	}
 	
 	@Override
-	public V getOrDefault(Object key, V defaultValue) {
+	public V getOrDefault(Object key,V defaultValue) {
 		return super.getOrDefault(fixKey(key),defaultValue);
 	}
 	
 	@Override
-	public V putIfAbsent(String key, V value) {
+	public V putIfAbsent(String key,V value) {
 		return super.putIfAbsent(fixKey(key),value);
 	}
 	
 	@Override
-	public boolean remove(Object key, Object value) {
+	public boolean remove(Object key,Object value) {
 		return super.remove(fixKey(key),value);
 	}
 	
 	@Override
-	public boolean replace(String key, V oldValue, V newValue) {
+	public boolean replace(String key,V oldValue,V newValue) {
 		return super.replace(fixKey(key),oldValue,newValue);
 	}
 	
 	@Override
-	public V replace(String key, V value) {
+	public V replace(String key,V value) {
 		return super.replace(fixKey(key),value);
 	}
 	
 	@Override
-	public V computeIfAbsent(String key, @NotNull Function<? super String, ? extends V> mappingFunction) {
+	public V computeIfAbsent(String key,@NotNull Function<? super String,? extends V> mappingFunction) {
 		return super.computeIfAbsent(fixKey(key),mappingFunction);
 	}
 	
 	@Override
-	public V computeIfPresent(String key, @NotNull BiFunction<? super String, ? super V, ? extends V> remappingFunction) {
+	public V computeIfPresent(String key,@NotNull BiFunction<? super String,? super V,? extends V> remappingFunction) {
 		return super.computeIfPresent(fixKey(key),remappingFunction);
 	}
 	
 	@Override
-	public V compute(String key, @NotNull BiFunction<? super String, ? super V, ? extends V> remappingFunction) {
+	public V compute(String key,@NotNull BiFunction<? super String,? super V,? extends V> remappingFunction) {
 		return super.compute(fixKey(key),remappingFunction);
 	}
 	
 	@Override
-	public V merge(String key, @NotNull V value, @NotNull BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
+	public V merge(String key,@NotNull V value,@NotNull BiFunction<? super V,? super V,? extends V> remappingFunction) {
 		return super.merge(fixKey(key),value,remappingFunction);
 	}
 	

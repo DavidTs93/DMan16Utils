@@ -18,7 +18,7 @@ public abstract class LocalDatabase {
 		Class.forName("org.sqlite.JDBC");
 		plugin.getDataFolder().mkdirs();
 		file = new File(plugin.getDataFolder(),databaseName + ".db");
-		if (!file.exists()) file.createNewFile();
+		if (!file.exists()) if (!file.createNewFile()) throw new IOException("Couldn't create db file!");
 		connect();
 		createTable();
 	}

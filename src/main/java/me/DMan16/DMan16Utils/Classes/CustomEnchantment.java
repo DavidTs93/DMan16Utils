@@ -31,13 +31,13 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 	private final @NotNull Set<NamespacedKey> conflicts;
 	private boolean registered = false;
 	
-	protected CustomEnchantment(@NotNull String key, @Nullable Collection<@NotNull NamespacedKey> conflicts) {
+	protected CustomEnchantment(@NotNull String key,@Nullable Collection<@NotNull NamespacedKey> conflicts) {
 		super(NamespacedKey.minecraft(Objects.requireNonNull(Utils.fixKey(key))));
 		this.conflicts = new HashSet<>();
 		if (conflicts != null) addConflicts(conflicts);
 	}
 	
-	protected CustomEnchantment(@NotNull String key, @NotNull NamespacedKey ... conflicts) {
+	protected CustomEnchantment(@NotNull String key,@NotNull NamespacedKey ... conflicts) {
 		this(key,Arrays.asList(conflicts));
 	}
 	
@@ -170,13 +170,9 @@ public abstract class CustomEnchantment extends Enchantment implements Listener 
 	}
 	
 	@NotNull
-	protected String defaultTranslationKey() {
+	protected final String defaultTranslationKey() {
 		return "enchantment.minecraft." + name().toLowerCase();
 	}
-	
-//	protected boolean addConflict(Enchantment enchantment) {
-//		return enchantment != null && !equals(enchantment) && conflicts.add(enchantment.getKey());
-//	}
 	
 	@Contract("null -> false")
 	public boolean hasEnchantment(ItemStack item) {

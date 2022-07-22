@@ -1,5 +1,6 @@
-package me.DMan16.DMan16Utils.Classes;
+package me.DMan16.DMan16Utils.Classes.Trios;
 
+import me.DMan16.DMan16Utils.Classes.MapEntry;
 import me.DMan16.DMan16Utils.Interfaces.Copyable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +14,7 @@ public class Trio<V,T,U> implements Copyable<Trio<V,T,U>> {
 	public final T second;
 	public final U third;
 	
-	public Trio(V first, T second, U third) {
+	public Trio(V first,T second,U third) {
 		this.first = first;
 		this.second = second;
 		this.third = third;
@@ -76,8 +77,8 @@ public class Trio<V,T,U> implements Copyable<Trio<V,T,U>> {
 		return MapEntry.of(first,valueFunction.apply(second,third));
 	}
 	
-	@Contract(value = "_,_,_ -> new", pure = true)
-	public static <V,T,U> @NotNull Trio<V,T,U> of(V first, T second, U third) {
+	@Contract(value = "_,_,_ -> new",pure = true)
+	public static <V,T,U> @NotNull Trio<V,T,U> of(V first,T second,U third) {
 		return new Trio<>(first,second,third);
 	}
 }

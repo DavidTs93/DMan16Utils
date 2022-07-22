@@ -57,11 +57,11 @@ public abstract class ListenerInventory implements Listener,Menu {
 		for (int slot : slots) inventory.clear(slot);
 	}
 	
-	protected void subtract(int amount, int ... slots) {
+	protected void subtract(int amount,int ... slots) {
 		for (int slot : slots) setItem(slot,Utils.subtract(getItem(slot),amount));
 	}
 	
-	protected void subtract(int amount, @NotNull Collection<@NotNull Integer> slots) {
+	protected void subtract(int amount,@NotNull Collection<@NotNull Integer> slots) {
 		slots.forEach(slot -> setItem(slot,Utils.subtract(getItem(slot),amount)));
 	}
 	
@@ -69,11 +69,11 @@ public abstract class ListenerInventory implements Listener,Menu {
 		return inv.equals(inventory);
 	}
 	
-	protected void setItem(int slot, @Nullable ItemStack item) {
+	protected void setItem(int slot,@Nullable ItemStack item) {
 		if (legalSlot(slot)) inventory.setItem(slot,item);
 	}
 	
-	protected void setItemable(int slot, @NotNull Itemable<?> item) {
+	protected void setItemable(int slot,@NotNull Itemable<?> item) {
 		if (legalSlot(slot)) inventory.setItem(slot,item.asItem());
 	}
 	
@@ -97,7 +97,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		PLAYER_MENUS.values().remove(this);
 	}
 	
-	protected final void close(boolean unregister, boolean cancelCloseUnregister) {
+	protected final void close(boolean unregister,boolean cancelCloseUnregister) {
 		if (unregister) {
 			unregister();
 			afterCloseUnregister(null);
@@ -116,7 +116,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected void afterClose() {}
 	
-	protected final void open(@NotNull JavaPlugin plugin, @NotNull Player player) {
+	protected final void open(@NotNull JavaPlugin plugin,@NotNull Player player) {
 		if (!registered) {
 			if (!register(plugin)) return;
 			registered = true;
@@ -134,7 +134,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		return view;
 	}
 	
-	protected void afterOpen(@NotNull Player player, @NotNull InventoryView view) {}
+	protected void afterOpen(@NotNull Player player,@NotNull InventoryView view) {}
 	
 	@Nullable
 	protected final InventoryView openInventory(@NotNull Player player) {
@@ -171,7 +171,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 	
 	protected void afterLeaveUnregister(PlayerQuitEvent event) {}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
 		if (isThisInventory(event.getView().getTopInventory())) for (int slot : event.getRawSlots()) if (slot < size) {
 			event.setCancelled(true);
@@ -187,7 +187,7 @@ public abstract class ListenerInventory implements Listener,Menu {
 		return PluginsItems.getItem("menu_next");
 	}
 	
-	protected BasicItemableGeneral<?> itemPevious() {
+	protected BasicItemableGeneral<?> itemPrevious() {
 		return PluginsItems.getItem("menu_previous");
 	}
 	

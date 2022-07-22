@@ -33,23 +33,23 @@ import java.util.Optional;
 public class PacketUtils {
 	public static final RotationsWrapper.@NotNull Safe ROTATIONS0 = rotations(0,0,0);
 	
-	public static void sendPackets(@NotNull Player player, PacketWrapper ... packets) {
+	public static void sendPackets(@NotNull Player player,PacketWrapper ... packets) {
 		if (packets.length <= 0) return;
 		ServerPlayer handle = (ServerPlayer) ReflectionUtils.getHandle(player).player();
 		for (PacketWrapper packet : packets) if (packet != null && packet.isPacket()) handle.connection.send((Packet<?>) packet.packet());
 	}
 	
-	public static void sendPackets(@NotNull Player player, Collection<? extends PacketWrapper> packets) {
+	public static void sendPackets(@NotNull Player player,Collection<? extends PacketWrapper> packets) {
 		if (packets == null) return;
 		ServerPlayer handle = (ServerPlayer) ReflectionUtils.getHandle(player).player();
 		for (PacketWrapper packet : packets) if (packet != null && packet.isPacket()) handle.connection.send((Packet<?>) packet.packet());
 	}
 	
-	public static void sendPackets(@NotNull Collection<@NotNull Player> players, PacketWrapper ... packets) {
+	public static void sendPackets(@NotNull Collection<@NotNull Player> players,PacketWrapper ... packets) {
 		if (players.size() > 0 && packets.length > 0) players.forEach(player -> sendPackets(player,packets));
 	}
 	
-	public static void sendPackets(@NotNull Collection<@NotNull Player> players, Collection<? extends PacketWrapper> packets) {
+	public static void sendPackets(@NotNull Collection<@NotNull Player> players,Collection<? extends PacketWrapper> packets) {
 		if (players.size() > 0 && packets != null) players.forEach(player -> sendPackets(player,packets));
 	}
 	
@@ -87,15 +87,13 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc, ComponentWrapper name, boolean invisible, boolean small, boolean arms, boolean plate, boolean marker) {
+	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker) {
 		return createArmorStand(loc,name,invisible,small,arms,plate,marker,null,null,null,null,null,null);
 	}
 	
 	@NotNull
-	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc, ComponentWrapper name, boolean invisible, boolean small, boolean arms, boolean plate,
-														 boolean marker, RotationsWrapper head, RotationsWrapper body, RotationsWrapper leftArm, RotationsWrapper rightArm,
-														 RotationsWrapper leftLeg, RotationsWrapper rightLeg, @NotNull Equipment equipment, boolean mainHand, boolean offHand,
-														 boolean helmet, boolean chestplate, boolean leggings, boolean boots) {
+	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker,RotationsWrapper head,RotationsWrapper body,RotationsWrapper leftArm,RotationsWrapper rightArm,
+														 RotationsWrapper leftLeg,RotationsWrapper rightLeg,@NotNull Equipment equipment,boolean mainHand,boolean offHand,boolean helmet,boolean chestplate,boolean leggings,boolean boots) {
 		ArmorStand stand = (ArmorStand) createArmorStand(loc,name,invisible,small,arms,plate,marker,head,body,leftArm,rightArm,leftLeg,rightLeg).armorStand();
 		stand.setYRot(loc.getYaw());	// set rotation
 		if (mainHand) stand.setItemSlot(EquipmentSlot.MAINHAND,(ItemStack) ReflectionUtils.asNMSCopy(equipment.mainHand()).item());
@@ -108,26 +106,24 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc, ComponentWrapper name, boolean invisible, boolean small, boolean arms, boolean plate,
-														 boolean marker, @NotNull Equipment equipment) {
+	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker,@NotNull Equipment equipment) {
 		return createArmorStand(loc,name,invisible,small,arms,plate,marker,null,null,null,null,null,null,equipment,
 				equipment.mainHand() != null,equipment.offHand() != null,equipment.helmet() != null,
 				equipment.chestplate() != null,equipment.leggings() != null,equipment.boots() != null);
 	}
 	
 	@NotNull
-	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc, ComponentWrapper name, boolean invisible, boolean small, boolean arms, boolean plate, boolean marker,
-														 RotationsWrapper head, RotationsWrapper body, RotationsWrapper leftArm, RotationsWrapper rightArm, RotationsWrapper leftLeg,
-														 RotationsWrapper rightLeg, @NotNull Equipment equipment) {
+	public static SafeArmorStandWrapper createArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker,
+														 RotationsWrapper head,RotationsWrapper body,RotationsWrapper leftArm,RotationsWrapper rightArm,RotationsWrapper leftLeg,
+														 RotationsWrapper rightLeg,@NotNull Equipment equipment) {
 		return createArmorStand(loc,name,invisible,small,arms,plate,marker,head,body,leftArm,rightArm,leftLeg,rightLeg,equipment,
 				equipment.mainHand() != null,equipment.offHand() != null,equipment.helmet() != null,
 				equipment.chestplate() != null,equipment.leggings() != null,equipment.boots() != null);
 	}
 	
 	@NotNull
-	public static PacketWrapper.Safe packetCreateArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker,
-															RotationsWrapper head,RotationsWrapper body,RotationsWrapper leftArm,RotationsWrapper rightArm,RotationsWrapper leftLeg,
-															RotationsWrapper rightLeg,@NotNull Equipment equipment) {
+	public static PacketWrapper.Safe packetCreateArmorStand(@NotNull Location loc,ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean plate,boolean marker,RotationsWrapper head,RotationsWrapper body,RotationsWrapper leftArm,RotationsWrapper rightArm,
+															RotationsWrapper leftLeg,RotationsWrapper rightLeg,@NotNull Equipment equipment) {
 		return new PacketWrapper.Safe(new ClientboundAddMobPacket((ArmorStand) createArmorStand(loc,name,invisible,small,arms,plate,marker,head,body,leftArm,rightArm,leftLeg,
 				rightLeg,equipment).armorStand()));
 	}
@@ -145,22 +141,20 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static PacketWrapper.Safe packetArmorNotNulls(int ID, @NotNull Equipment equipment) {
-		return packetArmor(ID,equipment,equipment.mainHand() != null,equipment.offHand() != null,equipment.helmet() != null,
-				equipment.chestplate() != null,equipment.leggings() != null,equipment.boots() != null);
+	public static PacketWrapper.Safe packetArmorNotNulls(int ID,@NotNull Equipment equipment) {
+		return packetArmor(ID,equipment,equipment.mainHand() != null,equipment.offHand() != null,equipment.helmet() != null,equipment.chestplate() != null,equipment.leggings() != null,equipment.boots() != null);
 	}
 	
 	@NotNull
 	public static SynchedEntityDataWrapper.Safe createDataWatcherName(ComponentWrapper name) {
 		SynchedEntityData data = new SynchedEntityData(null);
-		data.define(new EntityDataAccessor<>(2,EntityDataSerializers.OPTIONAL_COMPONENT),Optional.ofNullable(name == null || !name.isComponent() ? null :
-				(Component) name.component()));
+		data.define(new EntityDataAccessor<>(2,EntityDataSerializers.OPTIONAL_COMPONENT),Optional.ofNullable(name == null || !name.isComponent() ? null : (Component) name.component()));
 		data.define(new EntityDataAccessor<>(3,EntityDataSerializers.BOOLEAN),true);
 		return new SynchedEntityDataWrapper.Safe(data);
 	}
 	
 	@NotNull
-	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandOptions(boolean invisible, boolean small, boolean arms, boolean plate, boolean marker) {
+	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandOptions(boolean invisible,boolean small,boolean arms,boolean plate,boolean marker) {
 		SynchedEntityData data = new SynchedEntityData(null);
 		if (invisible) data.define(new EntityDataAccessor<>(0,EntityDataSerializers.BYTE),(byte) 32);
 		int options = 0;
@@ -173,8 +167,7 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandRotations(RotationsWrapper head, RotationsWrapper body, RotationsWrapper leftArm, RotationsWrapper rightArm,
-																					 RotationsWrapper leftLeg, RotationsWrapper rightLeg) {
+	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandRotations(RotationsWrapper head,RotationsWrapper body,RotationsWrapper leftArm,RotationsWrapper rightArm,RotationsWrapper leftLeg,RotationsWrapper rightLeg) {
 		SynchedEntityData data = new SynchedEntityData(null);
 		if (head != null && head.isRotations()) data.define(new EntityDataAccessor<>(16,EntityDataSerializers.ROTATIONS),(Rotations) head.rotations());
 		if (body != null && body.isRotations()) data.define(new EntityDataAccessor<>(17,EntityDataSerializers.ROTATIONS),(Rotations) body.rotations());
@@ -186,12 +179,10 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandEverything(ComponentWrapper name, boolean invisible, boolean small, boolean arms, boolean noPlate, boolean marker,
-																					  RotationsWrapper head, RotationsWrapper body, RotationsWrapper leftArm, RotationsWrapper rightArm,
-																					  RotationsWrapper leftLeg, RotationsWrapper rightLeg) {
+	public static SynchedEntityDataWrapper.Safe createDataWatcherArmorStandEverything(ComponentWrapper name,boolean invisible,boolean small,boolean arms,boolean noPlate,boolean marker,RotationsWrapper head,RotationsWrapper body,
+																					  RotationsWrapper leftArm,RotationsWrapper rightArm,RotationsWrapper leftLeg,RotationsWrapper rightLeg) {
 		SynchedEntityData data = (SynchedEntityData) createDataWatcherArmorStandRotations(head,body,leftArm,rightArm,leftLeg,rightLeg).data();
-		data.define(new EntityDataAccessor<>(2,EntityDataSerializers.OPTIONAL_COMPONENT),Optional.ofNullable(name == null || !name.isComponent() ? null :
-				(Component) name.component()));
+		data.define(new EntityDataAccessor<>(2,EntityDataSerializers.OPTIONAL_COMPONENT),Optional.ofNullable(name == null || !name.isComponent() ? null : (Component) name.component()));
 		data.define(new EntityDataAccessor<>(3,EntityDataSerializers.BOOLEAN),true);
 		if (invisible) data.define(new EntityDataAccessor<>(0,EntityDataSerializers.BYTE),(byte) 32);
 		int options = 0;
@@ -204,7 +195,7 @@ public class PacketUtils {
 	}
 	
 	@NotNull
-	public static PacketWrapper.Safe packetUpdateEntity(int ID, @NotNull SynchedEntityDataWrapper data) {
+	public static PacketWrapper.Safe packetUpdateEntity(int ID,@NotNull SynchedEntityDataWrapper data) {
 		return new PacketWrapper.Safe(new ClientboundSetEntityDataPacket(ID,(SynchedEntityData) data.data(),true));
 	}
 	
@@ -221,7 +212,7 @@ public class PacketUtils {
 //
 //	@NotNull
 //	@Unmodifiable
-//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size, double damageAmount,
+//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pairs.Pair<@NotNull Double,@NotNull Double> center, double size, double damageAmount,
 //													double damageBuffer, int warningDistance, int warningTime) {
 //		WorldBorder border = new WorldBorder();
 //		border.world = ReflectionUtils.getHandle(world);
@@ -236,14 +227,14 @@ public class PacketUtils {
 //
 //	@NotNull
 //	@Unmodifiable
-//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size, int warningDistance) {
+//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pairs.Pair<@NotNull Double,@NotNull Double> center, double size, int warningDistance) {
 //		WorldBorder border = ReflectionUtils.getWorldBorder(world);
 //		return packetWorldBorder(world,center,size,border.getDamagePerBlock(),border.getDamageSafeZone(),warningDistance,border.getWarningTime());
 //	}
 //
 //	@NotNull
 //	@Unmodifiable
-//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pair<@NotNull Double,@NotNull Double> center, double size) {
+//	public static List<Packet<?>> packetWorldBorder(@NotNull World world, @NotNull me.DMan16.DMan16Utils.Classes.Pairs.Pair<@NotNull Double,@NotNull Double> center, double size) {
 //		WorldBorder border = ReflectionUtils.getWorldBorder(world);
 //		return packetWorldBorder(world,center,size,border.getDamagePerBlock(),border.getDamageSafeZone(),border.getWarningBlocks(),border.getWarningTime());
 //	}

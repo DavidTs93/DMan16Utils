@@ -1,7 +1,6 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Classes.KeyedHashMap;
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.Material;
@@ -14,16 +13,19 @@ import org.jetbrains.annotations.Unmodifiable;
 import java.util.*;
 
 public class ItemUtils {
-	private static final KeyedHashMap<@NotNull ItemableInfo<?>> MAP = new KeyedHashMap<>();
+	private static final LinkedHashMap<@NotNull String,@NotNull ItemableInfo<?>> MAP = new LinkedHashMap<>();
 	private static final LinkedHashMap<@NotNull Class<?>,@NotNull String> CLASS_MAP = new LinkedHashMap<>();
 	
-	public static <V extends Itemable<?>> boolean registerItemable(@NotNull String key, @NotNull ItemableInfo<V> info) {
+	public static <V extends Itemable<?>> boolean registerItemable(@NotNull String key,@NotNull ItemableInfo<V> info) {
 		key = Utils.fixKey(key);
 		if (key == null || MAP.containsKey(key) || CLASS_MAP.containsKey(info.getMappableClass())) return false;
 		MAP.put(key,info);
 		CLASS_MAP.put(info.getMappableClass(),key);
 		key = CLASS_MAP.remove(ItemableStack.class);
-		if (key != null) CLASS_MAP.put(ItemableStack.class,key);
+		if (key != null) {
+			MAP.put(key,Objects.requireNonNull(MAP.remove(key)));
+			CLASS_MAP.put(ItemableStack.class,key);
+		}
 		return true;
 	}
 	
@@ -34,23 +36,23 @@ public class ItemUtils {
 	}
 	
 	@Nullable
-	private static <V extends Itemable<?>> V of(@Nullable ItemableInfo<V> info, @Nullable Map<String,?> arguments) {
+	private static <V extends Itemable<?>> V of(@Nullable ItemableInfo<V> info,@Nullable Map<String,?> arguments) {
 		return info == null ? null : info.fromArguments(arguments);
 	}
 	
 	@Nullable
-	private static Itemable<?> ofOrSubstitute(@Nullable ItemableInfo<?> info, @Nullable Map<String,?> arguments) {
+	private static Itemable<?> ofOrSubstitute(@Nullable ItemableInfo<?> info,@Nullable Map<String,?> arguments) {
 		return info == null ? null : (info.getMappableClass() == ItemableStack.class ? ItemableStack.ofOrSubstitute(arguments) : info.fromArguments(arguments));
 	}
 	
 	@Nullable
-	public static Itemable<?> of(@NotNull String key, @Nullable Map<String,?> arguments) {
-		return of(MAP.get(key),arguments);
+	public static Itemable<?> of(@NotNull String key,@Nullable Map<String,?> arguments) {
+		return of(MAP.get(Utils.fixKey(key)),arguments);
 	}
 	
 	@Nullable
-	public static Itemable<?> ofOrSubstitute(@NotNull String key, @Nullable Map<String,?> arguments) {
-		return ofOrSubstitute(MAP.get(key),arguments);
+	public static Itemable<?> ofOrSubstitute(@NotNull String key,@Nullable Map<String,?> arguments) {
+		return ofOrSubstitute(MAP.get(Utils.fixKey(key)),arguments);
 	}
 	
 	@Nullable
@@ -66,7 +68,7 @@ public class ItemUtils {
 	@Nullable
 	private static Pair<@NotNull String,@Nullable Map<String,?>> keyAndMap(@NotNull String str) {
 		if (str.isEmpty()) return null;
-		String key = null, arguments = null;
+		String key = null,arguments = null;
 		if (str.contains(":")) {
 			String[] arr = str.split(":",2);
 			if (arr.length == 2) {
@@ -80,14 +82,14 @@ public class ItemUtils {
 	@Nullable
 	@SuppressWarnings("unchecked")
 	@Contract("null,_ -> null")
-	public static <V extends Itemable<?>> V of(@Nullable String str, @NotNull Class<V> clazz) {
+	public static <V extends Itemable<?>> V of(@Nullable String str,@NotNull Class<V> clazz) {
 		if (str == null) return null;
 		Material material = Utils.getMaterial(str);
 		if (material != null) return clazz == ItemableStack.class ? (V) ItemableStack.of(material) : null;
 		Pair<String,Map<String,?>> keyAndMap = keyAndMap(str);
 		try {
 			if (keyAndMap == null) return (V) MAP.get(CLASS_MAP.get(clazz)).fromItem((ItemStack) Objects.requireNonNull(Utils.ObjectFromBase64(str)));
-			ItemableInfo<?> info = MAP.get(keyAndMap.first());
+			ItemableInfo<?> info = MAP.get(Utils.fixKey(keyAndMap.first()));
 			return info != null && info.getMappableClass().equals(clazz) ? (V) of(info,keyAndMap.second()) : null;
 		} catch (Exception e) {}
 		return null;
@@ -135,7 +137,7 @@ public class ItemUtils {
 	
 	@Nullable
 	@SuppressWarnings("unchecked")
-	public static <V extends Itemable<?>> V of(@NotNull Class<V> clazz, @Nullable Map<String,?> arguments) {
+	public static <V extends Itemable<?>> V of(@NotNull Class<V> clazz,@Nullable Map<String,?> arguments) {
 		String key = CLASS_MAP.get(clazz);
 		if (key != null) try {
 			return (V) of(key,arguments);
@@ -145,7 +147,7 @@ public class ItemUtils {
 	
 	@Nullable
 	@SuppressWarnings("unchecked")
-	public static <V> V off(@NotNull Class<V> clazz, @Nullable Map<String,?> arguments) {
+	public static <V> V off(@NotNull Class<V> clazz,@Nullable Map<String,?> arguments) {
 		String key = CLASS_MAP.get(clazz);
 		if (key != null) try {
 			return (V) of(key,arguments);
@@ -156,14 +158,14 @@ public class ItemUtils {
 	
 	@Nullable
 	@Contract("null,_ -> null; _,null -> null")
-	private static <V extends Itemable<?>> V of(@Nullable ItemableInfo<V> info, @Nullable ItemStack item) {
+	private static <V extends Itemable<?>> V of(@Nullable ItemableInfo<V> info,@Nullable ItemStack item) {
 		return info == null || item == null ? null : info.fromItem(item);
 	}
 	
 	@Nullable
 	@Contract("_,null -> null")
-	public static Itemable<?> of(@NotNull String key, @Nullable ItemStack item) {
-		return of(MAP.get(key),item);
+	public static Itemable<?> of(@NotNull String key,@Nullable ItemStack item) {
+		return of(MAP.get(Utils.fixKey(key)),item);
 	}
 	
 	@Nullable
@@ -204,7 +206,7 @@ public class ItemUtils {
 	@Nullable
 	@Contract("_,null -> null")
 	@SuppressWarnings("unchecked")
-	public static <V extends Itemable<?>> V of(@NotNull Class<V> clazz, @Nullable ItemStack item) {
+	public static <V extends Itemable<?>> V of(@NotNull Class<V> clazz,@Nullable ItemStack item) {
 		String key = CLASS_MAP.get(clazz);
 		if (key != null) try {
 			return (V) of(key,item);

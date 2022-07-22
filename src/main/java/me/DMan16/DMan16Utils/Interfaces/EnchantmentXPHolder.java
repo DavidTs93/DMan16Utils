@@ -1,6 +1,6 @@
 package me.DMan16.DMan16Utils.Interfaces;
 
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Utils.Utils;

@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Menus;
 
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
-import me.DMan16.DMan16Utils.Items.ItemUtils;
+import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,103 +12,131 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 public abstract class InnerInventory<V extends Itemable<?>> extends ListenerInventoryPages {
-	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu;
-	protected HashMap<@NotNull Integer,@NotNull List<@Nullable V>> updatingMenu;
+	protected HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> originalMenu;
+	protected HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> updatingMenu;
 	protected UUID ID;
 	protected boolean owner;
-	protected boolean first;
 	protected boolean allowEdit;
+	protected boolean clicks;
 	
-	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin,boolean owner, @NotNull UUID ID, Boolean allowEdit,
-														   @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu,@Nullable Function<T,@NotNull Boolean> doFirstMore) {
+	protected <T extends InnerInventory<V>> InnerInventory(@NotNull Player viewer,@Nullable Component name,@Nullable Boolean border,@NotNull JavaPlugin plugin,boolean owner,@NotNull UUID ID,Boolean allowEdit,
+														   @NotNull HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> originalMenu,@Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		super(viewer,viewer,5,name,border,plugin,(InnerInventory<V> inner) -> first(inner,ID,owner,allowEdit,originalMenu,doFirstMore));
 	}
 	
-	protected InnerInventory(@NotNull Player viewer, @Nullable Component name, @Nullable Boolean border, @NotNull JavaPlugin plugin, boolean owner,@NotNull UUID ID,
-							 @NotNull HashMap<@NotNull Integer,@NotNull List<@Nullable V>> originalMenu) {
+	protected InnerInventory(@NotNull Player viewer,@Nullable Component name,@Nullable Boolean border,@NotNull JavaPlugin plugin,boolean owner,@NotNull UUID ID,
+							 @NotNull HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> originalMenu) {
 		this(viewer,name,border,plugin,owner,ID,null,originalMenu,null);
 	}
 	
 	@SuppressWarnings("unchecked")
-	private static <V extends Itemable<?>,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner, @NotNull UUID ID, boolean owner, Boolean allowEdit,@NotNull HashMap<@NotNull Integer, @NotNull List<@Nullable V>> originalMenu,
-																					 @Nullable Function<T,@NotNull Boolean> doFirstMore) {
+	private static <V extends Itemable<?>,T extends InnerInventory<V>> boolean first(@NotNull InnerInventory<V> inner,@NotNull UUID ID,boolean owner,Boolean allowEdit,
+																					 @NotNull HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> originalMenu,@Nullable Function<T,@NotNull Boolean> doFirstMore) {
 		inner.ID = ID;
 		inner.owner = owner;
 		inner.allowEdit = allowEdit == null ? inner.owner : allowEdit;
 		inner.originalMenu = originalMenu;
-		inner.updatingMenu();
-		inner.first = true;
+		inner.clicks = false;
 		inner.rightClickJump = 10;
 		inner.fancyButtons = true;
-		if (doFirstMore != null) if (!doFirstMore.apply((T) inner)) throw new IllegalArgumentException();
+		inner.updatingMenu = inner.cloneMenu(originalMenu);
+		if (doFirstMore != null) return doFirstMore.apply((T) inner);
 		return true;
 	}
 	
-	protected void updatingMenu() {
-		this.updatingMenu = new HashMap<>();
-		this.originalMenu.forEach((page,items) -> this.updatingMenu.put(page,items.stream().map(this::cloneOriginal).collect(Collectors.toList())));
+	@NotNull
+	protected final HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> cloneMenu(@NotNull HashMap<@NotNull Integer,@NotNull HashMap<@NotNull Integer,@Nullable V>> menu) {
+		HashMap<Integer,HashMap<Integer,V>> map = new HashMap<>();
+		HashMap<Integer,V> items;
+		for (Map.Entry<Integer,HashMap<Integer,V>> entry : menu.entrySet()) {
+			items = new HashMap<>() {{
+				for (Entry<Integer,V> e : entry.getValue().entrySet()) if (!Utils.isNull(e.getValue())) put(e.getKey(),cloneOriginal(e.getValue()));
+			}};
+			if (!items.isEmpty()) map.put(entry.getKey(),items);
+		}
+		return map;
+	}
+	
+	@Contract("null -> true")
+	protected final boolean isPageEmpty(@Nullable HashMap<@NotNull Integer,@Nullable V> items) {
+		if (!Utils.isNullOrEmpty(items)) for (V item : items.values()) if (!Utils.isNull(item)) return false;
+		return true;
+	}
+	
+	protected boolean samePages(@Nullable HashMap<@NotNull Integer,@Nullable V> page1,@Nullable HashMap<@NotNull Integer,@Nullable V> page2) {
+		boolean empty1 = isPageEmpty(page1),empty2 = isPageEmpty(page2);
+		if (empty1 && empty2) return true;
+		else if (empty1 || empty2) return false;
+		Set<Integer> slots = Utils.joinSets(page1.keySet(),page2.keySet());
+		V item1,item2;
+		for (Integer slot : slots) {
+			empty1 = Utils.isNull(item1 = page1.get(slot));
+			empty2 = Utils.isNull(item2 = page2.get(slot));
+			if (empty1 && empty2) continue;
+			if (empty1 || empty2) return false;
+			if (!item1.equals(item2)) return false;
+		}
+		return true;
+	}
+	
+	protected boolean hasChanged() {
+		for (Integer slot : Utils.joinSets(originalMenu.keySet(),updatingMenu.keySet())) if (!samePages(originalMenu.get(slot),updatingMenu.get(slot))) return true;
+		return false;
 	}
 	
 	@Override
-	protected boolean cancelCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+	protected boolean cancelCheck(int slot,int inventorySlot,@NotNull ClickType click,@NotNull InventoryAction action,int hotbarSlot) {
 		return !allowEdit || (slot < size && slot >= size - 9);
 	}
 	
 	@Override
-	protected boolean secondSlotCheck(int slot, int inventorySlot, @NotNull ClickType click, @NotNull InventoryAction action, int hotbarSlot) {
+	protected boolean secondSlotCheck(int slot,int inventorySlot,@NotNull ClickType click,@NotNull InventoryAction action,int hotbarSlot) {
 		return super.secondSlotCheck(slot,inventorySlot,click,action,hotbarSlot) || slot >= size || slot < size - 9;
 	}
 	
 	@Override
 	protected void beforeSetPageAndReset(int newPage) {
-		if (this.allowEdit) savePage();
+		if (allowEdit) savePage();
 	}
 	
 	@Override
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onInventoryDrag(InventoryDragEvent event) {
 		if (!isThisInventory(event.getView().getTopInventory())) return;
-		if (!this.allowEdit) event.setCancelled(true);
+		if (!allowEdit) event.setCancelled(true);
 		else for (int slot : event.getRawSlots()) if (slot < size && slot >= size - 9) {
 			event.setCancelled(true);
 			return;
 		}
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onCloseSaveEvent(InventoryCloseEvent event) {
-		if (this.allowEdit && isThisInventory(event.getView().getTopInventory()) && event.getPlayer().equals(player) && !cancelCloseUnregister) saveExit();
+		if (allowEdit && isThisInventory(event.getView().getTopInventory()) && event.getPlayer().equals(player) && !cancelCloseUnregister) saveExit();
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onQuitSaveEvent(PlayerQuitEvent event) {
-		if (this.allowEdit && event.getPlayer().equals(player)) saveExit();
+		if (allowEdit && event.getPlayer().equals(player)) saveExit();
 	}
 	
-	@SuppressWarnings("unchecked")
 	protected void savePage() {
-		if (first) {
-			first = false;
-			return;
+		if (clicks && allowEdit && !samePages(originalMenu.get(currentPage),updatingMenu.get(currentPage))) {
+			save();
+			originalMenu = cloneMenu(updatingMenu);
 		}
-		List<V> pageItems = new ArrayList<>();
-		for (int i = 0; i < size - 9; i++) try {
-			pageItems.add((V) ItemUtils.ofOrHolder(getItem(i)));
-		} catch (Exception e) {
-			pageItems.add(null);
-		}
-		updateUpdatingMenu(pageItems);
+		clicks = false;
 	}
 	
 	protected boolean owner() {
@@ -121,13 +149,12 @@ public abstract class InnerInventory<V extends Itemable<?>> extends ListenerInve
 	
 	protected void saveExit() {
 		savePage();
-		save();
 	}
 	
+	@SuppressWarnings("unchecked")
 	protected V cloneOriginal(V item) {
-		return item;
+		return Utils.isNull(item) ? null : (V) item.copy();
 	}
 	
 	protected abstract void save();
-	protected abstract void updateUpdatingMenu(@NotNull List<@Nullable V> items);
 }

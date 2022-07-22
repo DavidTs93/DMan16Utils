@@ -1,12 +1,21 @@
 package me.DMan16.DMan16Utils.Listeners;
 
 import com.destroystokyo.paper.event.inventory.PrepareResultEvent;
-import me.DMan16.DMan16Utils.Classes.*;
+import me.DMan16.DMan16Utils.Classes.AdvancedRecipe;
+import me.DMan16.DMan16Utils.Classes.CreativeMenuItemUpdater;
+import me.DMan16.DMan16Utils.Classes.CustomRecipe;
+import me.DMan16.DMan16Utils.Classes.LootGenerationItemUpdater;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
+import me.DMan16.DMan16Utils.Classes.Trios.Trio;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Events.SuccessfulPrepareAnvilEvent;
+import me.DMan16.DMan16Utils.Events.SuccessfulPrepareCraftingEvent;
 import me.DMan16.DMan16Utils.Events.SuccessfulPrepareGrindstoneEvent;
 import me.DMan16.DMan16Utils.Events.SuccessfulPrepareSmithingEvent;
-import me.DMan16.DMan16Utils.Interfaces.*;
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
+import me.DMan16.DMan16Utils.Interfaces.ItemableReviveable;
+import me.DMan16.DMan16Utils.Interfaces.Listener;
+import me.DMan16.DMan16Utils.Interfaces.Repairable;
 import me.DMan16.DMan16Utils.Items.Enchantable;
 import me.DMan16.DMan16Utils.Items.ItemUtils;
 import me.DMan16.DMan16Utils.Items.NullItemable;
@@ -27,10 +36,7 @@ import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerItemDamageEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.world.LootGenerateEvent;
-import org.bukkit.inventory.AnvilInventory;
-import org.bukkit.inventory.GrindstoneInventory;
-import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.SmithingInventory;
+import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.NotNull;
@@ -39,18 +45,20 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class MiscListeners implements Listener {
-	private static final HashMap<@NotNull AnvilInventory,@NotNull SuccessfulPrepareInfo<AdvancedRecipe<AnvilInventory>>> ANVIL_RECIPE_EVENTS = new HashMap<>();
-	private static final HashMap<@NotNull SmithingInventory,@NotNull SuccessfulPrepareInfo<AdvancedRecipe<SmithingInventory>>> SMITHING_RECIPE_EVENTS = new HashMap<>();
-	private static final HashMap<@NotNull GrindstoneInventory,@NotNull SuccessfulPrepareInfo<AdvancedRecipe<GrindstoneInventory>>> GRINDSTONE_RECIPE_EVENTS = new HashMap<>();
+	private static final HashMap<@NotNull AnvilInventory,@NotNull SuccessfulPrepareAdvanced<AdvancedRecipe<AnvilInventory>>> ANVIL_RECIPE_EVENTS = new HashMap<>();
+	private static final HashMap<@NotNull SmithingInventory,@NotNull SuccessfulPrepareAdvanced<AdvancedRecipe<SmithingInventory>>> SMITHING_RECIPE_EVENTS = new HashMap<>();
+	private static final HashMap<@NotNull GrindstoneInventory,@NotNull SuccessfulPrepareAdvanced<AdvancedRecipe<GrindstoneInventory>>> GRINDSTONE_RECIPE_EVENTS = new HashMap<>();
+	private static final HashMap<@NotNull CraftingInventory,@NotNull SuccessfulPrepareCustom> CRAFTING_RECIPE_EVENTS = new HashMap<>();
 	private static final Set<@NotNull Material> DISABLED_GIVE_MATERIALS = new HashSet<>();
 	
 	public MiscListeners() {
 		register(DMan16UtilsMain.getInstance());
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
 	public void onDeathNPC(PlayerDeathEvent event) {
 		if (Utils.isPlayerNPC(event.getPlayer())) event.deathMessage(null);
 	}
@@ -63,17 +71,17 @@ public class MiscListeners implements Listener {
 		DISABLED_GIVE_MATERIALS.addAll(materials);
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onCommand(PlayerCommandPreprocessEvent event) {
 		onCommand(event,event.getMessage(),event.getPlayer());
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onCommand(ServerCommandEvent event) {
 		onCommand(event,event.getCommand(),event.getSender());
 	}
 	
-	private <V extends Event & Cancellable> void onCommand(V event, String cmd, CommandSender sender) {
+	private <V extends Event & Cancellable> void onCommand(V event,String cmd,CommandSender sender) {
 		if (cmd.startsWith("/")) cmd = cmd.replaceFirst("/","");
 		String[] split = cmd.split(" ",3);
 		if (split.length < 2) return;
@@ -87,7 +95,7 @@ public class MiscListeners implements Listener {
 		Utils.chatColors(sender,"&cMaterial disabled for giving!");
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
 	public void onItemDamage(PlayerItemDamageEvent event) {
 		if (event.getDamage() <= 0) return;
 		ItemStack item = event.getItem();
@@ -101,7 +109,7 @@ public class MiscListeners implements Listener {
 			}
 			int dmg = enchantable.damageItemStack();
 			if (enchantable.addDamage(event.getDamage()).shouldBreak()) {
-				if (!(enchantable instanceof ReviveableItemable<?>)) event.setDamage(max);
+				if (!(enchantable instanceof ItemableReviveable<?>)) event.setDamage(max);
 				else {
 					event.setDamage(0);
 					event.getItem().setItemMeta(itemable.asItem().getItemMeta());
@@ -118,14 +126,15 @@ public class MiscListeners implements Listener {
 		} catch (Exception e) {}
 	}
 	
-	private record SuccessfulPrepareInfo<V>(@NotNull Itemable<?> first, @Nullable Itemable<?> second, @NotNull V recipe,@NotNull Itemable<?> result, @Nullable Itemable<?> firstAfter, @Nullable Itemable<?> secondAfter) {}
+	private record SuccessfulPrepareAdvanced<V>(@Nullable Itemable<?> first,@Nullable Itemable<?> second,@NotNull V recipe,@NotNull Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter) {}
+	private record SuccessfulPrepareCustom(@NotNull List<@Nullable Itemable<?>> items,@NotNull CustomRecipe recipe,@NotNull Itemable<?> result,@Nullable List<@Nullable Itemable<?>> itemsAfter) {}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
 	public void onClickCraft(InventoryClickEvent event) {
 		if (event.getRawSlot() != 2) return;
 		if ((event.getInventory() instanceof AnvilInventory anvilInventory) && Utils.notNull(anvilInventory.getResult())) {
 			event.setCancelled(true);
-			SuccessfulPrepareInfo<AdvancedRecipe<AnvilInventory>> info = ANVIL_RECIPE_EVENTS.get(anvilInventory);
+			SuccessfulPrepareAdvanced<AdvancedRecipe<AnvilInventory>> info = ANVIL_RECIPE_EVENTS.get(anvilInventory);
 			if (info == null) anvilInventory.setResult(null);
 			else if ((event.getWhoClicked() instanceof Player player) && (event.getClick().isShiftClick() || ((event.getClick().isRightClick() || event.getClick().isLeftClick()) && Utils.isNull(event.getCursor())))) new BukkitRunnable() {
 				public void run() {
@@ -136,11 +145,12 @@ public class MiscListeners implements Listener {
 					anvilInventory.setResult(null);
 					anvilInventory.setFirstItem(info.firstAfter == null ? null : info.firstAfter.asItem());
 					anvilInventory.setSecondItem(info.secondAfter == null ? null : info.secondAfter.asItem());
+					ANVIL_RECIPE_EVENTS.remove(anvilInventory);
 				}
 			}.runTask(DMan16UtilsMain.getInstance());
 		} else if ((event.getInventory() instanceof SmithingInventory smithingInventory) && Utils.notNull(smithingInventory.getResult())) {
 			event.setCancelled(true);
-			SuccessfulPrepareInfo<AdvancedRecipe<SmithingInventory>> info = SMITHING_RECIPE_EVENTS.get(smithingInventory);
+			SuccessfulPrepareAdvanced<AdvancedRecipe<SmithingInventory>> info = SMITHING_RECIPE_EVENTS.get(smithingInventory);
 			if (info == null) smithingInventory.setResult(null);
 			else if ((event.getWhoClicked() instanceof Player player) && (event.getClick().isShiftClick() || ((event.getClick().isRightClick() || event.getClick().isLeftClick()) && Utils.isNull(event.getCursor())))) new BukkitRunnable() {
 				public void run() {
@@ -151,11 +161,12 @@ public class MiscListeners implements Listener {
 					smithingInventory.setResult(null);
 					smithingInventory.setInputEquipment(info.firstAfter == null ? null : info.firstAfter.asItem());
 					smithingInventory.setInputMineral(info.secondAfter == null ? null : info.secondAfter.asItem());
+					SMITHING_RECIPE_EVENTS.remove(smithingInventory);
 				}
 			}.runTask(DMan16UtilsMain.getInstance());
 		} else if ((event.getInventory() instanceof GrindstoneInventory grindstoneInventory) && Utils.notNull(grindstoneInventory.getResult())) {
 			event.setCancelled(true);
-			SuccessfulPrepareInfo<AdvancedRecipe<GrindstoneInventory>> info = GRINDSTONE_RECIPE_EVENTS.get(grindstoneInventory);
+			SuccessfulPrepareAdvanced<AdvancedRecipe<GrindstoneInventory>> info = GRINDSTONE_RECIPE_EVENTS.get(grindstoneInventory);
 			if (info == null) grindstoneInventory.setResult(null);
 			else if ((event.getWhoClicked() instanceof Player player) && (event.getClick().isShiftClick() || ((event.getClick().isRightClick() || event.getClick().isLeftClick()) && Utils.isNull(event.getCursor())))) new BukkitRunnable() {
 				public void run() {
@@ -166,16 +177,32 @@ public class MiscListeners implements Listener {
 					grindstoneInventory.setResult(null);
 					grindstoneInventory.setUpperItem(info.firstAfter == null ? null : info.firstAfter.asItem());
 					grindstoneInventory.setLowerItem(info.secondAfter == null ? null : info.secondAfter.asItem());
+					GRINDSTONE_RECIPE_EVENTS.remove(grindstoneInventory);
+				}
+			}.runTask(DMan16UtilsMain.getInstance());
+		} else if ((event.getInventory() instanceof CraftingInventory craftingInventory) && Utils.notNull(craftingInventory.getResult())) {
+			event.setCancelled(true);
+			SuccessfulPrepareCustom info = CRAFTING_RECIPE_EVENTS.get(craftingInventory);
+			if (info == null) craftingInventory.setResult(null);
+			else if ((event.getWhoClicked() instanceof Player player) && (event.getClick().isShiftClick() || ((event.getClick().isRightClick() || event.getClick().isLeftClick()) && Utils.isNull(event.getCursor())))) new BukkitRunnable() {
+				public void run() {
+					if (event.getClick().isShiftClick()) {
+						if (Utils.addFully(player,craftingInventory.getResult(),null).isEmpty()) return;
+					} else player.setItemOnCursor(craftingInventory.getResult());
+					craftingInventory.setResult(null);
+					craftingInventory.setMatrix(info.itemsAfter == null ? new ItemStack[0] : info.itemsAfter.stream().map(item -> item == null ? null : item.asItem()).toArray(ItemStack[]::new));
+					CRAFTING_RECIPE_EVENTS.remove(craftingInventory);
 				}
 			}.runTask(DMan16UtilsMain.getInstance());
 		}
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.MONITOR)
 	public void onCloseResultInventory(InventoryCloseEvent event) {
 		if (event.getInventory() instanceof AnvilInventory anvilInventory) ANVIL_RECIPE_EVENTS.remove(anvilInventory);
 		else if (event.getInventory() instanceof SmithingInventory smithingInventory) SMITHING_RECIPE_EVENTS.remove(smithingInventory);
 		else if (event.getInventory() instanceof GrindstoneInventory grindstoneInventory) GRINDSTONE_RECIPE_EVENTS.remove(grindstoneInventory);
+		else if (event.getInventory() instanceof CraftingInventory craftingInventory) CRAFTING_RECIPE_EVENTS.remove(craftingInventory);
 	}
 	
 	@EventHandler(priority = EventPriority.MONITOR)
@@ -191,7 +218,7 @@ public class MiscListeners implements Listener {
 		event.setResult(result == null ? null : result.second.third.asItem());
 		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
 		else {
-			ANVIL_RECIPE_EVENTS.put(event.getInventory(), new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
+			ANVIL_RECIPE_EVENTS.put(event.getInventory(),new SuccessfulPrepareAdvanced<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
 			event.setResult(newEvent.result().asItem());
 		}
 	}
@@ -208,7 +235,7 @@ public class MiscListeners implements Listener {
 		event.setResult(result == null ? null : result.second.third.asItem());
 		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
 		else {
-			SMITHING_RECIPE_EVENTS.put(event.getInventory(),new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
+			SMITHING_RECIPE_EVENTS.put(event.getInventory(),new SuccessfulPrepareAdvanced<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
 			event.setResult(newEvent.result().asItem());
 		}
 	}
@@ -224,10 +251,26 @@ public class MiscListeners implements Listener {
 		SuccessfulPrepareGrindstoneEvent newEvent = new SuccessfulPrepareGrindstoneEvent(event,first,second,result == null ? null : result.first,result == null ? null : result.second.third,result == null ? null : result.second.first,result == null ? null : result.second.second,originalResult);
 		if (result == null) newEvent.setCancelled(true);
 		event.setResult(result == null ? null : result.second.third.asItem());
-		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.first == null || newEvent.recipe == null) event.setResult(null);
+		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || (newEvent.first == null && newEvent.second == null) || newEvent.recipe == null) event.setResult(null);
 		else {
-			GRINDSTONE_RECIPE_EVENTS.put(grindstoneInventory,new SuccessfulPrepareInfo<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
+			GRINDSTONE_RECIPE_EVENTS.put(grindstoneInventory,new SuccessfulPrepareAdvanced<>(newEvent.first,newEvent.second,newEvent.recipe,newEvent.result(),newEvent.firstAfter(),newEvent.secondAfter()));
 			event.setResult(newEvent.result().asItem());
+		}
+	}
+	
+	@EventHandler(priority = EventPriority.MONITOR)
+	public void onPrepareCrafting(PrepareItemCraftEvent event) {
+		CRAFTING_RECIPE_EVENTS.remove(event.getInventory());
+		if (event.getRecipe() != null) return;
+		List<Itemable<?>> items = Arrays.stream(event.getInventory().getMatrix()).map(ItemUtils::ofOrSubstituteOrHolder).collect(Collectors.toList());
+		Pair<@NotNull CustomRecipe,@NotNull Pair<@Nullable List<@Nullable Itemable<?>>,@NotNull Itemable<?>>> result = Utils.customRecipes().getResult(items);
+		SuccessfulPrepareCraftingEvent newEvent = new SuccessfulPrepareCraftingEvent(event,items,result == null ? null : result.first,result == null ? null : result.second.second,result == null ? null : result.second.first);
+		if (result == null) newEvent.setCancelled(true);
+		event.getInventory().setResult(result == null ? null : result.second.second.asItem());
+		if (!newEvent.callEventAndDoTasksIfNotCancelled() || newEvent.result() == null || newEvent.recipe == null) event.getInventory().setResult(null);
+		else {
+			CRAFTING_RECIPE_EVENTS.put(event.getInventory(),new SuccessfulPrepareCustom(newEvent.items,newEvent.recipe,newEvent.result(),newEvent.itemsAfter()));
+			event.getInventory().setResult(newEvent.result().asItem());
 		}
 	}
 	

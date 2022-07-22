@@ -38,36 +38,36 @@ public interface Purchasable<V,T> {
 	}
 	
 	@Nullable
-	BigInteger getPrice(@NotNull Player player, T val);
+	BigInteger getPrice(@NotNull Player player,T val);
 	
 	@Nullable
-	default BigInteger getPrice2(@NotNull Player player, T val) {
+	default BigInteger getPrice2(@NotNull Player player,T val) {
 		return null;
 	}
 	
 	@Nullable
-	default BigInteger getPrice3(@NotNull Player player, T val) {
+	default BigInteger getPrice3(@NotNull Player player,T val) {
 		return null;
 	}
 	
 	boolean isPurchasable();
 	
-	boolean isOwned(@NotNull Player player, T val);
+	boolean isOwned(@NotNull Player player,T val);
 	
 	@Nullable
-	ItemStack itemOwned(@NotNull Player player, T val);
+	ItemStack itemOwned(@NotNull Player player,T val);
 	
 	@Nullable
-	ItemStack itemCantAfford(@NotNull Player player, T val);
+	ItemStack itemCantAfford(@NotNull Player player,T val);
 	
 	@Nullable
 	default ItemStack itemCantPurchase(@NotNull Player player,T val) {
 		return null;
 	}
 	
-	@NotNull ItemStack itemCanPurchaseAndAfford(@NotNull Player player, T val);
+	@NotNull ItemStack itemCanPurchaseAndAfford(@NotNull Player player,T val);
 	
-	default boolean canAfford(@NotNull Player player, @NotNull BigInteger price, T val) {
+	default boolean canAfford(@NotNull Player player,@NotNull BigInteger price,T val) {
 		return true;
 	}
 	

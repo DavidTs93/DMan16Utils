@@ -57,7 +57,7 @@ public class Gradient {
 	}
 	
 	@NotNull
-	private List<TextColor> makeGradient(TextColor start, TextColor end, int num) {
+	private List<TextColor> makeGradient(TextColor start,TextColor end,int num) {
 		List<TextColor> gradient = new ArrayList<>();
 		for (int i = 0; i < num; i++) {
 			float ratio = (float) i / (float) num;

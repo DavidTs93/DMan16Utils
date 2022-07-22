@@ -1,10 +1,10 @@
 package me.DMan16.DMan16Utils.Events.Callers;
 
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
+import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Events.SuccessfulJoinEvent;
 import me.DMan16.DMan16Utils.Events.SuccessfulLoginEvent;
 import me.DMan16.DMan16Utils.Interfaces.Listener;
-import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;

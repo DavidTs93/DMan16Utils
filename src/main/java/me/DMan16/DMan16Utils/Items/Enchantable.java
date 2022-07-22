@@ -293,8 +293,6 @@ public abstract class Enchantable<V extends Enchantable<V> & Itemable<V>> implem
 			if (enchantments != null) item = Utils.addEnchantments(item,enchantments);
 			item = info == null ? AttributesInfo.addAttributesNull(item,key,slot) : info.addAttributes(item,key,slot);
 		} else item = AttributesInfo.addAttributesNull(item,key,slot);
-//		return ReflectionUtils.addNBTTag(Utils.addDurabilityLore(item,maxDurability,damage,false),"Original",new Co);
-		
 		return Utils.applyOrOriginalIf(Utils.addDurabilityLore(item,maxDurability,damage,false),i -> ReflectionUtils.addNBTTag(i,"Original",new TagWrapper.Safe(ByteTag.ONE)),isDefault);
 	}
 	

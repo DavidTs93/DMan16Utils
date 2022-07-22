@@ -32,13 +32,13 @@ public class CitizensManager {
 		return Collections.unmodifiableList(newTraits);
 	}
 	
-	public void registerTrait(@NotNull Class<? extends Trait> clazz, @NotNull String name) {
+	public void registerTrait(@NotNull Class<? extends Trait> clazz,@NotNull String name) {
 		TraitInfo trait = TraitInfo.create(clazz).withName(name);
 		newTraits.add(trait);
 		CitizensAPI.getTraitFactory().registerTrait(trait);
 	}
 	
-	public boolean isNPC(@NotNull Entity entity, @Nullable NPCRegistry registry) {
+	public boolean isNPC(@NotNull Entity entity,@Nullable NPCRegistry registry) {
 		return getNPC(entity,registry) != null;
 	}
 	
@@ -57,12 +57,12 @@ public class CitizensManager {
 	}
 	
 	@Nullable
-	public NPC getNPC(@NotNull Entity entity, @Nullable NPCRegistry registry) {
+	public NPC getNPC(@NotNull Entity entity,@Nullable NPCRegistry registry) {
 		if (registry == null) registry = CitizensAPI.getNPCRegistry();
 		return registry.getNPC(entity);
 	}
 	
-	public boolean applySkin(@NotNull NPC npc, String name, String signature, String data) {
+	public boolean applySkin(@NotNull NPC npc,String name,String signature,String data) {
 		if (name != null && signature != null && data != null) try {
 			npc.getOrAddTrait(SkinTrait.class).setSkinPersistent(name,signature,data);
 			return true;
@@ -70,7 +70,7 @@ public class CitizensManager {
 		return false;
 	}
 	
-	public boolean applySkin(@NotNull NPC npc, Player player) {
+	public boolean applySkin(@NotNull NPC npc,Player player) {
 		if (player != null && (npc.getEntity() instanceof Player)) try {
 			GameProfile profile = Utils.getProfile(player);
 			Property property = Iterables.getFirst(profile.getProperties().get("textures"),null);
@@ -87,7 +87,7 @@ public class CitizensManager {
 		return false;
 	}
 	
-	public boolean applySkin(@NotNull NPC npc, String name) {
+	public boolean applySkin(@NotNull NPC npc,String name) {
 		if (name != null) try {
 			npc.getOrAddTrait(SkinTrait.class).setSkinName(name);
 			return true;

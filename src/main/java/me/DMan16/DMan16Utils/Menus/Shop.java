@@ -1,6 +1,6 @@
 package me.DMan16.DMan16Utils.Menus;
 
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
 import me.DMan16.DMan16Utils.Interfaces.Purchasable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import net.kyori.adventure.text.Component;
@@ -9,6 +9,7 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -28,29 +29,6 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
 		purchases = new ArrayList<>(generatePages(iter,purchase -> Pair.of(purchase,(T) null),null,0,lines - 1,0,8,border() == null ? slot -> slot >= size - 9 : (border() ? this::isBorder : null),null).values());
 	}
-	
-//	protected void setPurchases(@NotNull Iterator<@NotNull V> iter) {
-//		purchases = toMapList(iter,size,border() == null ? slot -> slot >= size : (border() ? this::isBorder : null));
-//	}
-//
-//	@NotNull
-//	public static <V,T> List<@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>>> toMapList(@NotNull Iterator<@NotNull V> iter,int size,@Nullable Function<@NotNull Integer,@NotNull Boolean> isBorder) {
-//		List<HashMap<Integer,Pair<V,T>>> list = new ArrayList<>();
-//		HashMap<Integer,Pair<V,T>> map = new HashMap<>();
-//		int i,idx;
-//		while (iter.hasNext()) {
-//			for (i = 0; i < size; i++) {
-//				if (getInnerIndex(i,size,isBorder) == null) continue;
-//				map.put(i,Pair.of(iter.next(),null));
-//				if (!iter.hasNext()) break;
-//			}
-//			if (!map.isEmpty()) {
-//				list.add(map);
-//				map = new HashMap<>();
-//			}
-//		}
-//		return list;
-//	}
 	
 	protected void setPurchases(@NotNull List<@NotNull V> list) {
 		setPurchases(list.iterator());
@@ -76,6 +54,7 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 		return true;
 	}
 	
+	@Positive
 	public int maxPage() {
 		return Math.max(1,purchases.size());
 	}
@@ -102,10 +81,9 @@ public abstract class Shop<V extends Purchasable<?,T>,T> extends ListenerInvento
 	}
 	
 	protected void handleAfterPurchase(boolean purchaseSuccessful,@NotNull InventoryClickEvent event,int slot,@NotNull HashMap<@NotNull Integer,@NotNull Pair<@NotNull V,@Nullable T>> page,@NotNull Pair<@NotNull V,@Nullable T> purchase,ItemStack slotItem,@NotNull ClickType click) {
-		if (purchaseSuccessful) {
-			Utils.savePlayer(player);
-			reloadPage();
-		}
+		if (!purchaseSuccessful) return;
+		Utils.savePlayer(player);
+		reloadPage();
 	}
 	
 	@Override

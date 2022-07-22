@@ -19,7 +19,7 @@ public enum EquipSlot {
 	public final @NotNull EquipmentSlot equipSlot;
 	public final EquipmentSlotWrapper.@NotNull Safe enumSlot;
 	
-	EquipSlot(@NotNull EquipmentSlot slot, @NotNull net.minecraft.world.entity.EquipmentSlot enumSlot) {
+	EquipSlot(@NotNull EquipmentSlot slot,@NotNull net.minecraft.world.entity.EquipmentSlot enumSlot) {
 		this.key = name().toLowerCase();
 		this.name = Utils.splitCapitalize(this.key,"_",null);
 		this.equipSlot = slot;

@@ -41,7 +41,6 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected boolean alwaysSetNext = false;
 	protected boolean alwaysSetPrevious = false;
 	private final Boolean border;
-//	protected boolean resetFillInside = false;
 	protected int rightClickJump = 1;
 	protected boolean fancyButtons = false;
 	protected boolean openOnInitialize = true;
@@ -165,7 +164,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	public void setPage(int newPage) {
-		if (newPage < 1 || (newPage == 1 && maxPage() == 0) || newPage > maxPage()) return;
+		if (newPage < 1 || newPage > maxPage()) return;
 		beforeSetPageAndReset(newPage);
 		currentPage = newPage;
 		reset();
@@ -219,7 +218,7 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	
 	@NotNull
 	protected BasicItemableGeneral<?> previous() {
-		return !fancyButtons ? super.itemPevious() : super.itemPevious().copyChangeNameIf(name -> name.append(Component.text(" (" + (currentPage - 1) + ")")),Objects::nonNull);
+		return !fancyButtons ? super.itemPrevious() : super.itemPrevious().copyChangeNameIf(name -> name.append(Component.text(" (" + (currentPage - 1) + ")")),Objects::nonNull);
 	}
 	
 	@Contract("null -> true")
@@ -244,12 +243,12 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	protected abstract void otherSlot(@NotNull InventoryClickEvent event,int slot,ItemStack slotItem,@NotNull ClickType click);
 	
 	@NotNull
-	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
-																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																				 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																		   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
 		if (endLine < startLine || endColumn < startColumn) throw new IllegalArgumentException();
-		LinkedHashMap<Integer,LinkedHashMap<Integer,T>> pages = new LinkedHashMap<>();
+		LinkedHashMap<Integer,HashMap<Integer,T>> pages = new LinkedHashMap<>();
 		List<Integer> slots = new ArrayList<>();
 		int slot;
 		for (int i = startLine; i <= endLine; i++) for (int j = startColumn; j <= endColumn; j++) {
@@ -268,58 +267,58 @@ public abstract class ListenerInventoryPages extends ListenerInventory {
 	}
 	
 	@NotNull
-	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
-																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																				 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																		   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
 		return generatePages(collection.iterator(),convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
 	}
 	
 	@NotNull
-	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
-																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																				 @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Iterator<@Nullable V> iter,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																		   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
 		return generatePages(iter,convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots == null ? null : ignoreSlots::contains,allowedSlots == null ? null : allowedSlots::contains);
 	}
 	
 	@NotNull
-	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
-																																				 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																				 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+	public static <V,T> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull T>> generatePages(@NotNull Collection<@Nullable V> collection,@NotNull Function<@Nullable V,@Nullable T> convert,@Nullable Function<@NotNull T,@NotNull Boolean> isNull,
+																																		   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
 		return generatePages(collection.iterator(),convert,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots,allowedSlots);
 	}
 	
 	@NotNull
-	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
-																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																			   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																		 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
 		return generatePages(iter,Utils::self,isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
 	}
 	
 	@NotNull
-	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
-																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																			   @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																		 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		 @Nullable Function<@NotNull Integer,@NotNull Boolean> ignoreSlot,@Nullable Function<@NotNull Integer,@NotNull Boolean> allowSlot) {
 		return generatePages(collection.iterator(),isNull,startLine,startColumn,endLine,endColumn,ignoreSlot,allowSlot);
 	}
 	
 	@NotNull
-	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
-																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Iterator<@Nullable V> iter,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																		 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		 @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
 		return generatePages(iter,isNull,startLine,startColumn,endLine,endColumn,ignoreSlots == null ? null : ignoreSlots::contains,allowedSlots == null ? null : allowedSlots::contains);
 	}
 	
 	@NotNull
-	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull LinkedHashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
-																																			   @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
-																																			   @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
-																																			   @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
+	public static <V> LinkedHashMap<@NotNull @Positive Integer,@NotNull HashMap<@NotNull @NonNegative Integer,@NotNull V>> generatePages(@NotNull Collection<@Nullable V> collection,@Nullable Function<@NotNull V,@NotNull Boolean> isNull,
+																																		 @NonNegative @Range(from = 0,to = 5) int startLine,@NonNegative @Range(from = 0,to = 5) int endLine,
+																																		 @NonNegative @Range(from = 0,to = 8) int startColumn,@NonNegative @Range(from = 0,to = 8) int endColumn,
+																																		 @Nullable Collection<@NotNull Integer> ignoreSlots,@Nullable Collection<@NotNull Integer> allowedSlots) {
 		return generatePages(collection.iterator(),isNull,startLine,startColumn,endLine,endColumn,ignoreSlots,allowedSlots);
 	}
 }

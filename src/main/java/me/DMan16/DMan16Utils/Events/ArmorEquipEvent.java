@@ -16,7 +16,7 @@ public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	private final ItemStack newArmor;
 	private final int hotbar;
 	
-	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull ArmorSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor) {
+	public ArmorEquipEvent(@NotNull Player player,@NotNull EquipMethod method,@NotNull ArmorSlot slot,@Nullable ItemStack oldArmor,@Nullable ItemStack newArmor) {
 		this(player,method,slot,oldArmor,newArmor,-1);
 	}
 	
@@ -26,7 +26,7 @@ public class ArmorEquipEvent extends PlayerEvent implements Cancellable {
 	 * @param oldArmor old armor before the change
 	 * @param newArmor new armor after the change
 	 */
-	public ArmorEquipEvent(@NotNull Player player, @NotNull EquipMethod method, @NotNull ArmorSlot slot, @Nullable ItemStack oldArmor, @Nullable ItemStack newArmor, int hotbar) {
+	public ArmorEquipEvent(@NotNull Player player,@NotNull EquipMethod method,@NotNull ArmorSlot slot,@Nullable ItemStack oldArmor,@Nullable ItemStack newArmor,int hotbar) {
 		super(player);
 		this.method = method;
 		this.slot = slot;

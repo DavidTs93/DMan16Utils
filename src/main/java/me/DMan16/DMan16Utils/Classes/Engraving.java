@@ -1,7 +1,6 @@
 package me.DMan16.DMan16Utils.Classes;
 
 import me.DMan16.DMan16Utils.Items.Enchantable;
-import me.DMan16.DMan16Utils.Items.Socketable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -21,7 +20,7 @@ public final class Engraving extends CustomEnchantment {
 	private final @NotNull @Unmodifiable Set<@NotNull EnchantmentTarget> targets;
 	private final @NotNull @Unmodifiable Set<@NotNull Material> materials;
 	
-	public Engraving(@NotNull String key, char symbol, @Nullable Collection<@NotNull EnchantmentTarget> targets, @Nullable Collection<@NotNull Material> materials) {
+	public Engraving(@NotNull String key,char symbol,@Nullable Collection<@NotNull EnchantmentTarget> targets,@Nullable Collection<@NotNull Material> materials) {
 		super(key);
 		this.symbol = symbol;
 		this.targets = targets == null ? Set.of() : Set.copyOf(targets);

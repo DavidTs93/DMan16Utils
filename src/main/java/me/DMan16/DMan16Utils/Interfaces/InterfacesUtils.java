@@ -60,7 +60,7 @@ public class InterfacesUtils {
 	}
 	
 	@NotNull
-	public static Component line(@NotNull String name, boolean selected) {
+	public static Component line(@NotNull String name,boolean selected) {
 		return selected ? Utils.noItalic(Component.text("► ").append(Component.translatable(name)).color(NamedTextColor.AQUA)) : Utils.noItalic(Component.translatable(name).color(NamedTextColor.WHITE));
 	}
 }

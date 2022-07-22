@@ -36,7 +36,7 @@ public class CommandTestEffects implements CommandExecutor,TabCompleter {
 		manager.dispose();
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command command,@NotNull String label,String[] args) {
 		if (args.length == 1 && (sender instanceof Player player)) {
 			Effect effect = effect(EFFECTS.indexOf(args[0].toLowerCase()));
 			if (effect != null) {
@@ -183,7 +183,7 @@ public class CommandTestEffects implements CommandExecutor,TabCompleter {
 		return effect;
 	}
 	
-	public List<String> onTabComplete(@NotNull CommandSender sender, @NotNull Command command, @NotNull String alias, @NotNull String[] args) {
+	public List<String> onTabComplete(@NotNull CommandSender sender,@NotNull Command command,@NotNull String alias,@NotNull String[] args) {
 		if (args.length == 1) return EFFECTS.stream().filter(cmd -> Utils.containsTabComplete(args[0],cmd)).map(String::toLowerCase).collect(Collectors.toList());
 		return new ArrayList<>();
 	}

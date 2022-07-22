@@ -9,11 +9,15 @@ import org.jetbrains.annotations.Nullable;
 
 public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
 	@Positive int amount();
-	
 	@Positive int maxSize();
 	
+	@NonNegative
+	default int toMaxSize() {
+		return maxSize() - amount();
+	}
+	
 	default boolean isMaxSize() {
-		return maxSize() <= amount();
+		return toMaxSize() == 0;
 	}
 	
 	@NotNull @Contract(value = "_ -> new",pure = true) V copy(@Positive int amount);
@@ -32,7 +36,7 @@ public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
 	
 	@NotNull
 	@Contract(value = "_ -> new",pure = true)
-	default V copyIncrement(@NonNegative int amount) {
+	default V copyAdd(@NonNegative int amount) {
 		if (amount == 0) return copy();
 		long newAmount = ((long) amount()) + amount;
 		return copy(newAmount > Integer.MAX_VALUE ? Integer.MAX_VALUE : (int) newAmount);
@@ -40,20 +44,35 @@ public interface Amountable<V extends Amountable<V>> extends Copyable<V> {
 	
 	/**
 	 * New amount is minimum 1
-	 * See also: {@link Amountable#copyDecrementOrNull(int)}
+	 * See also: {@link Amountable#copySubtractOrNull(int)}
 	 */
 	@NotNull
 	@Contract(value = "_ -> new",pure = true)
-	default V copyDecrement(@NonNegative int amount) {
-		V copy = copyDecrementOrNull(amount);
+	default V copySubtract(@NonNegative int amount) {
+		V copy = copySubtractOrNull(amount);
 		return copy == null ? copy(1) : copy;
 	}
 	
 	@Nullable
 	@Contract(pure = true)
-	default V copyDecrementOrNull(@NonNegative int amount) {
+	default V copySubtractOrNull(@NonNegative int amount) {
 		if (amount == 0) return copy();
 		long newAmount = Utils.clamp(((long) amount()) - amount,Integer.MIN_VALUE,Integer.MAX_VALUE);
 		return newAmount <= 0 ? null : copy((int) newAmount);
+	}
+	
+	@NotNull
+	default V amount(@NonNegative int amount) {
+		return copy(amount);
+	}
+	
+	@NotNull
+	default V add(@NonNegative int amount) {
+		return copyAdd(amount);
+	}
+	
+	@NotNull
+	default V subtract(@NonNegative int amount) {
+		return copySubtract(amount);
 	}
 }

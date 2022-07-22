@@ -1,8 +1,8 @@
 package me.DMan16.DMan16Utils.Interfaces;
 
 import me.DMan16.DMan16Utils.Classes.Empty;
-import me.DMan16.DMan16Utils.Classes.Pair;
-import me.DMan16.DMan16Utils.Classes.Trio;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
+import me.DMan16.DMan16Utils.Classes.Trios.Trio;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

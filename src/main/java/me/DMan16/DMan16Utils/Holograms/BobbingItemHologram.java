@@ -22,8 +22,7 @@ public class BobbingItemHologram extends ItemHologram {
 		if (isSpawned() || loc.getWorld() == null || (this.location != null && this.location.equals(loc = loc.clone().subtract(0,1,0)))) return false;
 		this.location = loc;
 		this.world = loc.getWorld();
-		ItemEntity entityItem = new ItemEntity(((ServerLevel) ReflectionUtils.getHandle(loc.getWorld()).world()),loc.getX(),loc.getY() - 1,loc.getZ(),
-				((net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy(item).item()),0,0,0);
+		ItemEntity entityItem = new ItemEntity(((ServerLevel) ReflectionUtils.getHandle(loc.getWorld()).world()),loc.getX(),loc.getY() - 1,loc.getZ(),((net.minecraft.world.item.ItemStack) ReflectionUtils.asNMSCopy(item).item()),0,0,0);
 		entityItem.setNoGravity(true);
 		ID = entityItem.getId();
 		create = new PacketWrapper.Safe(new ClientboundAddEntityPacket(entityItem));

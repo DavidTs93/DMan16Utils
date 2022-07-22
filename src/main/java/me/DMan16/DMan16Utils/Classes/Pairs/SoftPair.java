@@ -1,5 +1,6 @@
-package me.DMan16.DMan16Utils.Classes;
+package me.DMan16.DMan16Utils.Classes.Pairs;
 
+import me.DMan16.DMan16Utils.Classes.MapEntry;
 import me.DMan16.DMan16Utils.Interfaces.Copyable;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -13,7 +14,7 @@ public class SoftPair<V,T> implements Copyable<SoftPair<V,T>> {
 	protected V first;
 	protected T second;
 	
-	public SoftPair(V first, T second) {
+	public SoftPair(V first,T second) {
 		this.first = first;
 		this.second = second;
 	}
@@ -37,7 +38,7 @@ public class SoftPair<V,T> implements Copyable<SoftPair<V,T>> {
 	}
 	
 	@NotNull
-	@Contract(value = " -> new", pure = true)
+	@Contract(value = " -> new",pure = true)
 	public SoftPair<T,V> swapped() {
 		return of(this.second,this.first);
 	}
@@ -81,14 +82,14 @@ public class SoftPair<V,T> implements Copyable<SoftPair<V,T>> {
 		return MapEntry.of(first,second);
 	}
 	
-	@Contract(value = "_,_ -> new", pure = true)
-	public static <V,T> @NotNull SoftPair<V,T> of(V first, T second) {
+	@Contract(value = "_,_ -> new",pure = true)
+	public static <V,T> @NotNull SoftPair<V,T> of(V first,T second) {
 		return new SoftPair<>(first,second);
 	}
 	
 	@NotNull
 	@SafeVarargs
-	public static <V,T> Map<V,T> toHashMap(Pair<V,T> ... pairs) {
+	public static <V,T> Map<V,T> toHashMap(Pair<V,T>... pairs) {
 		Map<V,T> map = new HashMap<>();
 		for (Pair<V,T> pair : pairs) if (pair != null && pair.first != null) map.put(pair.first,pair.second);
 		return map;

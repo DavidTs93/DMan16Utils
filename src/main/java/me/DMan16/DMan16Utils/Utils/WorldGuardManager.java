@@ -39,7 +39,7 @@ public class WorldGuardManager {
 	}
 	
 	@NotNull
-	public List<ProtectedRegion> getRegions(@NotNull ProtectedRegion region, @NotNull World world) {
+	public List<ProtectedRegion> getRegions(@NotNull ProtectedRegion region,@NotNull World world) {
 		RegionContainer container = WorldGuard.getInstance().getPlatform().getRegionContainer();
 		RegionManager regions = container.get(BukkitAdapter.adapt(world));
 		return regions == null ? new ArrayList<>() : sortRegionsByPriority(regions.getApplicableRegions(region));
@@ -68,7 +68,7 @@ public class WorldGuardManager {
 	}
 	
 	@Nullable
-	public StateFlag newStateFlag(@NotNull String name, boolean defaultValue) {
+	public StateFlag newStateFlag(@NotNull String name,boolean defaultValue) {
 		try {
 			StateFlag flag = new StateFlag(name,defaultValue);
 			flagRegistry.register(flag);
@@ -81,7 +81,7 @@ public class WorldGuardManager {
 	}
 	
 	@Nullable
-	public StringFlag newStringFlag(@NotNull String name, String defaultValue) {
+	public StringFlag newStringFlag(@NotNull String name,String defaultValue) {
 		try {
 			StringFlag flag = new StringFlag(name,defaultValue);
 			flagRegistry.register(flag);

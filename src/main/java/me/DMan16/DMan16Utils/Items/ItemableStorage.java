@@ -1,10 +1,15 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Classes.Pair;
+import me.DMan16.DMan16Utils.Classes.Pairs.NumberPairs.PairInt;
+import me.DMan16.DMan16Utils.Classes.Pairs.Pair;
+import me.DMan16.DMan16Utils.DMan16UtilsMain;
 import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.ItemableAmountable;
 import me.DMan16.DMan16Utils.Interfaces.Scoreable;
 import me.DMan16.DMan16Utils.Utils.Utils;
+import org.bukkit.NamespacedKey;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +18,8 @@ import org.jetbrains.annotations.Nullable;
 import java.util.*;
 
 public abstract class ItemableStorage implements Scoreable {
+	protected static final @NotNull NamespacedKey STORAGE_KEY = new NamespacedKey(DMan16UtilsMain.getInstance(),"storage");
+	
 	protected final Itemable<?>@NotNull [] storage;
 	
 	protected ItemableStorage(@Positive int storageSize) {
@@ -23,15 +30,37 @@ public abstract class ItemableStorage implements Scoreable {
 	protected final LinkedHashMap<@NotNull Integer,@NotNull String> itemMap() {
 		LinkedHashMap<Integer,String> map = new LinkedHashMap<>();
 		Itemable<?> item;
-		for (int i = 0; i < storage.length; i++) if ((item = storage[i]) != null && !(item instanceof NullItemable)) map.put(i,item.stringMappable());
+		for (int i = 0; i < storage.length; i++) if (Utils.notNull(item = storage[i])) map.put(i,item.stringMappable());
 		return map;
 	}
 	
 	@NotNull
 	public Map<@NotNull String,Object> toMap() {
-		return new HashMap<>() {{
-			put("Storage",itemMap());
-		}};
+		return Utils.runGetOriginal(new HashMap<>(),map -> map.put("Storage",itemMap()));
+	}
+	
+	@NotNull
+	protected ItemStack setItemsPDC(@NotNull ItemStack item) {
+		return Utils.setKeyPersistentDataContainer(item,STORAGE_KEY,Utils.getJSONString(itemMap()));
+	}
+	
+	@Nullable
+	protected static Map<@NotNull @NonNegative Integer,@NotNull Itemable<?>> getItems(Map<?,?> map) {
+		if (Utils.isNullOrEmpty(map)) return null;
+		HashMap<Integer,Itemable<?>> storage = new HashMap<>();
+		Integer index;
+		Itemable<?> itemable;
+		for (Map.Entry<?,?> entry : map.entrySet()) {
+			index = Utils.getInteger(entry.getKey());
+			itemable = ItemUtils.of(Utils.getString(entry.getValue()));
+			if (index != null && index >= 0 && itemable != null) storage.put(index,itemable);
+		}
+		return storage;
+	}
+	
+	@Nullable
+	protected static Map<@NotNull @NonNegative Integer,@NotNull Itemable<?>> getItemsPDC(@NotNull ItemStack item) {
+		return getItems(Utils.getMapFromJSON(Utils.getKeyPersistentDataContainer(item,STORAGE_KEY,PersistentDataType.STRING)));
 	}
 	
 	public boolean isFull() {
@@ -39,7 +68,12 @@ public abstract class ItemableStorage implements Scoreable {
 		return true;
 	}
 	
-	protected boolean canIndexHoldItem(@NonNegative int index,@NotNull Itemable<?> item) {
+	public boolean isEmpty() {
+		for (Itemable<?> item : storage) if (!Utils.isNull(item)) return false;
+		return true;
+	}
+	
+	protected boolean canSlotHoldItem(@NonNegative int index,@NotNull Itemable<?> item) {
 		return true;
 	}
 	
@@ -49,12 +83,12 @@ public abstract class ItemableStorage implements Scoreable {
 		List<Pair<Integer,Integer>> list = new ArrayList<>();
 		if (item instanceof ItemableAmountable<?> amountable) for (int i = 0; i < storage.length; i++) {
 			if (storage[i] == null) continue;
-			if ((storage[i] instanceof NullItemable) || !canIndexHoldItem(i,storage[i])) storage[i] = null;
+			if ((storage[i] instanceof NullItemable) || !canSlotHoldItem(i,storage[i])) storage[i] = null;
 			else if ((storage[i] instanceof ItemableAmountable<?> storageItem) && !storageItem.isMaxSize() && (storageItem.canPassAsThis(item) || item.canPassAsThis(storageItem))) {
-				ItemableAmountable<?> copy = (ItemableAmountable<?>) storageItem.copyIncrement(amountable.amount());
+				ItemableAmountable<?> copy = (ItemableAmountable<?>) storageItem.copyAdd(amountable.amount());
 				int amount = copy.amount() - storageItem.amount();
 				if (amount <= 0) continue;
-				list.add(Pair.of(i,amount));
+				list.add(PairInt.of(i,amount));
 				amount = amountable.amount() - amount;
 				if (amount <= 0) {
 					item = null;
@@ -62,9 +96,10 @@ public abstract class ItemableStorage implements Scoreable {
 				} else amountable = (ItemableAmountable<?>) amountable.copy(amount);
 			}
 		}
-		if (!Utils.isNull(item)) for (int i = 0; i < storage.length; i++) if (Utils.isNull(storage[i]) || !canIndexHoldItem(i,storage[i])) {
+		if (!Utils.isNull(item)) for (int i = 0; i < storage.length; i++) if (Utils.isNull(storage[i]) && canSlotHoldItem(i,storage[i])) {
 			storage[i] = item;
-			list.add(Pair.of(i,(item instanceof ItemableAmountable<?> amountable) ? amountable.amount() : 1));
+			list.add(PairInt.of(i,(item instanceof ItemableAmountable<?> amountable) ? amountable.amount() : 1));
+			break;
 		}
 		return list.isEmpty() ? null : list;
 	}
@@ -77,15 +112,10 @@ public abstract class ItemableStorage implements Scoreable {
 		long score = 0;
 		for (Itemable<?> item : storage) {
 			if (Utils.isNull(item)) continue;
-			if (item instanceof Scoreable scoreable) score += scoreable.totalScore();
+			if (item instanceof Scoreable scoreable) score += scoreable.score();
 			else score += itemScoreNonScorable(item);
 			if (score >= Integer.MAX_VALUE) break;
 		}
 		return (int) Math.min(score,Integer.MAX_VALUE);
-	}
-	
-	@Nullable
-	public Itemable<?> getItem(@NonNegative int index) {
-		return index >= storage.length ? null : storage[index];
 	}
 }

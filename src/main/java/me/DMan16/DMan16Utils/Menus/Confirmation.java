@@ -23,7 +23,7 @@ public abstract class Confirmation extends ListenerInventory {
 	protected final Player player;
 	
 	@SuppressWarnings("unchecked")
-	protected <V extends Confirmation> Confirmation(@NotNull Player player, @NotNull Component name, @Nullable List<Component> noConfirmLore,@NotNull JavaPlugin plugin, @Nullable Function<V,@NotNull Boolean> doFirst) {
+	protected <V extends Confirmation> Confirmation(@NotNull Player player,@NotNull Component name,@Nullable List<Component> noConfirmLore,@NotNull JavaPlugin plugin,@Nullable Function<V,@NotNull Boolean> doFirst) {
 		super(Bukkit.getServer().createInventory(player,InventoryType.HOPPER,Utils.noItalic(name)));
 		this.player = player;
 		this.slotConfirm = 0;
@@ -34,7 +34,7 @@ public abstract class Confirmation extends ListenerInventory {
 		open(plugin,player);
 	}
 	
-	@EventHandler(ignoreCancelled = true, priority = EventPriority.LOWEST)
+	@EventHandler(ignoreCancelled = true,priority = EventPriority.LOWEST)
 	public void onClickEvent(InventoryClickEvent event) {
 		if (!isThisInventory(event.getView().getTopInventory())) return;
 		event.setCancelled(true);

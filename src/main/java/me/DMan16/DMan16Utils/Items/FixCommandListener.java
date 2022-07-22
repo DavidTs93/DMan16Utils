@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Items;
 
-import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Interfaces.Itemable;
 import me.DMan16.DMan16Utils.Interfaces.Repairable;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.command.Command;
@@ -18,7 +18,7 @@ public final class FixCommandListener implements CommandExecutor {
 		cmd.setExecutor(this);
 	}
 	
-	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command cmd, @NotNull String label, @NotNull String[] args) {
+	public boolean onCommand(@NotNull CommandSender sender,@NotNull Command cmd,@NotNull String label,@NotNull String[] args) {
 		if (!(sender instanceof Player player)) return true;
 		Itemable<?> item = ItemUtils.of(player.getInventory().getItemInMainHand());
 		if (!(item instanceof Repairable repairable)) {

@@ -37,12 +37,11 @@ public class ItemHologram implements Hologram<ItemHologram> {
 		if (isSpawned() || loc.getWorld() == null || (this.location != null && this.location.equals(loc = loc.clone().subtract(0,1,0)))) return false;
 		this.location = loc;
 		this.world = loc.getWorld();
-		ArmorStand stand = (ArmorStand) PacketUtils.createArmorStand(loc.clone().add(0,-1,0.25),null,true,true,true,false,
-				true,new Equipment(item,item,item,null,null,null)).armorStand();
+		ArmorStand stand = (ArmorStand) PacketUtils.createArmorStand(loc.clone().add(0,-1,0.25),null,true,true,true,false,true,new Equipment(item,item,item,null,null,null)).armorStand();
 		ID = stand.getId();
 		create = new PacketWrapper.Safe(new ClientboundAddMobPacket(stand));
 		edit = new PacketWrapper.Safe(new ClientboundSetEntityDataPacket(ID,stand.getEntityData(),true));
-		armor = PacketUtils.packetArmorNotNulls(ID, new Equipment(item,item,item,null,null,null));
+		armor = PacketUtils.packetArmorNotNulls(ID,new Equipment(item,item,item,null,null,null));
 		destroy = PacketUtils.packetDestroyEntity(ID);
 		HologramsManager.register(this);
 		Bukkit.getOnlinePlayers().forEach(this::spawn);
@@ -90,20 +89,5 @@ public class ItemHologram implements Hologram<ItemHologram> {
 	@NotNull
 	public ItemHologram copy() {
 		return new ItemHologram(item);
-	}
-	
-	@Override
-	public ItemHologram clone() {
-		try {
-			ItemHologram clone = (ItemHologram) super.clone();
-			clone.ID = 0;
-			clone.item = item.clone();
-			clone.location = null;
-			clone.world = null;
-			clone.create = null;
-			clone.destroy = null;
-			return clone;
-		} catch (Exception e) {}
-		return copy();
 	}
 }

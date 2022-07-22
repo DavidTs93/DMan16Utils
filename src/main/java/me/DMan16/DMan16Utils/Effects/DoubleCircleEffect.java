@@ -44,12 +44,12 @@ public class DoubleCircleEffect extends Effect {
 	/**
 	 * Factors (1, 2, 1)
 	 */
-	public float xFactor = 1F, yFactor = 2F, zFactor = 1F;
+	public float xFactor = 1F,yFactor = 2F,zFactor = 1F;
 	
 	/**
 	 * Offsets (0, 0.8, 0)
 	 */
-	public float xOffset, yOffset = 0.8F, zOffset;
+	public float xOffset,yOffset = 0.8F,zOffset;
 	
 	/**
 	 * Internal Counter
@@ -68,7 +68,6 @@ public class DoubleCircleEffect extends Effect {
 		Location location = getLocation();
 		for (int i = 0; i < particlesPerIteration; i++) {
 			step++;
-			
 			float s = MathUtils.PI * MathUtils.PI * step / particles;
 			vector1.setX(xFactor * size * MathUtils.cos(s) + xOffset);
 			vector1.setZ(zFactor * size * MathUtils.sin(s) + zOffset);
@@ -76,7 +75,6 @@ public class DoubleCircleEffect extends Effect {
 			vector2.setX(-vector1.getX());
 			vector2.setZ(-vector1.getZ());
 			vector2.setY(vector1.getY() + distance);
-			
 			display(particle,location.add(vector1));
 			location.subtract(vector1);
 			display(particle,location.add(vector2));

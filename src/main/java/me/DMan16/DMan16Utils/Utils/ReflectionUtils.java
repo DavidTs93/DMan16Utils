@@ -74,14 +74,14 @@ public class ReflectionUtils {
 		return new WorldWrapper.Safe(CraftUtils.toCraft(world).getHandle());
 	}
 	
-	public static boolean[] addEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull List<PotionEffect> effects) {
+	public static boolean[] addEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull Collection<PotionEffect> effects) {
 		if (effects.isEmpty()) return new boolean[0];
 		boolean[] result = new boolean[effects.size()];
-		for (int i = 0; i < effects.size(); i++) {
-			PotionEffect effect = effects.get(i);
+		int i = 0;
+		for (PotionEffect effect : effects) {
 			net.minecraft.world.effect.MobEffect mobEffect = (net.minecraft.world.effect.MobEffect) MobEffectWrapper.fromPotionEffectType(effect.getType()).mobEffect();
 			net.minecraft.world.effect.MobEffectInstance mobEffectInstance = new net.minecraft.world.effect.MobEffectInstance(mobEffect,effect.getDuration(),effect.getAmplifier(),effect.isAmbient(),effect.hasParticles(),effect.hasIcon());
-			result[i] = ((net.minecraft.world.entity.LivingEntity) getHandle(entity).livingEntity()).addEffect(mobEffectInstance,cause);
+			result[i++] = ((net.minecraft.world.entity.LivingEntity) getHandle(entity).livingEntity()).addEffect(mobEffectInstance,cause);
 		}
 		return result;
 	}
@@ -90,13 +90,13 @@ public class ReflectionUtils {
 		return addEffects(entity,cause,Arrays.asList(effects));
 	}
 	
-	public static boolean[] removeEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull List<PotionEffectType> effects) {
+	public static boolean[] removeEffects(@NotNull LivingEntity entity,@NotNull Cause cause,@NotNull Collection<PotionEffectType> effects) {
 		if (effects.isEmpty()) return new boolean[0];
 		boolean[] result = new boolean[effects.size()];
-		for (int i = 0; i < effects.size(); i++) {
-			PotionEffectType effect = effects.get(i);
+		int i = 0;
+		for (PotionEffectType effect : effects) {
 			net.minecraft.world.effect.MobEffect mobEffect = (net.minecraft.world.effect.MobEffect) MobEffectWrapper.fromPotionEffectType(effect).mobEffect();
-			result[i] = ((net.minecraft.world.entity.LivingEntity) getHandle(entity).livingEntity()).removeEffect(mobEffect,cause);
+			result[i++] = ((net.minecraft.world.entity.LivingEntity) getHandle(entity).livingEntity()).removeEffect(mobEffect,cause);
 		}
 		return result;
 	}

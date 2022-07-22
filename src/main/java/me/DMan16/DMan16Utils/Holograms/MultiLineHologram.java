@@ -61,8 +61,7 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 		this.location = location;
 		this.world = location.getWorld();
 		final Location loc = location.clone().add(0,LINE_DIFFERENCE,0);
-		List<@NotNull ArmorStand> stands = lines.stream().map(line ->
-				(ArmorStand) PacketUtils.createArmorStand(loc.subtract(0,LINE_DIFFERENCE,0),line,true,true,false,false,true).armorStand()).toList();
+		List<@NotNull ArmorStand> stands = lines.stream().map(line -> (ArmorStand) PacketUtils.createArmorStand(loc.subtract(0,LINE_DIFFERENCE,0),line,true,true,false,false,true).armorStand()).toList();
 		IDs = stands.stream().map(ArmorStand::getId).toList();
 		creates = stands.stream().map(ClientboundAddMobPacket::new).map(PacketWrapper.Safe::new).toList();
 		edits = IntStream.range(0,IDs.size()).mapToObj(i -> new PacketWrapper.Safe(new ClientboundSetEntityDataPacket(IDs.get(i),stands.get(i).getEntityData(),true))).toList();
@@ -114,19 +113,5 @@ public class MultiLineHologram implements Hologram<MultiLineHologram> {
 	@NotNull
 	public MultiLineHologram copy() {
 		return new MultiLineHologram(lines);
-	}
-	
-	@Override
-	public MultiLineHologram clone() {
-		try {
-			MultiLineHologram clone = (MultiLineHologram) super.clone();
-			clone.IDs = new ArrayList<>();
-			clone.location = null;
-			clone.world = null;
-			clone.creates = null;
-			clone.destroys = null;
-			return clone;
-		} catch (Exception e) {}
-		return copy();
 	}
 }

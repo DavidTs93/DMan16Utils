@@ -11,7 +11,7 @@ public final class SuccessfulPrepareSmithingEvent extends SuccessfulPrepareEvent
 	public final PrepareSmithingEvent event;
 	
 	public SuccessfulPrepareSmithingEvent(@NotNull PrepareSmithingEvent event,@Nullable Itemable<?> first,@Nullable Itemable<?> second,@Nullable AdvancedRecipe<SmithingInventory> recipe,
-										  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter, @Nullable Itemable<?> originalResult) {
+										  @Nullable Itemable<?> result,@Nullable Itemable<?> firstAfter,@Nullable Itemable<?> secondAfter,@Nullable Itemable<?> originalResult) {
 		super(first,second,recipe,result,firstAfter,secondAfter,originalResult);
 		this.event = event;
 	}

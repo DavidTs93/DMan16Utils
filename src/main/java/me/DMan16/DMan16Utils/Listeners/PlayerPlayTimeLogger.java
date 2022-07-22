@@ -1,7 +1,7 @@
 package me.DMan16.DMan16Utils.Listeners;
 
-import me.DMan16.DMan16Utils.Interfaces.Listener;
 import me.DMan16.DMan16Utils.DMan16UtilsMain;
+import me.DMan16.DMan16Utils.Interfaces.Listener;
 import me.DMan16.DMan16Utils.Utils.Utils;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -20,7 +20,6 @@ import java.util.stream.Collectors;
 public class PlayerPlayTimeLogger implements Listener {
 	private long lastUpdate;
 	private final HashMap<@NotNull UUID,@NotNull Long> joinedSinceLastUpdate;
-//	private final BukkitTask task;
 	
 	public PlayerPlayTimeLogger() {
 		register(DMan16UtilsMain.getInstance());

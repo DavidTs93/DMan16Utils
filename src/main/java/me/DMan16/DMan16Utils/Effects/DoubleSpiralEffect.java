@@ -32,9 +32,7 @@ public class DoubleSpiralEffect extends AnimatedBallEffect {
 			vector2.setX(-vector1.getX());
 			vector2.setZ(-vector1.getZ());
 			vector2.setY(vector1.getY());
-			
 			VectorUtils.rotateVector(vector1,xRotation,yRotation,zRotation);
-			
 			display(particle,location.add(vector1));
 			location.subtract(vector1);
 			display(particle,location.add(vector2));
